@@ -1,0 +1,142 @@
+#+ STARTUP: overview
+
+* Interface tweaks
+#+BEGIN_SRC emacs-lisp
+(setq inhibit-startup-message t)
+(tool-bar-mode -1)
+(toggle-scroll-bar -1)
+(global-linum-mode t)
+(fset 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+
+#+RESULTS:
+: y-or-n-p
+
+* Try
+#+BEGIN_SRC emacs-lisp
+(use-package try
+  :ensure t)
+#+END_SRC
+
+* Which key
+Brings up some help
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+             :ensure t
+             :config
+             (which-key-mode))
+#+END_SRC
+
+* Org mode
+#+BEGIN_SRC emacs-lisp
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+(setq org-src-fontify-natively t)
+#+END_SRC
+
+#+RESULTS:
+: t
+
+* Swiper/ivy/counsel
+#+BEGIN_SRC emacs-lisp
+ (use-package counsel
+  :ensure t
+  :bind
+  (("M-y" . counsel-yank-pop)
+   :map ivy-minibuffer-map
+   ("M-y" . ivy-next-line)))
+
+ (use-package ivy
+  :ensure t
+  :diminish (ivy-mode)
+  :bind (("C-x b" . ivy-switch-buffer))
+  :config
+  (ivy-mode 1)
+  (setq ivy-use-virtual-buffers t)
+  (setq ivy-display-style 'fancy))
+
+ (use-package swiper
+  :ensure t
+  :bind (("C-s" . swiper)
+	 ("C-r" . swiper)
+	 ("C-c C-r" . ivy-resume)
+	 ("M-x" . counsel-M-x)
+	 ("C-x C-f" . counsel-find-file))
+  :config
+  (progn
+    (ivy-mode 1)
+    (setq ivy-use-virtual-buffers t)
+    (setq ivy-display-style 'fancy)
+    (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
+    ))
+  #+END_SRC
+
+* Avy
+  Navigate by searching for a letter on the screen and jumping to it
+  Currently commented out as I'm not sure I like it
+  See https://github.com/abo-abo/avy for more info
+  #+BEGIN_SRC emacs-lisp
+  ;; (use-package avy
+  ;; :ensure t
+  ;; :bind ("M-s" . avy-goto-word-1)) ;; changed from char as per jcs
+  #+END_SRC
+
+* Autocomplete
+  #+BEGIN_SRC emacs-lisp
+ (use-package auto-complete
+  :ensure t
+  :init
+  (progn
+    (ac-config-default)
+    (global-auto-complete-mode t)
+    ))
+  #+END_SRC
+* Themes
+#+BEGIN_SRC emacs-lisp
+;; zenburn
+ (use-package zenburn-theme
+  :ensure t
+  :config (load-theme 'zenburn t))
+
+;; wheatgrass
+;; (load-theme 'wheatgrass t)
+#+END_SRC
+* Reveal.js
+#+BEGIN_SRC emacs-lisp
+(use-package ox-reveal
+:ensure ox-reveal)
+
+(setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
+(setq org-reveal-mathjax t)
+
+(use-package htmlize
+:ensure t)
+#+END_SRC
+
+* Evil mode
+#+BEGIN_SRC emacs-lisp
+(use-package evil
+  :ensure t
+  :config
+  (evil-mode 1))
+#+END_SRC
+
+#+RESULTS:
+: t
+
+* Stan
+** Stan mode
+   #+BEGIN_SRC emacs-lisp
+   (use-package stan-mode
+     :ensure t)
+   #+END_SRC
+** Stan snippets
+   #+BEGIN_SRC emacs-lisp
+   (use-package stan-snippets
+     :ensure t)
+   #+END_SRC
+
+
+* 
