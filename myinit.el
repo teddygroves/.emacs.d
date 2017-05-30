@@ -12,11 +12,15 @@
              :config
              (which-key-mode))
 
-(use-package org-bullets
-  :ensure t
-  :config
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+;; org-bullets
+;; (use-package org-bullets
+;;  :ensure t
+;;  :config
+;;  (add-hook 'org-mode-hook (lambda () (org-bullets-mode nil))))
 (setq org-src-fontify-natively t)
+(setq org-indent_mode nil)
+;; markdown export
+(require 'ox-md nil t)
 
 (use-package counsel
  :ensure t

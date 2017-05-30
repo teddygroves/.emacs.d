@@ -26,7 +26,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (stan-snippets evil htmlize zenburn-theme which-key use-package try ox-reveal org-bullets counsel color-theme avy auto-complete))))
+    (markdown-mode stan-snippets evil htmlize zenburn-theme which-key use-package try ox-reveal org-bullets counsel color-theme avy auto-complete))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
