@@ -29,11 +29,15 @@ Brings up some help
 
 * Org mode
 #+BEGIN_SRC emacs-lisp
-(use-package org-bullets
-  :ensure t
-  :config
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+;; org-bullets
+;; (use-package org-bullets
+;;  :ensure t
+;;  :config
+;;  (add-hook 'org-mode-hook (lambda () (org-bullets-mode nil))))
 (setq org-src-fontify-natively t)
+(setq org-indent_mode nil)
+;; markdown export
+(require 'ox-md nil t)
 #+END_SRC
 
 #+RESULTS:
@@ -138,9 +142,17 @@ Brings up some help
      :ensure t)
    #+END_SRC
 
+<<<<<<< HEAD
 * Latex 
 ** preview pane mode
    #+BEGIN_SRC emacs-lisp
    (use-package latex-preview-pane
      :ensure t)
    #+END_SRC
+* Markdown mode 
+   #+BEGIN_SRC emacs-lisp
+   (use-package markdown-mode
+     :ensure t)
+   #+END_SRC
+
+   #+RESULTS:
