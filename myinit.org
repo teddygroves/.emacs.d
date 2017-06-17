@@ -142,7 +142,6 @@ Brings up some help
      :ensure t)
    #+END_SRC
 
-<<<<<<< HEAD
 * Latex 
 ** preview pane mode
    #+BEGIN_SRC emacs-lisp
