@@ -88,3 +88,6 @@
 
 (use-package stan-snippets
   :ensure t)
+
+(use-package latex-preview-pane
+  :ensure t)
