@@ -7,6 +7,8 @@
 (toggle-scroll-bar -1)
 (global-linum-mode t)
 (fset 'yes-or-no-p 'y-or-n-p)
+;; full screen by default
+(set-frame-parameter nil 'fullscreen 'fullboth)
 #+END_SRC
 
 #+RESULTS:
@@ -75,6 +77,9 @@ Brings up some help
     (setq ivy-display-style 'fancy)
     (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
     ))
+
+  (use-package ivy-hydra
+   :ensure t)
   #+END_SRC
 
 * Avy
@@ -142,10 +147,20 @@ Brings up some help
      :ensure t)
    #+END_SRC
 
-* Markdown mode 
+* Markdown
+** markdown mode
    #+BEGIN_SRC emacs-lisp
    (use-package markdown-mode
-     :ensure t)
+    :ensure t
+    :commands (markdown-mode gfm-mode)
+    :mode (("README\\.md\\'" . gfm-mode)
+	    ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+    :init (setq markdown-command "multimarkdown"))
    #+END_SRC
-
+** markdown command
+   #+BEGIN_SRC emacs-lisp
+   (custom-set-variables
+    '(markdown-command "/usr/local/bin/pandoc"))
+   #+END_SRC
    #+RESULTS:
