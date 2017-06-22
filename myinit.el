@@ -98,6 +98,9 @@
 (use-package stan-snippets
   :ensure t)
 
+(use-package latex-preview-pane
+  :ensure t)
+
 (use-package markdown-mode
  :ensure t
  :commands (markdown-mode gfm-mode)
