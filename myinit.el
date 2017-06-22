@@ -111,3 +111,6 @@
 
 (custom-set-variables
  '(markdown-command "/usr/local/bin/pandoc"))
+
+(use-package magit
+ :ensure t)
