@@ -3,6 +3,8 @@
 (toggle-scroll-bar -1)
 (global-linum-mode t)
 (fset 'yes-or-no-p 'y-or-n-p)
+;; full screen by default
+(set-frame-parameter nil 'fullscreen 'fullboth)
 
 (use-package try
   :ensure t)
@@ -53,6 +55,9 @@
    (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
    ))
 
+ (use-package ivy-hydra
+  :ensure t)
+
 ;; (use-package avy
 ;; :ensure t
 ;; :bind ("M-s" . avy-goto-word-1)) ;; changed from char as per jcs
@@ -97,7 +102,15 @@
   :ensure t)
 
 (use-package markdown-mode
-  :ensure t)
+ :ensure t
+ :commands (markdown-mode gfm-mode)
+ :mode (("README\\.md\\'" . gfm-mode)
+	 ("\\.md\\'" . markdown-mode)
+      ("\\.markdown\\'" . markdown-mode))
+ :init (setq markdown-command "multimarkdown"))
+
+(custom-set-variables
+ '(markdown-command "/usr/local/bin/pandoc"))
 
 (use-package projectile
   :ensure t
@@ -130,3 +143,6 @@
   (dumb-jump-mode)
     :ensure
 )
+
+(use-package magit
+ :ensure t)
