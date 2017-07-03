@@ -2,6 +2,9 @@
 
 * Interface tweaks
 #+BEGIN_SRC emacs-lisp
+;; show column numbers
+(setq column-number-mode t)
+;; get rid of startup message
 (setq inhibit-startup-message t)
 (tool-bar-mode -1)
 (toggle-scroll-bar -1)
@@ -9,8 +12,6 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 ;; full screen by default
 (set-frame-parameter nil 'fullscreen 'fullboth)
-;; show column numbers
-(setq column-number-mode t)
 #+END_SRC
 
 #+RESULTS:
