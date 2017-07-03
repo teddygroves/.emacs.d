@@ -1,3 +1,6 @@
+;; show column numbers
+(setq column-number-mode t)
+;; get rid of startup message
 (setq inhibit-startup-message t)
 (tool-bar-mode -1)
 (toggle-scroll-bar -1)
@@ -113,4 +116,6 @@
  '(markdown-command "/usr/local/bin/pandoc"))
 
 (use-package magit
- :ensure t)
+ :ensure t
+ :bind (("C-x g" . magit-status)
+        ("C-x M-g" . magit-dispatch-popup)))
