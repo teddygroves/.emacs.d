@@ -217,3 +217,32 @@ Brings up some help
     :bind (("C-x g" . magit-status)
            ("C-x M-g" . magit-dispatch-popup)))
    #+END_SRC
+* Pdf-tools
+#+BEGIN_SRC emacs-lisp
+;;; Install epdfinfo via 'brew install pdf-tools' and then install the
+;;; pdf-tools elisp via the use-package below. To upgrade the epdfinfo
+;;; server, just do 'brew upgrade pdf-tools' prior to upgrading to newest
+;;; pdf-tools package using Emacs package system. If things get messed
+;;; up, just do 'brew uninstall pdf-tools', wipe out the elpa
+;;; pdf-tools package and reinstall both as at the start.
+(use-package pdf-tools
+  :ensure t
+  :config
+  (custom-set-variables
+    '(pdf-tools-handle-upgrades nil)) ; Use brew upgrade pdf-tools instead.
+  (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo"))
+(pdf-tools-install)
+
+#+END_SRC
+* ivy-bibtex
+#+BEGIN_SRC emacs-lisp
+(use-package ivy-bibtex
+  :ensure t
+  :bind (("M-i" . ivy-bibtex))
+  :config
+  (setq bibtex-completion-bibliography "/Users/teddy/Reading/bibliography.bib")
+  (setq bibtex-completion-pdf-field "File")
+  (setq bibtex-completion-library-path "/Users/teddy/Reading/pdf")
+  (setq bibtex-completion-notes-path "/Users/teddy/Writing/notes/reading_notes.org"))
+
+#+END_SRC
