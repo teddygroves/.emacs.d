@@ -12,6 +12,8 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 ;; full screen by default
 (set-frame-parameter nil 'fullscreen 'fullboth)
+;; get rid of annoying sounds
+(setq ring-bell-function 'ignore)
 #+END_SRC
 
 #+RESULTS:
