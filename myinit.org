@@ -1,5 +1,9 @@
 #+ STARTUP: overview
 
+* Autosaves to temporary directory
+#+BEGIN_SRC emacs-lisp
+(setq backup-directory-alist '(("." . "~/.emacs-saves")))
+#+END_SRC
 * Interface tweaks
 #+BEGIN_SRC emacs-lisp
 ;; show column numbers
@@ -19,6 +23,14 @@
 #+RESULTS:
 : y-or-n-p
 
+* Aggressive indent
+#+BEGIN_SRC emacs-lisp
+(use-package aggressive-indent
+  :ensure t
+  :init
+  (global-aggressive-indent-mode 1))
+
+#+END_SRC
 * Try
 #+BEGIN_SRC emacs-lisp
 (use-package try
@@ -35,20 +47,29 @@ Brings up some help
 #+END_SRC
 
 * Org mode
-#+BEGIN_SRC emacs-lisp
-;; org-bullets
-;; (use-package org-bullets
-;;  :ensure t
-;;  :config
-;;  (add-hook 'org-mode-hook (lambda () (org-bullets-mode nil))))
-(setq org-src-fontify-natively t)
-(setq org-indent_mode nil)
-;; markdown export
-(require 'ox-md nil t)
-#+END_SRC
+** export to export_<file_type>
+ #+BEGIN_SRC emacs-lisp
+ (defvar org-export-output-directory-prefix
+  "export_"
+  "prefix of directory used for org-mode export")
 
-#+RESULTS:
-: t
+ (defadvice org-export-output-file-name (before org-add-export-dir activate)
+   "Modifies org-export to place exported files in a different directory"
+   (when (not pub-dir)
+       (setq pub-dir (concat org-export-output-directory-prefix (substring extension 1)))
+       (when (not (file-directory-p pub-dir))
+	(make-directory pub-dir))))
+ #+END_SRC
+** interface
+ #+BEGIN_SRC emacs-lisp
+ (setq org-src-fontify-natively t)
+ (setq org-indent_mode nil)
+ (setq org-adapt-indentation nil)
+ #+END_SRC
+** markdown export
+#+BEGIN_SRC emacs-lisp
+ (require 'ox-md nil t)
+#+END_SRC
 
 * Swiper/ivy/counsel
 #+BEGIN_SRC emacs-lisp
@@ -130,6 +151,7 @@ Brings up some help
 #+END_SRC
 
 * Evil mode
+** install the package
 #+BEGIN_SRC emacs-lisp
 (use-package evil
   :ensure t
@@ -139,7 +161,15 @@ Brings up some help
 
 #+RESULTS:
 : t
-
+** key mappings
+#+BEGIN_SRC emacs-lisp
+(define-key evil-normal-state-map (kbd "C-k") (lambda ()
+                    (interactive)
+                    (evil-scroll-up nil)))
+(define-key evil-normal-state-map (kbd "C-j") (lambda ()
+                        (interactive)
+                        (evil-scroll-down nil)))
+#+END_SRC
 * Stan
 ** Stan mode
    #+BEGIN_SRC emacs-lisp
@@ -237,5 +267,47 @@ Brings up some help
   (setq bibtex-completion-pdf-field "File")
   (setq bibtex-completion-library-path "/Users/teddy/Reading/pdf")
   (setq bibtex-completion-notes-path "/Users/teddy/Writing/notes/reading_notes.org"))
+
+#+END_SRC
+* Python
+** flycheck
+#+BEGIN_SRC emacs-lisp
+(use-package flycheck
+  :ensure t
+  :init (global-flycheck-mode))
+#+END_SRC
+* Custom line numbers
+Disable line numbers for certain modes
+#+BEGIN_SRC emacs-lisp
+(require 'linum)
+
+(global-linum-mode)
+
+(defcustom linum-disabled-modes-list '(eshell-mode wl-summary-mode compilation-mode org-mode text-mode dired-mode doc-view-mode pdf-view-mode)
+  "* List of modes disabled when global linum mode is on"
+  :type '(repeat (sexp :tag "Major mode"))
+  :tag " Major modes where linum is disabled: "
+  :group 'linum
+  )
+(defcustom linum-disable-starred-buffers 't
+  "* Disable buffers that have stars in them like *Gnu Emacs*"
+  :type 'boolean
+  :group 'linum)
+
+(defun linum-on ()
+  "* When linum is running globally, disable line number in modes defined in `linum-disabled-modes-list'. Changed by linum-off. Also turns off numbering in starred modes like *scratch*"
+
+  (unless (or (minibufferp) (member major-mode linum-disabled-modes-list)
+              (and linum-disable-starred-buffers (string-match "*" (buffer-name)))
+              )
+    (linum-mode 1)))
+
+(provide 'setup-linum)
+
+#+END_SRC
+* ag
+#+BEGIN_SRC emacs-lisp
+(use-package ag
+  :ensure t)
 
 #+END_SRC

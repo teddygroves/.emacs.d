@@ -1,3 +1,5 @@
+(setq backup-directory-alist '(("." . "~/.emacs-saves")))
+
 ;; show column numbers
 (setq column-number-mode t)
 ;; get rid of startup message
@@ -8,6 +10,13 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 ;; full screen by default
 (set-frame-parameter nil 'fullscreen 'fullboth)
+;; get rid of annoying sounds
+(setq ring-bell-function 'ignore)
+
+(use-package aggressive-indent
+  :ensure t
+  :init
+  (global-aggressive-indent-mode 1))
 
 (use-package try
   :ensure t)
@@ -17,14 +26,21 @@
              :config
              (which-key-mode))
 
-;; org-bullets
-;; (use-package org-bullets
-;;  :ensure t
-;;  :config
-;;  (add-hook 'org-mode-hook (lambda () (org-bullets-mode nil))))
+(defvar org-export-output-directory-prefix
+ "export_"
+ "prefix of directory used for org-mode export")
+
+(defadvice org-export-output-file-name (before org-add-export-dir activate)
+  "Modifies org-export to place exported files in a different directory"
+  (when (not pub-dir)
+      (setq pub-dir (concat org-export-output-directory-prefix (substring extension 1)))
+      (when (not (file-directory-p pub-dir))
+       (make-directory pub-dir))))
+
 (setq org-src-fontify-natively t)
 (setq org-indent_mode nil)
-;; markdown export
+(setq org-adapt-indentation nil)
+
 (require 'ox-md nil t)
 
 (use-package counsel
@@ -95,6 +111,13 @@
   :config
   (evil-mode 1))
 
+(define-key evil-normal-state-map (kbd "C-k") (lambda ()
+                    (interactive)
+                    (evil-scroll-up nil)))
+(define-key evil-normal-state-map (kbd "C-j") (lambda ()
+                        (interactive)
+                        (evil-scroll-down nil)))
+
 (use-package stan-mode
   :ensure t)
 
@@ -116,15 +139,6 @@
  '(markdown-command "/usr/local/bin/pandoc"))
 
 (use-package projectile
-  :ensure t
-  :config
-  (projectile-global-mode)
-(setq projectile-completion-system 'ivy))
-
-(use-package counsel-projectile
-  :ensure t
-  :config
-  (counsel-projectile-on))(use-package projectile
   :ensure t
   :config
   (projectile-global-mode)
@@ -165,3 +179,44 @@
     '(pdf-tools-handle-upgrades nil)) ; Use brew upgrade pdf-tools instead.
   (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo"))
 (pdf-tools-install)
+
+(use-package ivy-bibtex
+  :ensure t
+  :bind (("M-i" . ivy-bibtex))
+  :config
+  (setq bibtex-completion-bibliography "/Users/teddy/Reading/bibliography.bib")
+  (setq bibtex-completion-pdf-field "File")
+  (setq bibtex-completion-library-path "/Users/teddy/Reading/pdf")
+  (setq bibtex-completion-notes-path "/Users/teddy/Writing/notes/reading_notes.org"))
+
+(use-package flycheck
+  :ensure t
+  :init (global-flycheck-mode))
+
+(require 'linum)
+
+(global-linum-mode)
+
+(defcustom linum-disabled-modes-list '(eshell-mode wl-summary-mode compilation-mode org-mode text-mode dired-mode doc-view-mode pdf-view-mode)
+  "* List of modes disabled when global linum mode is on"
+  :type '(repeat (sexp :tag "Major mode"))
+  :tag " Major modes where linum is disabled: "
+  :group 'linum
+  )
+(defcustom linum-disable-starred-buffers 't
+  "* Disable buffers that have stars in them like *Gnu Emacs*"
+  :type 'boolean
+  :group 'linum)
+
+(defun linum-on ()
+  "* When linum is running globally, disable line number in modes defined in `linum-disabled-modes-list'. Changed by linum-off. Also turns off numbering in starred modes like *scratch*"
+
+  (unless (or (minibufferp) (member major-mode linum-disabled-modes-list)
+              (and linum-disable-starred-buffers (string-match "*" (buffer-name)))
+              )
+    (linum-mode 1)))
+
+(provide 'setup-linum)
+
+(use-package ag
+  :ensure t)
