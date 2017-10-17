@@ -1,80 +1,80 @@
-((("tackler_positions" .
-   [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("get_tackler_responsibility" .
-   [0 0 0 0 0 0 0 0 0 1 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("get_restrictedness" .
-   [0 0 0 0 0 0 0 0 1 2 0 0 0 0 0 0 0 0])
-  ("restrictedness_cols" .
-   [0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0])
-  ("is_version_5_or_6" .
-   [0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0])
-  ("version" .
-   [1 0 0 0 0 0 0])
-  ("working_df" .
-   [4 0 0 0 1 0 0 0 0 0])
-  ("df" .
-   [8 0])
-  ("sampler_parameters" .
-   [0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0])
-  ("get_sampler_parameters_dataframe" .
-   [0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("loc" .
-   [4 0 0])
-  ("summarise_fit" .
-   [0 0 0 0 1 0 0 0 0 0 0 0 0])
-  ("stan_utils" .
-   [2 0 0 0 0 0 0 0 0 0])
-  ("summary" .
-   [5 0 0 0 0 0 0])
-  ("n_jobs" .
-   [1 0 1 0 0 0])
-  ("chains" .
-   [2 0 0 0 0 0])
-  ("MoveTackleModel" .
-   [0 0 0 0 1 2 2 0 0 0 0 0 0 0 0])
-  ("iterations" .
-   [1 0 0 0 0 1 0 0 0 0])
-  ("output" .
-   [1 0 0 0 0 0])
-  ("staticmethod" .
-   [0 0 0 0 0 0 0 1 1 0 0 0])
-  ("IrtControlModel" .
-   [0 0 1 1 0 0 1 0 0 0 0 0 0 0 0])
-  ("fit" .
-   [6 0 0])
-  ("combiner_info" .
-   [1 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("model_parameters" .
-   [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("columns" .
-   [2 0 0 0 0 0 0])
-  ("rename" .
-   [2 0 0 0 0 0])
-  ("prepare_data" .
-   [2 0 0 0 0 0 0 0 0 0 0 0])
-  ("UnopposedIrtModel" .
-   [0 0 0 0 2 1 0 0 0 0 0 0 0 0 0 0 0])
-  ("stan_input" .
-   [1 0 0 0 0 0 0 0 0 0])
-  ("tags" .
-   [1 0 0 0])
-  ("players" .
-   [1 0 0 0 0 0 0])
-  ("actions" .
-   [9 0 0 0 0 0 0])
-  ("tag_columns" .
-   [2 0 0 0 0 0 1 1 0 0 0])
-  ("data" .
-   [4 0 0 0])
-  ("renaming_dict" .
-   [5 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("unopposed_irt" .
-   [0 0 0 0 0 0 1 0 0 0 0 0 0])
-  ("markdown-mode" .
-   [1 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("log" .
-   [1 0 0])
+((("fit_summary" .
+   [0 0 0 1 0 0 0 0 0 0 0])
   ("Fetching" .
    [0 0 0 0 0 2 0 0])
-  ("fit_summary" .
-   [0 0 0 1 0 0 0 0 0 0 0])))
+  ("log" .
+   [1 0 0])
+  ("markdown-mode" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("unopposed_irt" .
+   [0 0 0 0 0 0 1 0 0 0 0 0 0])
+  ("renaming_dict" .
+   [5 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("data" .
+   [4 0 0 0])
+  ("tag_columns" .
+   [2 0 0 0 0 0 1 1 0 0 0])
+  ("actions" .
+   [9 0 0 0 0 0 0])
+  ("players" .
+   [1 0 0 0 0 0 0])
+  ("tags" .
+   [1 0 0 0])
+  ("stan_input" .
+   [1 0 0 0 0 0 0 0 0 0])
+  ("UnopposedIrtModel" .
+   [0 0 0 0 2 1 0 0 0 0 0 0 0 0 0 0 0])
+  ("prepare_data" .
+   [2 0 0 0 0 0 0 0 0 0 0 0])
+  ("rename" .
+   [2 0 0 0 0 0])
+  ("columns" .
+   [2 0 0 0 0 0 0])
+  ("model_parameters" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("combiner_info" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("fit" .
+   [6 0 0])
+  ("IrtControlModel" .
+   [0 0 1 1 0 0 1 0 0 0 0 0 0 0 0])
+  ("staticmethod" .
+   [0 0 0 0 0 0 0 1 1 0 0 0])
+  ("output" .
+   [1 0 0 0 0 0])
+  ("iterations" .
+   [1 0 0 0 0 1 0 0 0 0])
+  ("MoveTackleModel" .
+   [0 0 0 0 1 2 2 0 0 0 0 0 0 0 0])
+  ("chains" .
+   [2 0 0 0 0 0])
+  ("n_jobs" .
+   [1 0 1 0 0 0])
+  ("summary" .
+   [5 0 0 0 0 0 0])
+  ("stan_utils" .
+   [2 0 0 0 0 0 0 0 0 0])
+  ("summarise_fit" .
+   [0 0 0 0 1 0 0 0 0 0 0 0 0])
+  ("loc" .
+   [4 0 0])
+  ("get_sampler_parameters_dataframe" .
+   [0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("sampler_parameters" .
+   [0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0])
+  ("df" .
+   [8 0])
+  ("working_df" .
+   [4 0 0 0 1 0 0 0 0 0])
+  ("version" .
+   [1 0 0 0 0 0 0])
+  ("is_version_5_or_6" .
+   [0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0])
+  ("restrictedness_cols" .
+   [0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0])
+  ("get_restrictedness" .
+   [0 0 0 0 0 0 0 0 1 2 0 0 0 0 0 0 0 0])
+  ("get_tackler_responsibility" .
+   [0 0 0 0 0 0 0 0 0 1 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("tackler_positions" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])))

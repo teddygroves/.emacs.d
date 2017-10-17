@@ -220,3 +220,8 @@
 
 (use-package ag
   :ensure t)
+
+(use-package scala-mode
+  :ensure t
+  :interpreter
+  ("scala" . scala-mode))
