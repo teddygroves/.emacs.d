@@ -354,6 +354,7 @@ Disable line numbers for certain modes
 * Emacs Ipython Notebook
 #+BEGIN_SRC emacs-lisp
 (use-package ein
-  :ensure t)
+  :ensure t
+  :commands (ein:notebooklist-open))
 
 #+END_SRC
