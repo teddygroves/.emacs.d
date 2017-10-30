@@ -335,6 +335,7 @@ Disable line numbers for certain modes
     (evil-define-key 'normal neotree-mode-map (kbd "RET") 'neotree-enter)
     (setq projectile-switch-project-action 'neotree-projectile-action)
     (setq neo-smart-open t)
+    (setq neo-window-fixed-size nil)
     (defun neotree-project-dir ()
 	"Open NeoTree using the git root."
 	(interactive)
@@ -349,4 +350,10 @@ Disable line numbers for certain modes
 	    (message "Could not find git project root."))))
     (global-set-key [f8] 'neotree-project-dir)
 )
+#+END_SRC
+* Emacs Ipython Notebook
+#+BEGIN_SRC emacs-lisp
+(use-package ein
+  :ensure t)
+
 #+END_SRC
