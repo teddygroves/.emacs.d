@@ -290,7 +290,9 @@ Brings up some help
         (add-hook 'elpy-mode-hook 'flycheck-mode))
       (elpy-enable)
       ;; jedi is great
-      (setq elpy-rpc-backend "jedi")))
+      (setq elpy-rpc-backend "jedi"))
+      (setq elpy-rpc-python-command "python3")
+)
 #+END_SRC
 ** flycheck
 #+BEGIN_SRC emacs-lisp
