@@ -1,3 +1,5 @@
+(server-start)
+
 (setq backup-directory-alist '(("." . "~/.emacs-saves")))
 
 ;; show column numbers
@@ -12,6 +14,8 @@
 (set-frame-parameter nil 'fullscreen 'fullboth)
 ;; get rid of annoying sounds
 (setq ring-bell-function 'ignore)
+;; stop new frames popping up
+(setq ns-pop-up-frames nil)
 
 (use-package aggressive-indent
   :ensure t
@@ -254,3 +258,7 @@
 	    (message "Could not find git project root."))))
     (global-set-key [f8] 'neotree-project-dir)
 )
+
+(use-package ein
+  :ensure t
+  :commands (ein:notebooklist-open))

@@ -1,5 +1,9 @@
 #+ STARTUP: overview
 
+* Start emacs server on startup
+#+BEGIN_SRC emacs-lisp
+(server-start)
+#+END_SRC
 * Autosaves to temporary directory
 #+BEGIN_SRC emacs-lisp
 (setq backup-directory-alist '(("." . "~/.emacs-saves")))
@@ -18,6 +22,8 @@
 (set-frame-parameter nil 'fullscreen 'fullboth)
 ;; get rid of annoying sounds
 (setq ring-bell-function 'ignore)
+;; stop new frames popping up
+(setq ns-pop-up-frames nil)
 #+END_SRC
 
 #+RESULTS:
@@ -270,6 +276,22 @@ Brings up some help
 
 #+END_SRC
 * Python
+** elpy
+#+BEGIN_SRC emacs-lisp
+(use-package elpy
+  :ensure t
+  :config
+    (progn
+      ;; Use Flycheck instead of Flymake
+      (when (require 'flycheck nil t)
+        (remove-hook 'elpy-modules 'elpy-module-flymake)
+        (remove-hook 'elpy-modules 'elpy-module-yasnippet)
+        (remove-hook 'elpy-mode-hook 'elpy-module-highlight-indentation)
+        (add-hook 'elpy-mode-hook 'flycheck-mode))
+      (elpy-enable)
+      ;; jedi is great
+      (setq elpy-rpc-backend "jedi")))
+#+END_SRC
 ** flycheck
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
