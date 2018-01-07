@@ -1,8 +1,16 @@
+
 #+ STARTUP: overview
 
-* Start emacs server on startup
+* exec path from shell
+See https://github.com/purcell/exec-path-from-shell 
+
+I installed this so that elpy would know about my PATH environment
+variable
 #+BEGIN_SRC emacs-lisp
-(server-start)
+(use-package exec-path-from-shell
+  :ensure t)
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
 #+END_SRC
 * Autosaves to temporary directory
 #+BEGIN_SRC emacs-lisp
@@ -53,6 +61,38 @@ Brings up some help
 #+END_SRC
 
 * Org mode
+** gtd stuff
+*** todo headings
+#+BEGIN_SRC emacs-lisp
+(setq org-todo-keywords '((sequence "TODO(t)" "BACKLOG(b)"
+                                    "READY(r)" "IN PROGRESS(p)" "|" "DONE(d)")))
+#+END_SRC
+*** org capture keybinding
+#+BEGIN_SRC emacs-lisp
+(define-key global-map "\C-cc" 'org-capture)
+#+END_SRC
+*** agenda
+#+BEGIN_SRC emacs-lisp
+(setq org-agenda-files '("~/Dropbox/Writing/notes/inbox.org"
+                         "~/Dropbox/Writing/notes/gtd.org"
+                         "~/Dropbox/Writing/notes/tickler.org"))
+#+END_SRC
+*** capture templates
+#+BEGIN_SRC emacs-lisp
+(setq org-capture-templates '(("t" "Todo [inbox]" entry
+                               (file+headline "~/Dropbox/Writing/notes/inbox.org" "Tasks")
+                               "* TODO %i%?")
+                              ("T" "Tickler" entry
+                               (file+headline "~/Dropbox/Writing/notes/inbox.org" "Tickler")
+                               "* %i%? \n %U")))
+#+END_SRC
+*** Refile targets
+#+BEGIN_SRC emacs-lisp
+(setq org-refile-targets '(("~/Dropbox/Writing/notes/gtd.org" :maxlevel . 3)
+                           ("~/Dropbox/Writing/notes/tickler.org" :maxlevel . 2)
+			   ("~/Dropbox/Writing/notes/topics.org" :maxlevel . 2)))
+
+#+END_SRC
 ** export to export_<file_type>
  #+BEGIN_SRC emacs-lisp
  (defvar org-export-output-directory-prefix
@@ -259,7 +299,8 @@ Brings up some help
   :config
   (custom-set-variables
     '(pdf-tools-handle-upgrades nil)) ; Use brew upgrade pdf-tools instead.
-  (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo"))
+  (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo")
+  (setq auto-revert-interval 0.5))
 (pdf-tools-install)
 
 #+END_SRC
@@ -286,11 +327,12 @@ Brings up some help
       (when (require 'flycheck nil t)
         (remove-hook 'elpy-modules 'elpy-module-flymake)
         (remove-hook 'elpy-modules 'elpy-module-yasnippet)
-        (remove-hook 'elpy-mode-hook 'elpy-module-highlight-indentation)
+;;        (remove-hook 'elpy-mode-hook 'elpy-module-highlight-indentation)
         (add-hook 'elpy-mode-hook 'flycheck-mode))
       (elpy-enable)
       ;; jedi is great
       (setq elpy-rpc-backend "jedi"))
+      ;; use python 3
       (setq elpy-rpc-python-command "python3")
 )
 #+END_SRC

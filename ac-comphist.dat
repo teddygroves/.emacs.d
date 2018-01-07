@@ -1,132 +1,172 @@
-((("check_for_teamgames_to_drop" .
-   [0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("to_check" .
-   [3 0 0 0 0 0 0 0])
-  ("latest_teamgames_to_drop" .
-   [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("drop" .
-   [1 0 0 0])
-  ("working_tg" .
-   [0 0 0 0 1 1 0 1 0 0])
-  ("tg" .
-   [1 0])
-  ("to_drop" .
-   [1 0 0 2 0 0 0])
-  ("team_indices" .
-   [1 0 0 0 0 0 0 0 0 0 0 0])
-  ("do_a_check" .
-   [0 0 0 0 1 1 0 0 0 0])
-  ("enough_games" .
-   [1 0 0 0 0 0 0 0 0 0 0 0])
-  ("fit_summary" .
-   [0 0 0 1 0 0 0 0 0 0 0])
-  ("Fetching" .
-   [0 0 0 0 0 2 0 0])
-  ("log" .
-   [1 0 0])
-  ("markdown-mode" .
-   [1 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("unopposed_irt" .
-   [0 0 0 0 0 0 1 0 0 0 0 0 0])
-  ("renaming_dict" .
-   [5 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("data" .
-   [5 0 0 0])
-  ("tag_columns" .
-   [2 0 0 0 0 0 1 1 0 0 0])
-  ("actions" .
-   [9 0 0 0 0 0 0])
-  ("players" .
-   [1 0 0 0 0 0 0])
-  ("tags" .
-   [1 0 0 0])
-  ("stan_input" .
-   [1 0 0 0 0 0 0 0 0 0])
-  ("UnopposedIrtModel" .
-   [0 0 0 0 2 1 0 0 0 0 0 0 0 0 0 0 0])
-  ("prepare_data" .
-   [2 0 0 0 0 0 0 0 0 0 0 0])
-  ("rename" .
-   [2 0 0 0 0 0])
-  ("columns" .
-   [2 0 0 0 0 0 0])
-  ("model_parameters" .
-   [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("combiner_info" .
-   [1 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("fit" .
-   [6 0 0])
-  ("IrtControlModel" .
-   [0 0 1 1 0 0 1 0 0 0 0 0 0 0 0])
-  ("staticmethod" .
-   [0 0 0 0 0 0 0 1 1 0 0 0])
-  ("output" .
+((("pystan" .
    [1 0 0 0 0 0])
-  ("iterations" .
-   [1 0 0 0 0 1 0 0 0 0])
-  ("MoveTackleModel" .
-   [0 0 0 0 1 2 2 0 0 0 0 0 0 0 0])
-  ("chains" .
-   [2 0 0 0 0 0])
-  ("n_jobs" .
-   [1 0 1 0 0 0])
-  ("summary" .
-   [5 0 0 0 0 0 0])
-  ("stan_utils" .
-   [2 0 0 0 0 0 0 0 0 0])
-  ("summarise_fit" .
-   [0 0 0 0 1 0 0 0 0 0 0 0 0])
-  ("loc" .
-   [4 0 0])
-  ("get_sampler_parameters_dataframe" .
-   [0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("sampler_parameters" .
-   [0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0])
-  ("df" .
-   [8 0])
-  ("working_df" .
-   [4 0 0 0 1 0 0 0 0 0])
-  ("version" .
+  ("numpy" .
+   [1 0 0 0 0])
+  ("primary" .
    [1 0 0 0 0 0 0])
-  ("is_version_5_or_6" .
-   [0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0])
-  ("restrictedness_cols" .
-   [0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0])
-  ("get_restrictedness" .
-   [0 0 0 0 0 0 0 0 1 2 0 0 0 0 0 0 0 0])
-  ("get_tackler_responsibility" .
-   [0 0 0 0 0 0 0 0 0 1 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("tackler_positions" .
-   [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("footballradar" .
-   [1 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("gamestop" .
-   [4 0 0 0 0 0 0 0])
-  ("half_info_raw" .
-   [2 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("gamestops_raw" .
-   [2 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("half_info" .
-   [6 0 0 0 0 1 0 0 0])
-  ("prepare_half_info" .
-   [0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0])
-  ("plot" .
+  ("heights" .
+   [1 0 0 0 0 0 0])
+  ("join" .
+   [2 0 0 0])
+  ("player_ids" .
+   [1 0 0 0 0 0 0 0 0 0])
+  ("index" .
+   [1 0 0 0 0])
+  ("DataFrame" .
+   [1 0 0 0 0 0 0 0 0])
+  ("duel" .
    [1 0 0 0])
-  ("plt" .
-   [3 0 0])
-  ("pd" .
+  ("unique" .
+   [1 0 0 0 0 0])
+  ("np" .
    [2 0])
-  ("predictions" .
+  ("player" .
+   [3 0 0 0 0 0])
+  ("DuelModel" .
+   [0 0 0 0 1 0 0 0 0])
+  ("scores" .
+   [1 0 0 0 0 0])
+  ("POST_V8_DUEL" .
+   [0 0 1 0 0 0 0 0 0 0 0 0])
+  ("SCORES" .
+   [1 0 0 0 0 0])
+  ("score" .
+   [2 0 0 0 0])
+  ("show" .
+   [1 0 0 0])
+  ("subplots" .
+   [1 0 0 0 0 0 0 0])
+  ("n_bins" .
+   [1 0 0 0 0 0])
+  ("bins" .
+   [1 0 0 0])
+  ("bias_column" .
    [2 0 0 0 0 0 0 0 0 0 0])
   ("threshold" .
    [2 0 0 0 0 0 0 0 0])
-  ("bias_column" .
+  ("predictions" .
    [2 0 0 0 0 0 0 0 0 0 0])
-  ("bins" .
+  ("pd" .
+   [3 0])
+  ("plt" .
+   [3 0 0])
+  ("plot" .
    [1 0 0 0])
-  ("n_bins" .
+  ("prepare_half_info" .
+   [0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0])
+  ("half_info" .
+   [6 0 0 0 0 1 0 0 0])
+  ("gamestops_raw" .
+   [2 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("half_info_raw" .
+   [2 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("gamestop" .
+   [4 0 0 0 0 0 0 0])
+  ("footballradar" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("tackler_positions" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("get_tackler_responsibility" .
+   [0 0 0 0 0 0 0 0 0 1 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("get_restrictedness" .
+   [0 0 0 0 0 0 0 0 1 2 0 0 0 0 0 0 0 0])
+  ("restrictedness_cols" .
+   [0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0])
+  ("is_version_5_or_6" .
+   [0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0])
+  ("version" .
+   [1 0 0 0 0 0 0])
+  ("working_df" .
+   [4 0 0 0 1 0 0 0 0 0])
+  ("df" .
+   [8 0])
+  ("sampler_parameters" .
+   [0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0])
+  ("get_sampler_parameters_dataframe" .
+   [0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("loc" .
+   [4 0 0])
+  ("summarise_fit" .
+   [0 0 0 0 1 0 0 0 0 0 0 0 0])
+  ("stan_utils" .
+   [2 0 0 0 0 0 0 0 0 0])
+  ("summary" .
+   [5 0 0 0 0 0 0])
+  ("n_jobs" .
+   [1 0 1 0 0 0])
+  ("chains" .
+   [2 0 0 0 0 0])
+  ("MoveTackleModel" .
+   [0 0 0 0 1 2 2 0 0 0 0 0 0 0 0])
+  ("iterations" .
+   [1 0 0 0 0 1 0 0 0 0])
+  ("output" .
    [1 0 0 0 0 0])
-  ("subplots" .
-   [1 0 0 0 0 0 0 0])
-  ("show" .
-   [1 0 0 0])))
+  ("staticmethod" .
+   [0 0 0 0 0 0 0 1 1 0 0 0])
+  ("IrtControlModel" .
+   [0 0 1 1 0 0 1 0 0 0 0 0 0 0 0])
+  ("fit" .
+   [6 0 0])
+  ("combiner_info" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("model_parameters" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("columns" .
+   [2 0 0 0 0 0 0])
+  ("rename" .
+   [2 0 0 0 0 0])
+  ("prepare_data" .
+   [2 0 0 0 0 0 0 0 0 0 0 0])
+  ("UnopposedIrtModel" .
+   [0 0 0 0 2 1 0 0 0 0 0 0 0 0 0 0 0])
+  ("stan_input" .
+   [1 0 0 0 0 0 0 0 0 0])
+  ("tags" .
+   [1 0 0 0])
+  ("players" .
+   [4 0 0 0 0 0 0])
+  ("actions" .
+   [9 0 0 0 0 0 0])
+  ("tag_columns" .
+   [2 0 0 0 0 0 1 1 0 0 0])
+  ("data" .
+   [5 0 0 0])
+  ("renaming_dict" .
+   [5 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("unopposed_irt" .
+   [0 0 0 0 0 0 1 0 0 0 0 0 0])
+  ("markdown-mode" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("log" .
+   [1 0 0])
+  ("Fetching" .
+   [0 0 0 0 0 2 0 0])
+  ("fit_summary" .
+   [0 0 0 1 0 0 0 0 0 0 0])
+  ("enough_games" .
+   [1 0 0 0 0 0 0 0 0 0 0 0])
+  ("do_a_check" .
+   [0 0 0 0 1 1 0 0 0 0])
+  ("team_indices" .
+   [1 0 0 0 0 0 0 0 0 0 0 0])
+  ("to_drop" .
+   [1 0 0 2 0 0 0])
+  ("tg" .
+   [1 0])
+  ("working_tg" .
+   [0 0 0 0 1 1 0 1 0 0])
+  ("drop" .
+   [1 0 0 0])
+  ("latest_teamgames_to_drop" .
+   [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("to_check" .
+   [3 0 0 0 0 0 0 0])
+  ("check_for_teamgames_to_drop" .
+   [0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("dump" .
+   [1 0 0 0])
+  ("read" .
+   [1 0 0 0])
+  ("duels" .
+   [1 0 0 0 0])))

@@ -1,4 +1,7 @@
-(server-start)
+(use-package exec-path-from-shell
+  :ensure t)
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
 
 (setq backup-directory-alist '(("." . "~/.emacs-saves")))
 
@@ -29,6 +32,26 @@
              :ensure t
              :config
              (which-key-mode))
+
+(setq org-todo-keywords '((sequence "TODO(t)" "BACKLOG(b)"
+                                    "READY(r)" "IN PROGRESS(p)" "|" "DONE(d)")))
+
+(define-key global-map "\C-cc" 'org-capture)
+
+(setq org-agenda-files '("~/Dropbox/Writing/notes/inbox.org"
+                         "~/Dropbox/Writing/notes/gtd.org"
+                         "~/Dropbox/Writing/notes/tickler.org"))
+
+(setq org-capture-templates '(("t" "Todo [inbox]" entry
+                               (file+headline "~/Dropbox/Writing/notes/inbox.org" "Tasks")
+                               "* TODO %i%?")
+                              ("T" "Tickler" entry
+                               (file+headline "~/Dropbox/Writing/notes/inbox.org" "Tickler")
+                               "* %i%? \n %U")))
+
+(setq org-refile-targets '(("~/Dropbox/Writing/notes/gtd.org" :maxlevel . 3)
+                           ("~/Dropbox/Writing/notes/tickler.org" :maxlevel . 2)
+			   ("~/Dropbox/Writing/notes/topics.org" :maxlevel . 2)))
 
 (defvar org-export-output-directory-prefix
  "export_"
@@ -181,7 +204,8 @@
   :config
   (custom-set-variables
     '(pdf-tools-handle-upgrades nil)) ; Use brew upgrade pdf-tools instead.
-  (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo"))
+  (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo")
+  (setq auto-revert-interval 0.5))
 (pdf-tools-install)
 
 (use-package ivy-bibtex
@@ -192,6 +216,23 @@
   (setq bibtex-completion-pdf-field "File")
   (setq bibtex-completion-library-path "/Users/teddy/Reading/pdf")
   (setq bibtex-completion-notes-path "/Users/teddy/Writing/notes/reading_notes.org"))
+
+(use-package elpy
+  :ensure t
+  :config
+    (progn
+      ;; Use Flycheck instead of Flymake
+      (when (require 'flycheck nil t)
+        (remove-hook 'elpy-modules 'elpy-module-flymake)
+        (remove-hook 'elpy-modules 'elpy-module-yasnippet)
+;;        (remove-hook 'elpy-mode-hook 'elpy-module-highlight-indentation)
+        (add-hook 'elpy-mode-hook 'flycheck-mode))
+      (elpy-enable)
+      ;; jedi is great
+      (setq elpy-rpc-backend "jedi"))
+      ;; use python 3
+      (setq elpy-rpc-python-command "python3")
+)
 
 (use-package flycheck
   :ensure t
