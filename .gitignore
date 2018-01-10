@@ -9,3 +9,5 @@ projectile-bookmarks.eld
 auto-save-list/*
 request/*
 url/*
+/bookmarks
+/tramp
