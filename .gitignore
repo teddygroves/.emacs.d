@@ -11,3 +11,6 @@ request/*
 url/*
 /bookmarks
 /tramp
+/ido.last
+/projectile-bookmarks.eld
+/abbrev_defs
