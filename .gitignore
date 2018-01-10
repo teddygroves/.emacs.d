@@ -4,5 +4,8 @@ backups/
 elpa/*
 recentf
 myinit.el
-ac-comphist.dat
 projectile-bookmarks.eld
+*.dat
+auto-save-list/*
+request/*
+url/*
