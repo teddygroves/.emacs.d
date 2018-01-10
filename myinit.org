@@ -1,4 +1,4 @@
-#+ STARTUP: overview
+#+STARTUP: overview
 
 * Exec path from shell
 See https://github.com/purcell/exec-path-from-shell 
