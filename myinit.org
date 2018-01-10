@@ -1,7 +1,6 @@
-
 #+ STARTUP: overview
 
-* exec path from shell
+* Exec path from shell
 See https://github.com/purcell/exec-path-from-shell 
 
 I installed this so that elpy would know about my PATH environment
@@ -61,23 +60,23 @@ Brings up some help
 #+END_SRC
 
 * Org mode
-** gtd stuff
-*** todo headings
+** Gtd stuff
+*** Todo headings
 #+BEGIN_SRC emacs-lisp
 (setq org-todo-keywords '((sequence "TODO(t)" "BACKLOG(b)"
                                     "READY(r)" "IN PROGRESS(p)" "|" "DONE(d)")))
 #+END_SRC
-*** org capture keybinding
+*** Org capture keybinding
 #+BEGIN_SRC emacs-lisp
 (define-key global-map "\C-cc" 'org-capture)
 #+END_SRC
-*** agenda
+*** Agenda
 #+BEGIN_SRC emacs-lisp
 (setq org-agenda-files '("~/Dropbox/Writing/notes/inbox.org"
                          "~/Dropbox/Writing/notes/gtd.org"
                          "~/Dropbox/Writing/notes/tickler.org"))
 #+END_SRC
-*** capture templates
+*** Capture templates
 #+BEGIN_SRC emacs-lisp
 (setq org-capture-templates '(("t" "Todo [inbox]" entry
                                (file+headline "~/Dropbox/Writing/notes/inbox.org" "Tasks")
@@ -93,7 +92,7 @@ Brings up some help
 			   ("~/Dropbox/Writing/notes/topics.org" :maxlevel . 2)))
 
 #+END_SRC
-** export to export_<file_type>
+** Export to export_<file_type>
  #+BEGIN_SRC emacs-lisp
  (defvar org-export-output-directory-prefix
   "export_"
@@ -106,13 +105,13 @@ Brings up some help
        (when (not (file-directory-p pub-dir))
 	(make-directory pub-dir))))
  #+END_SRC
-** interface
+** Interface
  #+BEGIN_SRC emacs-lisp
  (setq org-src-fontify-natively t)
  (setq org-indent_mode nil)
  (setq org-adapt-indentation nil)
  #+END_SRC
-** markdown export
+** Markdown export
 #+BEGIN_SRC emacs-lisp
  (require 'ox-md nil t)
 #+END_SRC
@@ -197,7 +196,7 @@ Brings up some help
 #+END_SRC
 
 * Evil mode
-** install the package
+** Install the package
 #+BEGIN_SRC emacs-lisp
 (use-package evil
   :ensure t
@@ -207,7 +206,7 @@ Brings up some help
 
 #+RESULTS:
 : t
-** key mappings
+** Key mappings
 #+BEGIN_SRC emacs-lisp
 (define-key evil-normal-state-map (kbd "C-k") (lambda ()
                     (interactive)
@@ -229,13 +228,13 @@ Brings up some help
    #+END_SRC
 
 * Latex 
-** preview pane mode
+** Preview pane mode
    #+BEGIN_SRC emacs-lisp
    (use-package latex-preview-pane
      :ensure t)
    #+END_SRC
 * Markdown
-** markdown mode
+** Markdown mode
    #+BEGIN_SRC emacs-lisp
    (use-package markdown-mode
     :ensure t
@@ -245,7 +244,7 @@ Brings up some help
          ("\\.markdown\\'" . markdown-mode))
     :init (setq markdown-command "multimarkdown"))
    #+END_SRC
-** markdown command
+** Markdown command
    #+BEGIN_SRC emacs-lisp
    (custom-set-variables
     '(markdown-command "/usr/local/bin/pandoc"))
@@ -304,7 +303,7 @@ Brings up some help
 (pdf-tools-install)
 
 #+END_SRC
-* ivy-bibtex
+* Ivy-bibtex
 #+BEGIN_SRC emacs-lisp
 (use-package ivy-bibtex
   :ensure t
@@ -317,7 +316,7 @@ Brings up some help
 
 #+END_SRC
 * Python
-** elpy
+** Elpy
 #+BEGIN_SRC emacs-lisp
 (use-package elpy
   :ensure t
@@ -336,7 +335,7 @@ Brings up some help
       (setq elpy-rpc-python-command "python3")
 )
 #+END_SRC
-** flycheck
+** Flycheck
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
   :ensure t
@@ -371,7 +370,7 @@ Disable line numbers for certain modes
 (provide 'setup-linum)
 
 #+END_SRC
-* ag
+* Ag
 #+BEGIN_SRC emacs-lisp
 (use-package ag
   :ensure t)
