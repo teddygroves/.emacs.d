@@ -1,0 +1,7 @@
+# key: py
+# name: python-block
+# --
+
+#+BEGIN_SRC ipython ${1::session} :results ${2:raw drawer}
+$0
+#+END_SRC

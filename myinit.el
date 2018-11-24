@@ -3,6 +3,8 @@
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
+(setq-default fill-column 80)
+
 (setq backup-directory-alist '(("." . "~/.emacs-saves")))
 
 ;; show column numbers
@@ -32,6 +34,17 @@
              :ensure t
              :config
              (which-key-mode))
+
+(use-package ob-ipython
+ :ensure t)
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)
+   (ipython . t)))
+;don't prompt me to confirm everytime I want to evaluate a block
+(setq org-confirm-babel-evaluate nil)
+;; from https://emacs.stackexchange.com/questions/30520/org-mode-c-c-c-c-to-display-inline-image
+(add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
 (setq org-todo-keywords '((sequence "TODO(t)" "BACKLOG(b)"
                                     "READY(r)" "IN PROGRESS(p)" "|" "DONE(d)")))
@@ -70,6 +83,17 @@
 
 (require 'ox-md nil t)
 
+(defun my/org-md-paragraph-unfill (&rest args)
+  "Unfill CONTENTS, the `cadr' in ARGS."
+  (let* ((actual-args (car args))
+         (org-el (nth 0 actual-args))
+         (contents (nth 1 actual-args))
+         (info (nth 2 actual-args)))
+    ;; Unfill contents
+    (setq contents (concat (mapconcat 'identity (split-string contents) " ") "\n"))
+    (list org-el contents info)))
+    (advice-add 'org-md-paragraph :filter-args #'my/org-md-paragraph-unfill)
+
 (use-package counsel
  :ensure t
  :bind
@@ -89,7 +113,6 @@
 (use-package swiper
  :ensure t
  :bind (("C-s" . swiper)
-	("C-r" . swiper)
 	("C-c C-r" . ivy-resume)
 	("M-x" . counsel-M-x)
 	("C-x C-f" . counsel-find-file))
@@ -145,6 +168,8 @@
                         (interactive)
                         (evil-scroll-down nil)))
 
+(evil-set-initial-state 'term-mode 'emacs)
+
 (use-package stan-mode
   :ensure t)
 
@@ -153,6 +178,8 @@
 
 (use-package latex-preview-pane
   :ensure t)
+
+(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
 
 (use-package markdown-mode
  :ensure t
@@ -217,6 +244,10 @@
   (setq bibtex-completion-library-path "/Users/teddy/Reading/pdf")
   (setq bibtex-completion-notes-path "/Users/teddy/Writing/notes/reading_notes.org"))
 
+(use-package flycheck
+  :ensure t
+  :init (global-flycheck-mode))
+
 (use-package elpy
   :ensure t
   :config
@@ -228,15 +259,13 @@
 ;;        (remove-hook 'elpy-mode-hook 'elpy-module-highlight-indentation)
         (add-hook 'elpy-mode-hook 'flycheck-mode))
       (elpy-enable)
-      ;; jedi is great
       (setq elpy-rpc-backend "jedi"))
       ;; use python 3
-      (setq elpy-rpc-python-command "python3")
-)
-
-(use-package flycheck
-  :ensure t
-  :init (global-flycheck-mode))
+      ;;(setq elpy-rpc-python-command "python3")
+      ;; see https://necromuralist.github.io/posts/org-babel-ipython-and-elpy-conflict/
+      (setq python-shell-interpreter "ipython"
+            python-shell-interpreter-args "-i --simple-prompt")
+  )
 
 (require 'linum)
 
@@ -282,7 +311,6 @@
     (evil-define-key 'normal neotree-mode-map (kbd "SPC") 'neotree-quick-look)
     (evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
     (evil-define-key 'normal neotree-mode-map (kbd "RET") 'neotree-enter)
-    (setq projectile-switch-project-action 'neotree-projectile-action)
     (setq neo-smart-open t)
     (setq neo-window-fixed-size nil)
     (defun neotree-project-dir ()
@@ -299,7 +327,87 @@
 	    (message "Could not find git project root."))))
     (global-set-key [f8] 'neotree-project-dir)
 )
+  ;; Set the neo-window-width to the current width of the
+  ;; neotree window, to trick neotree into resetting the
+  ;; width back to the actual window width.
+  ;; Fixes: https://github.com/jaypei/emacs-neotree/issues/262
+    (eval-after-load "neotree"
+     '(add-to-list 'window-size-change-functions
+                   (lambda (frame)
+                     (let ((neo-window (neo-global--get-window)))
+                       (unless (null neo-window)
+                         (setq neo-window-width (window-width neo-window)))))))
 
 (use-package ein
   :ensure t
   :commands (ein:notebooklist-open))
+
+(require 'epa-file)
+(setenv "GPG_AGENT_INFO" nil)
+(epa-file-enable)
+
+(use-package ace-window
+  :ensure t)
+(global-set-key (kbd "M-o") 'ace-window)
+(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+
+;; make sure passwords are in load path
+(add-to-list 'load-path "~/.emacs.d/secrets/")
+
+;; connections 
+(setq sql-connection-alist
+      '((datalake (sql-product 'mysql)
+                   (sql-server "datalake.footballradar.net")
+                   (sql-user "teddy.groves")
+                   (sql-database "datalake"))
+	(pmi_test (sql-product 'mysql)
+                   (sql-server "127.0.0.1")
+                   (sql-user "root")
+                   (sql-database "pmi_test"))
+        (playermodel (sql-product 'mysql)
+                      (sql-server "mysql.prod.footballradar.net")
+                      (sql-user "player_model")
+                      (sql-database "playermodel"))))
+
+(add-hook 'sql-interactive-mode-hook
+        (lambda ()
+          (toggle-truncate-lines t)))
+
+(defun my-sql-connect (product connection)
+  ;; load the password
+  (require 'my-password "my-password.el.gpg")
+
+  ;; update the password to the sql-connection-alist
+  (let ((connection-info (assoc connection sql-connection-alist))
+        (sql-password (car (last (assoc connection my-sql-password)))))
+    (delete sql-password connection-info)
+    (nconc connection-info `((sql-password ,sql-password)))
+    (setq sql-connection-alist (assq-delete-all connection sql-connection-alist))
+    (add-to-list 'sql-connection-alist connection-info))
+
+  ;; connect to database
+  (setq sql-product product)
+  (sql-connect connection))
+
+(defun datalake ()
+  (interactive)
+  (my-sql-connect 'mysql 'datalake))
+
+(defun playermodel ()
+  (interactive)
+  (my-sql-connect 'mysql 'playermodel))
+
+(defun pmi_test ()
+  (interactive)
+  (my-sql-connect 'mysql 'pmi_test))
+
+(setq-default indent-tabs-mode nil)
+
+(use-package yasnippet
+  :ensure t
+  :init
+ (yas-global-mode 1)
+)
+
+(setq auto-image-file-mode t)
+(setq global-auto-revert-mode t)
