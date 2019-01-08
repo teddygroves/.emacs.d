@@ -66,6 +66,13 @@ Brings up some help
              (which-key-mode))
 #+END_SRC
 
+* Themes
+#+BEGIN_SRC emacs-lisp
+;; zenburn
+ (use-package zenburn-theme
+  :ensure t
+  :config (load-theme 'zenburn t))
+#+END_SRC
 * Org mode
 ** Org babel
 #+BEGIN_SRC emacs-lisp
@@ -80,6 +87,12 @@ Brings up some help
 ;; from https://emacs.stackexchange.com/questions/30520/org-mode-c-c-c-c-to-display-inline-image
 (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 #+END_SRC
+** Interface
+ #+BEGIN_SRC emacs-lisp
+ (setq org-src-fontify-natively t)
+ (setq org-indent_mode nil)
+ (setq org-adapt-indentation nil)
+ #+END_SRC
 ** Skinning
 
 Taken from [[http://www.howardism.org/Technical/Emacs/orgmode-wordprocessor.html][Howard Abrams's blog]]
@@ -154,12 +167,6 @@ Taken from [[http://www.howardism.org/Technical/Emacs/orgmode-wordprocessor.html
        (when (not (file-directory-p pub-dir))
 	(make-directory pub-dir))))
  #+END_SRC
-** Interface
- #+BEGIN_SRC emacs-lisp
- (setq org-src-fontify-natively t)
- (setq org-indent_mode nil)
- (setq org-adapt-indentation nil)
- #+END_SRC
 ** Markdown export
 #+BEGIN_SRC emacs-lisp
  (require 'ox-md nil t)
@@ -225,13 +232,6 @@ Copied from here: https://www.reddit.com/r/emacs/comments/9819tc/emacs_and_hard_
     (global-auto-complete-mode t)
     ))
   #+END_SRC
-* Themes
-#+BEGIN_SRC emacs-lisp
-;; zenburn
- (use-package zenburn-theme
-  :ensure t
-  :config (load-theme 'zenburn t))
-#+END_SRC
 * Reveal.js
 #+BEGIN_SRC emacs-lisp
 (use-package ox-reveal
@@ -579,7 +579,9 @@ Switch windows using ~M-o~!
 * images
 #+BEGIN_SRC emacs-lisp
 
-  (setq auto-image-file-mode t)
-  (setq global-auto-revert-mode t)
-
+  (auto-image-file-mode 1)
+  (global-auto-revert-mode 1)
 #+END_SRC
+
+#+RESULTS:
+: t

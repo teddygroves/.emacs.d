@@ -35,6 +35,11 @@
              :config
              (which-key-mode))
 
+;; zenburn
+ (use-package zenburn-theme
+  :ensure t
+  :config (load-theme 'zenburn t))
+
 (use-package ob-ipython
  :ensure t)
 (org-babel-do-load-languages
@@ -45,6 +50,28 @@
 (setq org-confirm-babel-evaluate nil)
 ;; from https://emacs.stackexchange.com/questions/30520/org-mode-c-c-c-c-to-display-inline-image
 (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
+
+(setq org-src-fontify-natively t)
+(setq org-indent_mode nil)
+(setq org-adapt-indentation nil)
+
+(require 'org-bullets)
+(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+
+(let* ((variable-tuple (cond ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
+                             (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+       (base-font-color     (face-foreground 'default nil 'default))
+       (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
+(custom-theme-set-faces 'user
+                          `(org-level-8 ((t (,@headline ,@variable-tuple))))
+                          `(org-level-7 ((t (,@headline ,@variable-tuple))))
+                          `(org-level-6 ((t (,@headline ,@variable-tuple))))
+                          `(org-level-5 ((t (,@headline ,@variable-tuple))))
+                          `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
+                          `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.25))))
+                          `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.5))))
+                          `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.75))))
+                          `(org-document-title ((t (,@headline ,@variable-tuple :height 1.5 :underline nil))))))
 
 (setq org-todo-keywords '((sequence "TODO(t)" "BACKLOG(b)"
                                     "READY(r)" "IN PROGRESS(p)" "|" "DONE(d)")))
@@ -76,10 +103,6 @@
       (setq pub-dir (concat org-export-output-directory-prefix (substring extension 1)))
       (when (not (file-directory-p pub-dir))
        (make-directory pub-dir))))
-
-(setq org-src-fontify-natively t)
-(setq org-indent_mode nil)
-(setq org-adapt-indentation nil)
 
 (require 'ox-md nil t)
 
@@ -127,10 +150,6 @@
  (use-package ivy-hydra
   :ensure t)
 
-;; (use-package avy
-;; :ensure t
-;; :bind ("M-s" . avy-goto-word-1)) ;; changed from char as per jcs
-
 (use-package auto-complete
  :ensure t
  :init
@@ -138,14 +157,6 @@
    (ac-config-default)
    (global-auto-complete-mode t)
    ))
-
-;; zenburn
- (use-package zenburn-theme
-  :ensure t
-  :config (load-theme 'zenburn t))
-
-;; wheatgrass
-;; (load-theme 'wheatgrass t)
 
 (use-package ox-reveal
 :ensure ox-reveal)
@@ -409,5 +420,5 @@
  (yas-global-mode 1)
 )
 
-(setq auto-image-file-mode t)
-(setq global-auto-revert-mode t)
+(auto-image-file-mode 1)
+(global-auto-revert-mode 1)
