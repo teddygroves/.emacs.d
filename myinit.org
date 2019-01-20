@@ -69,9 +69,12 @@ Brings up some help
 * Themes
 #+BEGIN_SRC emacs-lisp
 ;; zenburn
- (use-package zenburn-theme
-  :ensure t
-  :config (load-theme 'zenburn t))
+;(use-package zenburn-theme
+;:ensure t
+;:config (load-theme 'zenburn t))
+(use-package solarized-theme
+ :ensure t
+ :config (load-theme 'solarized-dark t))
 #+END_SRC
 * Org mode
 ** Org babel
@@ -94,9 +97,7 @@ Brings up some help
  (setq org-adapt-indentation nil)
  #+END_SRC
 ** Skinning
-
 Taken from [[http://www.howardism.org/Technical/Emacs/orgmode-wordprocessor.html][Howard Abrams's blog]]
-
 *** Org bullets
 
 #+BEGIN_SRC emacs-lisp
@@ -106,20 +107,20 @@ Taken from [[http://www.howardism.org/Technical/Emacs/orgmode-wordprocessor.html
 
 *** Big Lucida Grande headers
 #+BEGIN_SRC emacs-lisp
-(let* ((variable-tuple (cond ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
-                             (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
-       (base-font-color     (face-foreground 'default nil 'default))
-       (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
-(custom-theme-set-faces 'user
-                          `(org-level-8 ((t (,@headline ,@variable-tuple))))
-                          `(org-level-7 ((t (,@headline ,@variable-tuple))))
-                          `(org-level-6 ((t (,@headline ,@variable-tuple))))
-                          `(org-level-5 ((t (,@headline ,@variable-tuple))))
-                          `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
-                          `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.25))))
-                          `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.5))))
-                          `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.75))))
-                          `(org-document-title ((t (,@headline ,@variable-tuple :height 1.5 :underline nil))))))
+;(let* ((variable-tuple (cond ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
+;                             (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+;       (base-font-color     (face-foreground 'default nil 'default))
+;       (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
+;(custom-theme-set-faces 'user
+;                          `(org-level-8 ((t (,@headline ,@variable-tuple))))
+;                          `(org-level-7 ((t (,@headline ,@variable-tuple))))
+;                          `(org-level-6 ((t (,@headline ,@variable-tuple))))
+;                          `(org-level-5 ((t (,@headline ,@variable-tuple))))
+;                          `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
+;                          `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.25))))
+;                          `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.5))))
+;                          `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.75))))
+;                          `(org-document-title ((t (,@headline ,@variable-tuple :height 1.5 :underline nil))))))
 #+END_SRC
 
 ** Gtd stuff
@@ -321,7 +322,9 @@ Commented out due to causing an initialisation error. See [[https://github.com/y
 (use-package counsel-projectile
   :ensure t
 ;; commented out below lines as they caused an initialisation error
-;  :config
+  :config
+ (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+
 ;  (counsel-projectile-on)
 )
 
@@ -371,7 +374,7 @@ Commented out due to causing an initialisation error. See [[https://github.com/y
   :ensure t
   :bind (("M-i" . ivy-bibtex))
   :config
-  (setq bibtex-completion-bibliography "/Users/teddy/Reading/bibliography.bib")
+  (setq bibtex-completion-bibliography "/Users/teddy/Dropbox/Reading/bibliography.bib")
   (setq bibtex-completion-pdf-field "File")
   (setq bibtex-completion-library-path "/Users/teddy/Reading/pdf")
   (setq bibtex-completion-notes-path "/Users/teddy/Writing/notes/reading_notes.org"))
@@ -382,6 +385,8 @@ Commented out due to causing an initialisation error. See [[https://github.com/y
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
   :ensure t
+  :config (setq-local flycheck-python-pylint-executable "python3")
+          (defvaralias 'flycheck-python-flake8-executable 'elpy-rpc-python-command)
   :init (global-flycheck-mode))
 #+END_SRC
 ** Elpy
@@ -395,14 +400,19 @@ Commented out due to causing an initialisation error. See [[https://github.com/y
         (remove-hook 'elpy-modules 'elpy-module-flymake)
         (remove-hook 'elpy-modules 'elpy-module-yasnippet)
 ;;        (remove-hook 'elpy-mode-hook 'elpy-module-highlight-indentation)
-        (add-hook 'elpy-mode-hook 'flycheck-mode))
+;;        (add-hook 'elpy-mode-hook 'flycheck-mode)
+)
       (elpy-enable)
       (setq elpy-rpc-backend "jedi"))
       ;; use python 3
-      ;;(setq elpy-rpc-python-command "python3")
-      ;; see https://necromuralist.github.io/posts/org-babel-ipython-and-elpy-conflict/
+      (setq elpy-rpc-python-command "python3")
+      ; see https://necromuralist.github.io/posts/org-babel-ipython-and-elpy-conflict/
       (setq python-shell-interpreter "ipython"
             python-shell-interpreter-args "-i --simple-prompt")
+      ; See https://github.com/syl20bnr/spacemacs/issues/8797
+      (setq python-shell-completion-native-enable nil)
+      ; See https://emacs.stackexchange.com/questions/37570/elpy-starts-python-processes-at-the-root-of-my-git-tree-not-the-modules-actual/39232#39232
+      (setq elpy-shell-use-project-root nil)
   )
 #+END_SRC
 * Custom line numbers
@@ -518,18 +528,10 @@ Switch windows using ~M-o~!
   
   ;; connections 
   (setq sql-connection-alist
-        '((datalake (sql-product 'mysql)
-                     (sql-server "datalake.footballradar.net")
-                     (sql-user "teddy.groves")
-                     (sql-database "datalake"))
-	  (pmi_test (sql-product 'mysql)
+        '((pmi_test (sql-product 'mysql)
                      (sql-server "127.0.0.1")
                      (sql-user "root")
-                     (sql-database "pmi_test"))
-          (playermodel (sql-product 'mysql)
-                        (sql-server "mysql.prod.footballradar.net")
-                        (sql-user "player_model")
-                        (sql-database "playermodel"))))
+                     (sql-database "pmi_test"))))
 
   (add-hook 'sql-interactive-mode-hook
           (lambda ()
@@ -551,14 +553,6 @@ Switch windows using ~M-o~!
     (setq sql-product product)
     (sql-connect connection))
     
-  (defun datalake ()
-    (interactive)
-    (my-sql-connect 'mysql 'datalake))
-  
-  (defun playermodel ()
-    (interactive)
-    (my-sql-connect 'mysql 'playermodel))
-  
   (defun pmi_test ()
     (interactive)
     (my-sql-connect 'mysql 'pmi_test))

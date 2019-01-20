@@ -1,3 +1,4 @@
+
 (use-package exec-path-from-shell
   :ensure t)
 (when (memq window-system '(mac ns x))
@@ -16,7 +17,7 @@
 (global-linum-mode t)
 (fset 'yes-or-no-p 'y-or-n-p)
 ;; full screen by default
-(set-frame-parameter nil 'fullscreen 'fullboth)
+;(set-frame-parameter nil 'fullscreen 'fullboth)
 ;; get rid of annoying sounds
 (setq ring-bell-function 'ignore)
 ;; stop new frames popping up
@@ -36,9 +37,12 @@
              (which-key-mode))
 
 ;; zenburn
- (use-package zenburn-theme
-  :ensure t
-  :config (load-theme 'zenburn t))
+;(use-package zenburn-theme
+;:ensure t
+;:config (load-theme 'zenburn t))
+(use-package solarized-theme
+ :ensure t
+ :config (load-theme 'solarized-dark t))
 
 (use-package ob-ipython
  :ensure t)
@@ -58,20 +62,20 @@
 (require 'org-bullets)
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
-(let* ((variable-tuple (cond ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
-                             (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
-       (base-font-color     (face-foreground 'default nil 'default))
-       (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
-(custom-theme-set-faces 'user
-                          `(org-level-8 ((t (,@headline ,@variable-tuple))))
-                          `(org-level-7 ((t (,@headline ,@variable-tuple))))
-                          `(org-level-6 ((t (,@headline ,@variable-tuple))))
-                          `(org-level-5 ((t (,@headline ,@variable-tuple))))
-                          `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
-                          `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.25))))
-                          `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.5))))
-                          `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.75))))
-                          `(org-document-title ((t (,@headline ,@variable-tuple :height 1.5 :underline nil))))))
+;(let* ((variable-tuple (cond ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
+;                             (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+;       (base-font-color     (face-foreground 'default nil 'default))
+;       (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
+;(custom-theme-set-faces 'user
+;                          `(org-level-8 ((t (,@headline ,@variable-tuple))))
+;                          `(org-level-7 ((t (,@headline ,@variable-tuple))))
+;                          `(org-level-6 ((t (,@headline ,@variable-tuple))))
+;                          `(org-level-5 ((t (,@headline ,@variable-tuple))))
+;                          `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
+;                          `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.25))))
+;                          `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.5))))
+;                          `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.75))))
+;                          `(org-document-title ((t (,@headline ,@variable-tuple :height 1.5 :underline nil))))))
 
 (setq org-todo-keywords '((sequence "TODO(t)" "BACKLOG(b)"
                                     "READY(r)" "IN PROGRESS(p)" "|" "DONE(d)")))
@@ -91,7 +95,7 @@
 
 (setq org-refile-targets '(("~/Dropbox/Writing/notes/gtd.org" :maxlevel . 3)
                            ("~/Dropbox/Writing/notes/tickler.org" :maxlevel . 2)
-			   ("~/Dropbox/Writing/notes/topics.org" :maxlevel . 2)))
+                           ("~/Dropbox/Writing/notes/topics.org" :maxlevel . 2)))
 
 (defvar org-export-output-directory-prefix
  "export_"
@@ -136,9 +140,9 @@
 (use-package swiper
  :ensure t
  :bind (("C-s" . swiper)
-	("C-c C-r" . ivy-resume)
-	("M-x" . counsel-M-x)
-	("C-x C-f" . counsel-find-file))
+        ("C-c C-r" . ivy-resume)
+        ("M-x" . counsel-M-x)
+        ("C-x C-f" . counsel-find-file))
  :config
  (progn
    (ivy-mode 1)
@@ -158,14 +162,14 @@
    (global-auto-complete-mode t)
    ))
 
-(use-package ox-reveal
-:ensure ox-reveal)
+;(use-package ox-reveal
+; :ensure ox-reveal)
 
-(setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
-(setq org-reveal-mathjax t)
+;(setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
+;(setq org-reveal-mathjax t)
 
-(use-package htmlize
-:ensure t)
+;(use-package htmlize
+;:ensure t)
 
 (use-package evil
   :ensure t
@@ -196,7 +200,7 @@
  :ensure t
  :commands (markdown-mode gfm-mode)
  :mode (("README\\.md\\'" . gfm-mode)
-	 ("\\.md\\'" . markdown-mode)
+         ("\\.md\\'" . markdown-mode)
       ("\\.markdown\\'" . markdown-mode))
  :init (setq markdown-command "multimarkdown"))
 
@@ -211,14 +215,18 @@
 
 (use-package counsel-projectile
   :ensure t
+;; commented out below lines as they caused an initialisation error
   :config
-  (counsel-projectile-on))
+ (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+
+;  (counsel-projectile-on)
+)
 
 (use-package dumb-jump
   :bind (("M-g o" . dumb-jump-go-other-window)
-	 ("M-g j" . dumb-jump-go)
-	 ("M-g x" . dumb-jump-go-prefer-external)
-	 ("M-g z" . dumb-jump-go-prefer-external-other-window))
+         ("M-g j" . dumb-jump-go)
+         ("M-g x" . dumb-jump-go-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
   :config (setq dumb-jump-selector 'ivy) ;; (setq dumb-jump-selector 'helm)
 
   :init
@@ -250,13 +258,15 @@
   :ensure t
   :bind (("M-i" . ivy-bibtex))
   :config
-  (setq bibtex-completion-bibliography "/Users/teddy/Reading/bibliography.bib")
+  (setq bibtex-completion-bibliography "/Users/teddy/Dropbox/Reading/bibliography.bib")
   (setq bibtex-completion-pdf-field "File")
   (setq bibtex-completion-library-path "/Users/teddy/Reading/pdf")
   (setq bibtex-completion-notes-path "/Users/teddy/Writing/notes/reading_notes.org"))
 
 (use-package flycheck
   :ensure t
+  :config (setq-local flycheck-python-pylint-executable "python3")
+          (defvaralias 'flycheck-python-flake8-executable 'elpy-rpc-python-command)
   :init (global-flycheck-mode))
 
 (use-package elpy
@@ -268,14 +278,19 @@
         (remove-hook 'elpy-modules 'elpy-module-flymake)
         (remove-hook 'elpy-modules 'elpy-module-yasnippet)
 ;;        (remove-hook 'elpy-mode-hook 'elpy-module-highlight-indentation)
-        (add-hook 'elpy-mode-hook 'flycheck-mode))
+;;        (add-hook 'elpy-mode-hook 'flycheck-mode)
+)
       (elpy-enable)
       (setq elpy-rpc-backend "jedi"))
       ;; use python 3
-      ;;(setq elpy-rpc-python-command "python3")
-      ;; see https://necromuralist.github.io/posts/org-babel-ipython-and-elpy-conflict/
+      (setq elpy-rpc-python-command "python3")
+      ; see https://necromuralist.github.io/posts/org-babel-ipython-and-elpy-conflict/
       (setq python-shell-interpreter "ipython"
             python-shell-interpreter-args "-i --simple-prompt")
+      ; See https://github.com/syl20bnr/spacemacs/issues/8797
+      (setq python-shell-completion-native-enable nil)
+      ; See https://emacs.stackexchange.com/questions/37570/elpy-starts-python-processes-at-the-root-of-my-git-tree-not-the-modules-actual/39232#39232
+      (setq elpy-shell-use-project-root nil)
   )
 
 (require 'linum)
@@ -325,17 +340,17 @@
     (setq neo-smart-open t)
     (setq neo-window-fixed-size nil)
     (defun neotree-project-dir ()
-	"Open NeoTree using the git root."
-	(interactive)
-	(let ((project-dir (projectile-project-root))
-	    (file-name (buffer-file-name)))
-	(neotree-toggle)
-	(if project-dir
-	    (if (neo-global--window-exists-p)
-		(progn
-		    (neotree-dir project-dir)
+        "Open NeoTree using the git root."
+        (interactive)
+        (let ((project-dir (projectile-project-root))
+            (file-name (buffer-file-name)))
+        (neotree-toggle)
+        (if project-dir
+            (if (neo-global--window-exists-p)
+                (progn
+                    (neotree-dir project-dir)
                 (neotree-find file-name)))
-	    (message "Could not find git project root."))))
+            (message "Could not find git project root."))))
     (global-set-key [f8] 'neotree-project-dir)
 )
   ;; Set the neo-window-width to the current width of the
@@ -371,7 +386,7 @@
                    (sql-server "datalake.footballradar.net")
                    (sql-user "teddy.groves")
                    (sql-database "datalake"))
-	(pmi_test (sql-product 'mysql)
+        (pmi_test (sql-product 'mysql)
                    (sql-server "127.0.0.1")
                    (sql-user "root")
                    (sql-database "pmi_test"))
@@ -399,7 +414,7 @@
   ;; connect to database
   (setq sql-product product)
   (sql-connect connection))
-
+  
 (defun datalake ()
   (interactive)
   (my-sql-connect 'mysql 'datalake))
