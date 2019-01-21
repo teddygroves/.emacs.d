@@ -101,8 +101,17 @@ Taken from [[http://www.howardism.org/Technical/Emacs/orgmode-wordprocessor.html
 *** Org bullets
 
 #+BEGIN_SRC emacs-lisp
-(require 'org-bullets)
-(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+(use-package org-bullets
+ :ensure t
+ :commands org-bullets-mode
+ :config
+  (add-hook 'org-mode-hook
+            (lambda ()
+             (org-bullets-mode 1))))
+
+
+;(require 'org-bullets)
+;(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 #+END_SRC
 
 *** Big Lucida Grande headers

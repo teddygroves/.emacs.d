@@ -1,4 +1,3 @@
-
 (use-package exec-path-from-shell
   :ensure t)
 (when (memq window-system '(mac ns x))
@@ -59,8 +58,17 @@
 (setq org-indent_mode nil)
 (setq org-adapt-indentation nil)
 
-(require 'org-bullets)
-(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+(use-package org-bullets
+ :ensure t
+ :commands org-bullets-mode
+ :config
+  (add-hook 'org-mode-hook
+            (lambda ()
+             (org-bullets-mode 1))))
+
+
+;(require 'org-bullets)
+;(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
 ;(let* ((variable-tuple (cond ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
 ;                             (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
@@ -95,7 +103,7 @@
 
 (setq org-refile-targets '(("~/Dropbox/Writing/notes/gtd.org" :maxlevel . 3)
                            ("~/Dropbox/Writing/notes/tickler.org" :maxlevel . 2)
-                           ("~/Dropbox/Writing/notes/topics.org" :maxlevel . 2)))
+			   ("~/Dropbox/Writing/notes/topics.org" :maxlevel . 2)))
 
 (defvar org-export-output-directory-prefix
  "export_"
@@ -140,9 +148,9 @@
 (use-package swiper
  :ensure t
  :bind (("C-s" . swiper)
-        ("C-c C-r" . ivy-resume)
-        ("M-x" . counsel-M-x)
-        ("C-x C-f" . counsel-find-file))
+	("C-c C-r" . ivy-resume)
+	("M-x" . counsel-M-x)
+	("C-x C-f" . counsel-find-file))
  :config
  (progn
    (ivy-mode 1)
@@ -200,7 +208,7 @@
  :ensure t
  :commands (markdown-mode gfm-mode)
  :mode (("README\\.md\\'" . gfm-mode)
-         ("\\.md\\'" . markdown-mode)
+	 ("\\.md\\'" . markdown-mode)
       ("\\.markdown\\'" . markdown-mode))
  :init (setq markdown-command "multimarkdown"))
 
@@ -224,9 +232,9 @@
 
 (use-package dumb-jump
   :bind (("M-g o" . dumb-jump-go-other-window)
-         ("M-g j" . dumb-jump-go)
-         ("M-g x" . dumb-jump-go-prefer-external)
-         ("M-g z" . dumb-jump-go-prefer-external-other-window))
+	 ("M-g j" . dumb-jump-go)
+	 ("M-g x" . dumb-jump-go-prefer-external)
+	 ("M-g z" . dumb-jump-go-prefer-external-other-window))
   :config (setq dumb-jump-selector 'ivy) ;; (setq dumb-jump-selector 'helm)
 
   :init
@@ -340,17 +348,17 @@
     (setq neo-smart-open t)
     (setq neo-window-fixed-size nil)
     (defun neotree-project-dir ()
-        "Open NeoTree using the git root."
-        (interactive)
-        (let ((project-dir (projectile-project-root))
-            (file-name (buffer-file-name)))
-        (neotree-toggle)
-        (if project-dir
-            (if (neo-global--window-exists-p)
-                (progn
-                    (neotree-dir project-dir)
+	"Open NeoTree using the git root."
+	(interactive)
+	(let ((project-dir (projectile-project-root))
+	    (file-name (buffer-file-name)))
+	(neotree-toggle)
+	(if project-dir
+	    (if (neo-global--window-exists-p)
+		(progn
+		    (neotree-dir project-dir)
                 (neotree-find file-name)))
-            (message "Could not find git project root."))))
+	    (message "Could not find git project root."))))
     (global-set-key [f8] 'neotree-project-dir)
 )
   ;; Set the neo-window-width to the current width of the
@@ -382,18 +390,10 @@
 
 ;; connections 
 (setq sql-connection-alist
-      '((datalake (sql-product 'mysql)
-                   (sql-server "datalake.footballradar.net")
-                   (sql-user "teddy.groves")
-                   (sql-database "datalake"))
-        (pmi_test (sql-product 'mysql)
+      '((pmi_test (sql-product 'mysql)
                    (sql-server "127.0.0.1")
                    (sql-user "root")
-                   (sql-database "pmi_test"))
-        (playermodel (sql-product 'mysql)
-                      (sql-server "mysql.prod.footballradar.net")
-                      (sql-user "player_model")
-                      (sql-database "playermodel"))))
+                   (sql-database "pmi_test"))))
 
 (add-hook 'sql-interactive-mode-hook
         (lambda ()
@@ -414,14 +414,6 @@
   ;; connect to database
   (setq sql-product product)
   (sql-connect connection))
-  
-(defun datalake ()
-  (interactive)
-  (my-sql-connect 'mysql 'datalake))
-
-(defun playermodel ()
-  (interactive)
-  (my-sql-connect 'mysql 'playermodel))
 
 (defun pmi_test ()
   (interactive)
