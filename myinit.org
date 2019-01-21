@@ -108,10 +108,6 @@ Taken from [[http://www.howardism.org/Technical/Emacs/orgmode-wordprocessor.html
   (add-hook 'org-mode-hook
             (lambda ()
              (org-bullets-mode 1))))
-
-
-;(require 'org-bullets)
-;(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 #+END_SRC
 
 *** Big Lucida Grande headers
