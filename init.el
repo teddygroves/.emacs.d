@@ -30,7 +30,7 @@
  '(org-agenda-files (quote ("~/Writing/notes/org/away_day_planning.org")))
  '(package-selected-packages
    (quote
-    (solarized-theme ob-ipython ensime ace-window exec-path-from-shell elpy ein neotree ess scala-mode ag flycheck aggressive-indent ivy-bibtex pdf-tools dumb-jump counsel-projectile projectile zenburn-theme which-key use-package try stan-snippets ox-reveal org-bullets markdown-mode magit latex-preview-pane ivy-hydra htmlize evil counsel color-theme avy auto-complete)))
+    (emacs-matlab matlab matlab-mode matlab-model auctex solarized-theme ob-ipython ensime ace-window exec-path-from-shell elpy ein neotree ess scala-mode ag flycheck aggressive-indent ivy-bibtex pdf-tools dumb-jump counsel-projectile projectile zenburn-theme which-key use-package try stan-snippets ox-reveal org-bullets markdown-mode magit latex-preview-pane ivy-hydra htmlize evil counsel color-theme avy auto-complete)))
  '(pdf-tools-handle-upgrades nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

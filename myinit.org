@@ -394,6 +394,18 @@ Commented out due to causing an initialisation error. See [[https://github.com/y
           (defvaralias 'flycheck-python-flake8-executable 'elpy-rpc-python-command)
   :init (global-flycheck-mode))
 #+END_SRC
+** pyenv mode
+#+BEGIN_SRC emacs-lisp
+(use-package pyenv-mode
+  :ensure t
+  :init
+  (add-to-list 'exec-path "~/.pyenv/shims")
+  (setenv "WORKON_HOME" "~/.pyenv/versions/")
+  :config
+  (pyenv-mode)
+  :bind
+  ("C-x p e" . pyenv-activate-current-project))
+#+END_SRC
 ** Elpy
 #+BEGIN_SRC emacs-lisp
 (use-package elpy
@@ -409,8 +421,8 @@ Commented out due to causing an initialisation error. See [[https://github.com/y
 )
       (elpy-enable)
       (setq elpy-rpc-backend "jedi"))
-      ;; use python 3
-      (setq elpy-rpc-python-command "python3")
+      ;; use pyenv python
+      (setq elpy-rpc-python-command "/Users/tedgro/.pyenv/shims/python")
       ; see https://necromuralist.github.io/posts/org-babel-ipython-and-elpy-conflict/
       (setq python-shell-interpreter "ipython"
             python-shell-interpreter-args "-i --simple-prompt")
@@ -587,3 +599,25 @@ Switch windows using ~M-o~!
 
 #+RESULTS:
 : t
+* Matlab
+Copied from [[https://github.com/thisirs/dotemacs/blob/master/lisp/init-matlab.el][here]]. 
+
+NB make sure the version is correct.
+#+BEGIN_SRC emacs-lisp
+; the code I originally used (from emacs-wiki)
+; (autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
+; (add-to-list
+;  'auto-mode-alist
+;  '("\\.m$" . matlab-mode))
+; (setq matlab-indent-function t)
+; (setq matlab-shell-command "matlab")
+
+ 
+(use-package matlab
+ :ensure matlab-mode
+ :mode ("\\.m$" . matlab-mode)
+ :config
+ (setq matlab-indent-function t)
+ (setq matlab-shell-command "/Applications/MATLAB_R2018b.app/bin/matlab")
+ (setq matlab-shell-command-switches (list "-nodesktop")))
+#+END_SRC

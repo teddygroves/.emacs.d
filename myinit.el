@@ -66,10 +66,6 @@
             (lambda ()
              (org-bullets-mode 1))))
 
-
-;(require 'org-bullets)
-;(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
-
 ;(let* ((variable-tuple (cond ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
 ;                             (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
 ;       (base-font-color     (face-foreground 'default nil 'default))
@@ -429,3 +425,20 @@
 
 (auto-image-file-mode 1)
 (global-auto-revert-mode 1)
+
+; the code I originally used (from emacs-wiki)
+; (autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
+; (add-to-list
+;  'auto-mode-alist
+;  '("\\.m$" . matlab-mode))
+; (setq matlab-indent-function t)
+; (setq matlab-shell-command "matlab")
+
+ 
+(use-package matlab
+ :ensure matlab-mode
+ :mode ("\\.m$" . matlab-mode)
+ :config
+ (setq matlab-indent-function t)
+ (setq matlab-shell-command "/Applications/MATLAB_R2018b.app/bin/matlab")
+ (setq matlab-shell-command-switches (list "-nodesktop"))
