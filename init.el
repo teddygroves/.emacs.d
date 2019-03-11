@@ -26,11 +26,11 @@
    (quote
     (elpy-module-eldoc elpy-module-pyvenv elpy-module-django elpy-module-sane-defaults)))
  '(elpy-shell-echo-input nil)
- '(markdown-command "/usr/local/bin/pandoc" t)
+ '(markdown-command "/usr/local/bin/pandoc")
  '(org-agenda-files (quote ("~/Writing/notes/org/away_day_planning.org")))
  '(package-selected-packages
    (quote
-    (emacs-matlab matlab matlab-mode matlab-model auctex solarized-theme ob-ipython ensime ace-window exec-path-from-shell elpy ein neotree ess scala-mode ag flycheck aggressive-indent ivy-bibtex pdf-tools dumb-jump counsel-projectile projectile zenburn-theme which-key use-package try stan-snippets ox-reveal org-bullets markdown-mode magit latex-preview-pane ivy-hydra htmlize evil counsel color-theme avy auto-complete)))
+    (ox-hugo lsp-python-ms ox-pandoc org-plus-contrib ox-bibtex org-ref poly-org poly-markdown lsp-python company-lsp lsp-ui lsp-mode emacs-matlab matlab matlab-mode matlab-model auctex solarized-theme ob-ipython ensime ace-window exec-path-from-shell elpy ein neotree ess scala-mode ag flycheck aggressive-indent ivy-bibtex pdf-tools dumb-jump counsel-projectile projectile zenburn-theme which-key use-package try stan-snippets ox-reveal org-bullets markdown-mode magit latex-preview-pane ivy-hydra htmlize evil counsel color-theme avy auto-complete)))
  '(pdf-tools-handle-upgrades nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

@@ -3,7 +3,7 @@
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
-(setq-default fill-column 80)
+(setq-default fill-column 79)
 
 (setq backup-directory-alist '(("." . "~/.emacs-saves")))
 
@@ -40,11 +40,20 @@
 ;:ensure t
 ;:config (load-theme 'zenburn t))
 (use-package solarized-theme
- :ensure t
- :config (load-theme 'solarized-dark t))
+  :ensure t
+  :config (load-theme 'solarized-dark t))
+
+(add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
+(unless (package-installed-p 'org-plus-contrib)  ;; Make sure the Org package is
+  (package-install 'org-plus-contrib))
+
+(setq nikola-use-pygments nil)
+
+(use-package ox-pandoc
+  :ensure t)
 
 (use-package ob-ipython
- :ensure t)
+  :ensure t)
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((python . t)
@@ -123,57 +132,48 @@
     ;; Unfill contents
     (setq contents (concat (mapconcat 'identity (split-string contents) " ") "\n"))
     (list org-el contents info)))
-    (advice-add 'org-md-paragraph :filter-args #'my/org-md-paragraph-unfill)
+(advice-add 'org-md-paragraph :filter-args #'my/org-md-paragraph-unfill)
 
 (use-package counsel
- :ensure t
- :bind
- (("M-y" . counsel-yank-pop)
-  :map ivy-minibuffer-map
-  ("M-y" . ivy-next-line)))
+  :ensure t
+  :bind
+  (("M-y" . counsel-yank-pop)
+   :map ivy-minibuffer-map
+   ("M-y" . ivy-next-line)))
 
 (use-package ivy
- :ensure t
- :diminish (ivy-mode)
- :bind (("C-x b" . ivy-switch-buffer))
- :config
- (ivy-mode 1)
- (setq ivy-use-virtual-buffers t)
- (setq ivy-display-style 'fancy))
+  :ensure t
+  :diminish (ivy-mode)
+  :bind (("C-x b" . ivy-switch-buffer))
+  :config
+  (ivy-mode 1)
+  (setq ivy-use-virtual-buffers t)
+  (setq ivy-display-style 'fancy))
 
 (use-package swiper
- :ensure t
- :bind (("C-s" . swiper)
-	("C-c C-r" . ivy-resume)
-	("M-x" . counsel-M-x)
-	("C-x C-f" . counsel-find-file))
- :config
- (progn
-   (ivy-mode 1)
-   (setq ivy-use-virtual-buffers t)
-   (setq ivy-display-style 'fancy)
-   (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
-   ))
+  :ensure t
+  :bind (("C-s" . swiper)
+	 ("C-c C-r" . ivy-resume)
+	 ("M-x" . counsel-M-x)
+	 ("C-x C-f" . counsel-find-file))
+  :config
+  (progn
+    (ivy-mode 1)
+    (setq ivy-use-virtual-buffers t)
+    (setq ivy-display-style 'fancy)
+    (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
+    ))
 
- (use-package ivy-hydra
+(use-package ivy-hydra
   :ensure t)
 
-(use-package auto-complete
- :ensure t
- :init
- (progn
-   (ac-config-default)
-   (global-auto-complete-mode t)
-   ))
-
-;(use-package ox-reveal
-; :ensure ox-reveal)
-
-;(setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
-;(setq org-reveal-mathjax t)
-
-;(use-package htmlize
-;:ensure t)
+;; (use-package auto-complete
+ ;; :ensure t
+ ;; :init
+ ;; (progn
+   ;; (ac-config-default)
+   ;; (global-auto-complete-mode t)
+   ;; ))
 
 (use-package evil
   :ensure t
@@ -184,8 +184,8 @@
                     (interactive)
                     (evil-scroll-up nil)))
 (define-key evil-normal-state-map (kbd "C-j") (lambda ()
-                        (interactive)
-                        (evil-scroll-down nil)))
+                                                (interactive)
+                                                (evil-scroll-down nil)))
 
 (evil-set-initial-state 'term-mode 'emacs)
 
@@ -194,6 +194,8 @@
 
 (use-package stan-snippets
   :ensure t)
+
+(setq org-latex-pdf-process '("latexmk -pdf -outdir=%o %f"))
 
 (use-package latex-preview-pane
   :ensure t)
@@ -219,12 +221,16 @@
 
 (use-package counsel-projectile
   :ensure t
-;; commented out below lines as they caused an initialisation error
+  ;; commented out below lines as they caused an initialisation error
   :config
- (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
 
-;  (counsel-projectile-on)
-)
+                                        ;  (counsel-projectile-on)
+  )
+
+(use-package ox-hugo
+  :ensure t            ;Auto-install the package from Melpa (optional)
+  :after ox)
 
 (use-package dumb-jump
   :bind (("M-g o" . dumb-jump-go-other-window)
@@ -235,13 +241,21 @@
 
   :init
   (dumb-jump-mode)
-    :ensure
-)
+  :ensure
+  )
+
+(defun increment-number-at-point ()
+  (interactive)
+  (skip-chars-backward "0-9")
+  (or (looking-at "[0-9]+")
+      (error "No number at point"))
+  (replace-match (number-to-string (1+ (string-to-number (match-string 0))))))
+(global-set-key (kbd "C-c +") 'increment-number-at-point)
 
 (use-package magit
- :ensure t
- :bind (("C-x g" . magit-status)
-        ("C-x M-g" . magit-dispatch-popup)))
+  :ensure t
+  :bind (("C-x g" . magit-status)
+         ("C-x M-g" . magit-dispatch-popup)))
 
 ;;; Install epdfinfo via 'brew install pdf-tools' and then install the
 ;;; pdf-tools elisp via the use-package below. To upgrade the epdfinfo
@@ -262,40 +276,97 @@
   :ensure t
   :bind (("M-i" . ivy-bibtex))
   :config
-  (setq bibtex-completion-bibliography "/Users/teddy/Dropbox/Reading/bibliography.bib")
+  (setq bibtex-completion-bibliography "/Users/tedgro/Dropbox/Reading/bibliography.bib")
   (setq bibtex-completion-pdf-field "File")
-  (setq bibtex-completion-library-path "/Users/teddy/Reading/pdf")
-  (setq bibtex-completion-notes-path "/Users/teddy/Writing/notes/reading_notes.org"))
+  (setq bibtex-completion-library-path "/Users/tedgro/Dropbox/Reading/pdf")
+  (setq bibtex-completion-notes-path "/Users/tedgro/Dropbox/Writing/notes/reading_notes.org"))
+(require 'ox-bibtex)
+(setq org-bibtex-file "/Users/tedgro/Dropbox/Reading/bibliography.bib")
 
-(use-package flycheck
+(use-package lsp-mode
   :ensure t
-  :config (setq-local flycheck-python-pylint-executable "python3")
-          (defvaralias 'flycheck-python-flake8-executable 'elpy-rpc-python-command)
-  :init (global-flycheck-mode))
-
-(use-package elpy
-  :ensure t
+  :commands lsp
   :config
-    (progn
-      ;; Use Flycheck instead of Flymake
-      (when (require 'flycheck nil t)
-        (remove-hook 'elpy-modules 'elpy-module-flymake)
-        (remove-hook 'elpy-modules 'elpy-module-yasnippet)
-;;        (remove-hook 'elpy-mode-hook 'elpy-module-highlight-indentation)
-;;        (add-hook 'elpy-mode-hook 'flycheck-mode)
-)
-      (elpy-enable)
-      (setq elpy-rpc-backend "jedi"))
-      ;; use python 3
-      (setq elpy-rpc-python-command "python3")
-      ; see https://necromuralist.github.io/posts/org-babel-ipython-and-elpy-conflict/
-      (setq python-shell-interpreter "ipython"
-            python-shell-interpreter-args "-i --simple-prompt")
-      ; See https://github.com/syl20bnr/spacemacs/issues/8797
-      (setq python-shell-completion-native-enable nil)
-      ; See https://emacs.stackexchange.com/questions/37570/elpy-starts-python-processes-at-the-root-of-my-git-tree-not-the-modules-actual/39232#39232
-      (setq elpy-shell-use-project-root nil)
-  )
+
+  ;; lsp-ui gives us the blue documentation boxes and the sidebar info
+  (use-package lsp-ui
+    :ensure t
+    :config
+    (setq lsp-ui-sideline-ignore-duplicate t)
+    (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+
+  ;; make sure we have lsp-imenu everywhere we have LSP
+  ;; (require 'lsp-imenu)
+  ;; (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
+
+  ;; install LSP company backend for LSP-driven completion
+  (use-package company-lsp
+    :ensure t
+    :config
+    (setq company-lsp-async t)
+    (setq company-lsp-cache-candidates t)
+    (push 'company-lsp company-backends))
+
+  (use-package lsp-python-ms
+    :demand
+    :load-path "~/.emacs.d/git-repos/lsp-python-ms/"
+    :ensure nil
+    :hook (python-mode . lsp)
+    :config
+
+    ;; for dev build of language server
+    (setq lsp-python-ms-dir
+          (expand-file-name "/Users/tedgro/Code/cloned/python-language-server/output/bin/Release/"))
+    ;; for executable of language server, if it's not symlinked on your PATH
+    (setq lsp-python-ms-executable
+          "/Users/tedgro/Code/cloned/python-language-server/output/bin/Release/osx-x64/publish/Microsoft.Python.LanguageServer"))
+
+(setq lsp-enable-indentation t)
+  (setq lsp-enable-completion-at-point t)
+  (setq lsp-prefer-flymake nil)
+  (setq lsp-ui-flycheck-enable t))
+
+(setq python-shell-interpreter "ipython"
+      python-shell-interpreter-args "--simple-prompt -i")
+
+;;  (use-package flycheck
+;;    :ensure t
+;;    :config (defvaralias 'flycheck-python-flake8-executable 'elpy-rpc-python-command)
+;;    :init (global-flycheck-mode))
+
+;;(use-package pyenv-mode
+;;  :ensure t
+;;  :init
+;;  (add-to-list 'exec-path "~/.pyenv/shims")
+;;  (setenv "WORKON_HOME" "~/.pyenv/versions/")
+;;  :config
+;;  (pyenv-mode)
+;;  :bind
+;;  ("C-x p e" . pyenv-activate-current-project))
+
+;; (use-package elpy
+;;   :ensure t
+;;   :config
+;;     (progn
+;;       ;; Use Flycheck instead of Flymake
+;;       (when (require 'flycheck nil t)
+;;         (remove-hook 'elpy-modules 'elpy-module-flymake)
+;;         (remove-hook 'elpy-modules 'elpy-module-yasnippet)
+;; ;;        (remove-hook 'elpy-mode-hook 'elpy-module-highlight-indentation)
+;;         (add-hook 'elpy-mode-hook 'flycheck-mode)
+;; )
+;;       (elpy-enable)
+;;       (setq elpy-rpc-backend "jedi"))
+;;       ;; use pyenv python
+;;       (setq elpy-rpc-python-command "/Users/tedgro/.pyenv/shims/python")
+;;       ; see https://necromuralist.github.io/posts/org-babel-ipython-and-elpy-conflict/
+;;       (setq python-shell-interpreter "ipython"
+;;             python-shell-interpreter-args "-i --simple-prompt")
+;;       ; See https://github.com/syl20bnr/spacemacs/issues/8797
+;;       (setq python-shell-completion-native-enable nil)
+;;       ; See https://emacs.stackexchange.com/questions/37570/elpy-starts-python-processes-at-the-root-of-my-git-tree-not-the-modules-actual/39232#39232
+;;       (setq elpy-shell-use-project-root nil)
+;;   )
 
 (require 'linum)
 
@@ -368,10 +439,6 @@
                        (unless (null neo-window)
                          (setq neo-window-width (window-width neo-window)))))))
 
-(use-package ein
-  :ensure t
-  :commands (ein:notebooklist-open))
-
 (require 'epa-file)
 (setenv "GPG_AGENT_INFO" nil)
 (epa-file-enable)
@@ -380,40 +447,6 @@
   :ensure t)
 (global-set-key (kbd "M-o") 'ace-window)
 (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-
-;; make sure passwords are in load path
-(add-to-list 'load-path "~/.emacs.d/secrets/")
-
-;; connections 
-(setq sql-connection-alist
-      '((pmi_test (sql-product 'mysql)
-                   (sql-server "127.0.0.1")
-                   (sql-user "root")
-                   (sql-database "pmi_test"))))
-
-(add-hook 'sql-interactive-mode-hook
-        (lambda ()
-          (toggle-truncate-lines t)))
-
-(defun my-sql-connect (product connection)
-  ;; load the password
-  (require 'my-password "my-password.el.gpg")
-
-  ;; update the password to the sql-connection-alist
-  (let ((connection-info (assoc connection sql-connection-alist))
-        (sql-password (car (last (assoc connection my-sql-password)))))
-    (delete sql-password connection-info)
-    (nconc connection-info `((sql-password ,sql-password)))
-    (setq sql-connection-alist (assq-delete-all connection sql-connection-alist))
-    (add-to-list 'sql-connection-alist connection-info))
-
-  ;; connect to database
-  (setq sql-product product)
-  (sql-connect connection))
-
-(defun pmi_test ()
-  (interactive)
-  (my-sql-connect 'mysql 'pmi_test))
 
 (setq-default indent-tabs-mode nil)
 
@@ -441,4 +474,4 @@
  :config
  (setq matlab-indent-function t)
  (setq matlab-shell-command "/Applications/MATLAB_R2018b.app/bin/matlab")
- (setq matlab-shell-command-switches (list "-nodesktop"))
+ (setq matlab-shell-command-switches (list "-nodesktop")))
