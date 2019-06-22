@@ -10,12 +10,34 @@
   (package-install 'use-package))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; make sure environment variables are correct
+(use-package exec-path-from-shell
+  :ensure t
+  :if (memq window-system '(mac ns))
+  :config
+  (exec-path-from-shell-initialize))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
 (use-package solarized-theme
+  :ensure t)
+
+(use-package gruvbox-theme
+  :ensure t)
+
+(use-package dracula-theme
+  :ensure t)
+
+(use-package zenburn-theme
+  :ensure t)
+
+(use-package color-theme-sanityinc-tomorrow
+  :ensure t)
+
+
+(use-package darktooth-theme
   :ensure t
-  :config (load-theme 'solarized-dark t))
-
-
+  :config (load-theme 'darktooth t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; General purpose packages
 (use-package ace-window
   :ensure t
@@ -99,7 +121,8 @@
 (use-package yasnippet
   :ensure t
   :init
-  (yas-global-mode 1))
+  (yas-global-mode 1)
+  :bind (("M-s M-s" . yas-insert-snippet)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Evil mode
@@ -190,6 +213,12 @@
 (use-package dockerfile-mode
   :ensure t)
 
+;; csv mode
+(use-package csv-mode
+  :ensure t
+  :config
+  (add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode)))
+
 ;; R
 (use-package ess
   :ensure t
@@ -198,6 +227,14 @@
 ;; Python
 (setq python-shell-interpreter "ipython"
       python-shell-interpreter-args "--simple-prompt -i")
+
+(use-package pipenv
+  :ensure t
+  :hook (python-mode . pipenv-mode)
+  :init
+  (setq
+   pipenv-projectile-after-switch-function
+   #'pipenv-projectile-after-switch-extended))
 
 ;; bibtex
 (use-package ivy-bibtex
@@ -336,7 +373,6 @@
 
 (tool-bar-mode -1)
 (toggle-scroll-bar -1)
-(global-linum-mode t)
 (fset 'yes-or-no-p 'y-or-n-p)
 
 ;; function for incrementing numbers with C-c +
@@ -348,3 +384,21 @@
   (replace-match (number-to-string (1+ (string-to-number (match-string 0))))))
 (global-set-key (kbd "C-c +") 'increment-number-at-point)
 
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(csv-separators (quote ("," "	" ";")))
+ '(package-selected-packages
+   (quote
+    (csv-mode pipenv color-theme-sanityinc-tomorrow zenburn-theme darktooth-theme dracula-theme gruvbox-theme which-key use-package try stan-snippets solarized-theme scala-mode pyenv-mode pdf-tools ox-pandoc ox-hugo org-plus-contrib org-bullets ob-ipython neotree matlab-mode magit lsp-ui lsp-python latex-preview-pane key-chord ivy-hydra ivy-bibtex htmlize helm-bibtex flycheck exec-path-from-shell evil ess elpy ein dumb-jump dockerfile-mode counsel-projectile company-lsp auctex aggressive-indent ag ace-window)))
+ '(pdf-tools-handle-upgrades nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(org-level-1 ((t (:inherit default :foreground "#83a598" :height 1))))
+ '(org-level-2 ((t (:inherit default :foreground "#fabd2f" :height 1))))
+ '(org-level-4 ((t (:inherit default :foreground "#fb4933" :weight normal :height 1)))))
