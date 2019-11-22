@@ -19,25 +19,18 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
-(use-package solarized-theme
-  :ensure t)
+(defadvice load-theme (before theme-dont-propagate activate)
+  (mapcar #'disable-theme custom-enabled-themes))
 
-(use-package gruvbox-theme
-  :ensure t)
+;; (use-package solarized-theme)
+;; (use-package gruvbox-theme)
+;; (use-package dracula-theme)
+;; (use-package zenburn-theme)
+(use-package faff-theme)
+;; (use-package darktooth-theme)
+;; (use-package commentary-theme)
 
-(use-package dracula-theme
-  :ensure t)
-
-(use-package zenburn-theme
-  :ensure t)
-
-(use-package color-theme-sanityinc-tomorrow
-  :ensure t)
-
-
-(use-package darktooth-theme
-  :ensure t
-  :config (load-theme 'darktooth t))
+(load-theme 'faff)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; General purpose packages
 (use-package ace-window
   :ensure t
@@ -57,6 +50,7 @@
 
 (use-package company
   :ensure t
+  :init (global-company-mode)
   :pin melpa)
 
 (use-package counsel
@@ -128,15 +122,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Evil mode
 (use-package evil
   :ensure t
+  :init
+  (setq evil-want-keybinding nil)
   :config
   (evil-mode 1))
-(define-key evil-normal-state-map (kbd "C-k") (lambda ()
-                                                (interactive)
-                                                (evil-scroll-up nil)))
-(define-key evil-normal-state-map (kbd "C-j") (lambda ()
-                                                (interactive)
-                                                (evil-scroll-down nil)))
-(evil-set-initial-state 'term-mode 'emacs) ;; Use emacs mode in terminals (except ~M-x shell~)
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :custom (evil-collection-company-use-tng nil)
+  :init (evil-collection-init))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; lsp
@@ -194,9 +188,71 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Filetype-specific packages
 ;; Stan
 (use-package stan-mode
-  :ensure t)
+  ;; Uncomment if directly loading from your development repo
+  ;; :load-path "your-path/stan-mode/stan-mode"
+  :ensure t
+  :mode ("\\.stan\\'" . stan-mode)
+  :hook (stan-mode . stan-mode-setup)
+  ;;
+  :config
+  ;; The officially recommended offset is 2.
+  (setq stan-indentation-offset 2))
+
+;;; company-stan.el
+(use-package company-stan
+  ;; Uncomment if directly loading from your development repo
+  ;; :load-path "your-path/stan-mode/company-stan/"
+  :ensure t
+  :hook (stan-mode . company-stan-backend)
+  ;;
+  :config
+  ;; Whether to use fuzzy matching in `company-stan'
+  (setq company-stan-fuzzy nil))
+
+;;; eldoc-stan.el
+(use-package eldoc-stan
+  ;; Uncomment if directly loading from your development repo
+  ;; :load-path "your-path/stan-mode/eldoc-stan/"
+  :ensure t
+  :hook (stan-mode . eldoc-stan-setup)
+  ;;
+  :config
+  ;; No configuration options as of now.
+  )
+
+;;; flycheck-stan.el
+(use-package flycheck-stan
+  ;; Uncomment if directly loading from your development repo
+  ;; :load-path "your-path/stan-mode/flycheck-stan/"
+  :ensure t
+  :hook (stan-mode . flycheck-stan-setup)
+  ;;
+  :config
+  ;; No configuration options as of now.
+  )
+
+;;; stan-snippets.el
 (use-package stan-snippets
-  :ensure t)
+  ;; Uncomment if directly loading from your development repo
+  ;; :load-path "your-path/stan-mode/stan-snippets/"
+  :ensure t
+  :hook (stan-mode . stan-snippets-initialize)
+  ;;
+  :config
+  ;; No configuration options as of now.
+  )
+
+;;; ac-stan.el
+(use-package ac-stan
+  ;; Uncomment if directly loading from your development repo
+  ;; :load-path "path-to-your-repo/stan-mode/ac-stan/"
+  ;; Delete the line below if using.
+  :disabled t
+  :hook (stan-mode . stan-ac-mode-setup)
+  ;;
+  :config
+  ;; No configuration options as of now.
+  )
 
 ;; Matlab
 ;; Copied from [[https://github.com/thisirs/dotemacs/blob/master/lisp/init-matlab.el][here]]. 
@@ -227,14 +283,8 @@
 ;; Python
 (setq python-shell-interpreter "ipython"
       python-shell-interpreter-args "--simple-prompt -i")
-
-(use-package pipenv
-  :ensure t
-  :hook (python-mode . pipenv-mode)
-  :init
-  (setq
-   pipenv-projectile-after-switch-function
-   #'pipenv-projectile-after-switch-extended))
+(use-package pyvenv
+  :ensure t)
 
 ;; bibtex
 (use-package ivy-bibtex
@@ -273,6 +323,7 @@
 (setq org-src-fontify-natively t)
 (setq org-indent_mode nil)
 (setq org-adapt-indentation nil)
+
 ;; export
 (use-package ox-pandoc
   :ensure t
@@ -287,6 +338,9 @@
     (setq pub-dir (concat org-export-output-directory-prefix (substring extension 1)))
     (when (not (file-directory-p pub-dir))
       (make-directory pub-dir))))
+
+;; images
+(setq org-image-actual-width nil)
 
 ;; Clicking on ebib link opens the pdf
 (org-link-set-parameters "ebib" :follow 'open-ebib)
@@ -339,6 +393,9 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
+;; Don't report auto-reverts
+(setq auto-revert-verbose nil)
+
 ;; Default fill column 79
 (setq-default fill-column 79)
 
@@ -390,15 +447,24 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(csv-separators (quote ("," "	" ";")))
+ '(custom-safe-themes
+   (quote
+    ("33af2d5cb040182b798c3a4ee6d16210e700a2fabaa409231e1c4a003cafd1c2" "6d9cb4d7b94002b476bfd18025c9ed62283a572b660e8fb988ea100aa6b8eeab" "8dcdc47af0290303002023237a77b5b412692d1b8658da819ab18caccfb811b5" "1436d643b98844555d56c59c74004eb158dc85fc55d2e7205f8d9b8c860e177f" default)))
  '(package-selected-packages
    (quote
-    (csv-mode pipenv color-theme-sanityinc-tomorrow zenburn-theme darktooth-theme dracula-theme gruvbox-theme which-key use-package try stan-snippets solarized-theme scala-mode pyenv-mode pdf-tools ox-pandoc ox-hugo org-plus-contrib org-bullets ob-ipython neotree matlab-mode magit lsp-ui lsp-python latex-preview-pane key-chord ivy-hydra ivy-bibtex htmlize helm-bibtex flycheck exec-path-from-shell evil ess elpy ein dumb-jump dockerfile-mode counsel-projectile company-lsp auctex aggressive-indent ag ace-window)))
+    (flycheck-stan c-eldoc eldoc-stan company-stan commentary-theme faff-theme color-theme-sanityinc-solarized color-theme-sanityinc-solarized-light evil-collection ox-tufte ox-ipynb csv-mode pipenv color-theme-sanityinc-tomorrow zenburn-theme darktooth-theme dracula-theme gruvbox-theme which-key use-package try stan-snippets solarized-theme scala-mode pyenv-mode pdf-tools ox-pandoc ox-hugo org-plus-contrib org-bullets ob-ipython neotree matlab-mode magit lsp-ui lsp-python latex-preview-pane key-chord ivy-hydra ivy-bibtex htmlize helm-bibtex flycheck exec-path-from-shell evil ess elpy ein dumb-jump dockerfile-mode counsel-projectile company-lsp auctex aggressive-indent ag ace-window)))
  '(pdf-tools-handle-upgrades nil))
+;; (custom-set-faces
+;; custom-set-faces was added by Custom.
+;; If you edit it by hand, you could mess it up, so be careful.
+;; Your init file should contain only one such instance.
+;; If there is more than one, they won't work right.
+;; '(org-level-1 ((t (:inherit default :foreground "#83a598" :height 1))))
+;; '(org-level-2 ((t (:inherit default :foreground "#fabd2f" :height 1))))
+;; '(org-level-4 ((t (:inherit default :foreground "#fb4933" :weight normal :height 1)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(org-level-1 ((t (:inherit default :foreground "#83a598" :height 1))))
- '(org-level-2 ((t (:inherit default :foreground "#fabd2f" :height 1))))
- '(org-level-4 ((t (:inherit default :foreground "#fb4933" :weight normal :height 1)))))
+ )
