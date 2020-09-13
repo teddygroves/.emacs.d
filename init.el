@@ -9,7 +9,6 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; make sure environment variables are correct
 (use-package exec-path-from-shell
   :ensure t
@@ -19,29 +18,59 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
-(defadvice load-theme (before theme-dont-propagate activate)
-  (mapcar #'disable-theme custom-enabled-themes))
+(use-package doom-themes
+  :ensure t
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-;; (use-package solarized-theme)
-;; (use-package gruvbox-theme)
-;; (use-package dracula-theme)
-;; (use-package zenburn-theme)
-(use-package faff-theme)
-;; (use-package darktooth-theme)
-;; (use-package commentary-theme)
+  ;; choose a theme
+  ;; (load-theme 'doom-solarized-light t)
 
-(load-theme 'faff)
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  
+  ;; Enable custom neotree theme (all-the-icons must be installed!)
+  (doom-themes-neotree-config)
+  ;; or for treemacs users
+  (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
+  (doom-themes-treemacs-config)
+  
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
+(use-package modus-vivendi-theme :ensure)
+(use-package modus-operandi-theme
+  :ensure t
+  :init
+  ;; NOTE: Everything is disabled by default.
+  (setq modus-operandi-theme-slanted-constructs t
+        modus-operandi-theme-bold-constructs t
+        ;; modus-operandi-theme-fringes 'subtle ; {nil,'subtle,'intense}
+        ;; modus-operandi-theme-3d-modeline t
+        modus-operandi-theme-faint-syntax t
+        ;; modus-operandi-theme-intense-hl-line t
+        modus-operandi-theme-intense-paren-match t
+        modus-operandi-theme-prompts 'subtle ; {nil,'subtle,'intense}
+        modus-operandi-theme-completions 'opinionated ; {nil,'moderate,'opinionated}
+        modus-operandi-theme-diffs nil ; {nil,'desaturated,'fg-only}
+        modus-operandi-theme-org-blocks 'rainbow ; {nil,'greyscale,'rainbow}
+        ;; modus-operandi-theme-variable-pitch-headings t
+        modus-operandi-theme-rainbow-headings t
+        ;; modus-operandi-theme-scale-headings t
+        )
+  :config
+  (load-theme 'modus-operandi t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; General purpose packages
+
+(use-package dired-x ;; so that C-x C-j always does dired-jump
+  :demand t)
+
 (use-package ace-window
   :ensure t
   :config
   (global-set-key (kbd "M-o") 'ace-window)
   (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
-
-(use-package aggressive-indent
-  :ensure t
-  :init
-  (global-aggressive-indent-mode 1))
 
 (use-package which-key
   :ensure t
@@ -90,6 +119,7 @@
   :ensure t
   :config
   (projectile-global-mode)
+  (setq projectile-switch-project-action #'projectile-dired)
   (setq projectile-completion-system 'ivy))
 
 (use-package counsel-projectile
@@ -119,19 +149,73 @@
   :bind (("M-s M-s" . yas-insert-snippet)))
 
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; elfeed
+;; (use-package elfeed
+;;   :ensure t
+;;   :defer t
+;;   :commands (elfeed)
+;;   :config
+;;   (global-set-key (kbd "C-x w") 'elfeed)
+;;   (setq-default elfeed-search-filter "@3-months-ago +unread +essay "))
+
+;; (setq elfeed-feeds
+;;       '("https://herbsutter.com/rss"))
+;; (use-package elfeed-org
+;;   :ensure t
+;;   :config
+;;   (elfeed-org)
+;;   (setq rmh-elfeed-org-files (list "/Users/tedgro/.emacs.d/elfeed.org")))
+
+;; (setq elfeed-show-mode-hook
+;;       (lambda ()
+;; 	(set-face-attribute
+;;          'variable-pitch (selected-frame)
+;;          :font (font-spec :family "Menlo" :size 12))
+;; 	(setq fill-column 80)
+;; 	(setq elfeed-show-entry-switch #'my-show-elfeed)))
+
+;; (defun my-show-elfeed (buffer)
+;;   (with-current-buffer buffer
+;;     (setq buffer-read-only nil)
+;;     (goto-char (point-min))
+;;     (re-search-forward "\n\n")
+;;     (fill-individual-paragraphs (point) (point-max))
+;;     (setq buffer-read-only t))
+;;   (switch-to-buffer buffer))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Evil mode
 (use-package evil
   :ensure t
   :init
   (setq evil-want-keybinding nil)
+  (setq evil-want-C-i-jump nil)
   :config
+  (evil-set-initial-state 'vterm-mode 'emacs)
   (evil-mode 1))
+
 (use-package evil-collection
   :after evil
   :ensure t
   :custom (evil-collection-company-use-tng nil)
   :init (evil-collection-init))
 
+(use-package evil-org
+  :ensure t
+  :after org
+  :config
+  (add-hook 'org-mode-hook 'evil-org-mode)
+  (add-hook 'evil-org-mode-hook
+            (lambda ()
+              (evil-org-set-key-theme)))
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; mode for reading epubs
+(use-package nov
+  :ensure t
+  :config
+  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+  (setq nov-variable-pitch nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; lsp
 (use-package lsp-mode
@@ -186,11 +270,15 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Filetype-specific packages
+
+;; vterm
+(use-package vterm
+    :ensure t)
+
 ;; Stan
 (use-package stan-mode
   ;; Uncomment if directly loading from your development repo
   ;; :load-path "your-path/stan-mode/stan-mode"
-  :ensure t
   :mode ("\\.stan\\'" . stan-mode)
   :hook (stan-mode . stan-mode-setup)
   ;;
@@ -202,18 +290,16 @@
 (use-package company-stan
   ;; Uncomment if directly loading from your development repo
   ;; :load-path "your-path/stan-mode/company-stan/"
-  :ensure t
-  :hook (stan-mode . company-stan-backend)
+  :hook (stan-mode . company-stan-setup)
   ;;
   :config
   ;; Whether to use fuzzy matching in `company-stan'
-  (setq company-stan-fuzzy nil))
+  (setq company-stan-fuzzy 1))
 
 ;;; eldoc-stan.el
 (use-package eldoc-stan
   ;; Uncomment if directly loading from your development repo
   ;; :load-path "your-path/stan-mode/eldoc-stan/"
-  :ensure t
   :hook (stan-mode . eldoc-stan-setup)
   ;;
   :config
@@ -222,20 +308,21 @@
 
 ;;; flycheck-stan.el
 (use-package flycheck-stan
-  ;; Uncomment if directly loading from your development repo
-  ;; :load-path "your-path/stan-mode/flycheck-stan/"
-  :ensure t
-  :hook (stan-mode . flycheck-stan-setup)
-  ;;
+  ;; Add a hook to setup `flycheck-stan' upon `stan-mode' entry
+  :hook ((stan-mode . flycheck-stan-stanc2-setup)
+         (stan-mode . flycheck-stan-stanc3-setup))
   :config
-  ;; No configuration options as of now.
-  )
+  ;; A string containing the name or the path of the stanc2 executable
+  ;; If nil, defaults to `stanc2'
+  (setq flycheck-stanc-executable nil)
+  ;; A string containing the name or the path of the stanc2 executable
+  ;; If nil, defaults to `stanc3'
+  (setq flycheck-stanc3-executable nil))
 
 ;;; stan-snippets.el
 (use-package stan-snippets
   ;; Uncomment if directly loading from your development repo
   ;; :load-path "your-path/stan-mode/stan-snippets/"
-  :ensure t
   :hook (stan-mode . stan-snippets-initialize)
   ;;
   :config
@@ -278,12 +365,17 @@
 ;; R
 (use-package ess
   :ensure t
-  :init (require 'ess-site))
+  :init (require 'ess-site)
+  :config
+  (exec-path-from-shell-copy-env "LC_ALL")
+  (exec-path-from-shell-copy-env "LANG"))
 
 ;; Python
 (setq python-shell-interpreter "ipython"
       python-shell-interpreter-args "--simple-prompt -i")
 (use-package pyvenv
+  :ensure t)
+(use-package jupyter
   :ensure t)
 
 ;; bibtex
@@ -291,26 +383,44 @@
   :ensure t
   :bind (("M-i" . ivy-bibtex))
   :config
+  (defun bibtex-completion-format-citation-org-cite (keys)
+    "Format ebib references for keys in KEYS."
+    (s-join ", "
+            (--map (format "cite:%s" it) keys)
+            ))
+
+  (defun bibtex-completion-insert-org-file-link (keys)
+    "Insert an org mode format link to the pdf"
+    (insert (s-join ", "
+                    (cl-loop
+                     for key in keys
+                     for entry = (bibtex-completion-get-entry key)
+                     for title = (bibtex-completion-apa-get-value "title" entry)
+                     for pdf = (car (bibtex-completion-find-pdf key))
+                     collect (org-link-make-string pdf title)))))
+  (ivy-bibtex-ivify-action ;; makes this function available to ivy-bibtex
+   bibtex-completion-insert-org-file-link ivy-bibtex-insert-org-file-link)
+  (setq bibtex-completion-pdf-open-function
+        (lambda (fpath)
+          (call-process "open" nil 0 nil "-a" "/Applications/Skim.app" fpath)))
+  (setq bibtex-completion-format-citation-functions
+        '((org-mode      . bibtex-completion-format-citation-org-cite)
+          (latex-mode    . bibtex-completion-format-citation-cite)
+          (markdown-mode . bibtex-completion-format-citation-pandoc-citeproc)
+          (default       . bibtex-completion-format-citation-default)))
+  (setq ivy-bibtex-default-action 'ivy-bibtex-insert-citation)
   (setq bibtex-completion-bibliography "/Users/tedgro/Dropbox/Reading/bibliography.bib")
   (setq bibtex-completion-pdf-field "File")
   (setq bibtex-completion-library-path "/Users/tedgro/Dropbox/Reading/pdf")
-  (setq bibtex-completion-notes-path "/Users/tedgro/Dropbox/Writing/reading_notes/reading_notes.org"))
-
-;; Pdf-tools
-;;; Install epdfinfo via 'brew install pdf-tools' and then install the
-;;; pdf-tools elisp via the use-package below. To upgrade the epdfinfo
-;;; server, just do 'brew upgrade pdf-tools' prior to upgrading to newest
-;;; pdf-tools package using Emacs package system. If things get messed
-;;; up, just do 'brew uninstall pdf-tools', wipe out the elpa
-;;; pdf-tools package and reinstall both as at the start.
-(use-package pdf-tools
-  :ensure t
-  :config
-  (custom-set-variables
-   '(pdf-tools-handle-upgrades nil)) ; Use brew upgrade pdf-tools instead.
-  (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo")
-  (setq auto-revert-interval 0.5))
-(pdf-tools-install)
+  (setq bibtex-completion-notes-path "/Users/tedgro/Writing/reading_notes/reading_notes.org")
+  (ivy-set-actions
+   'ivy-bibtex
+   '(("p" ivy-bibtex-open-pdf "Open PDF file (if present)")
+     ("c" ivy-bibtex-insert-citation "Insert citation")
+     ("r" ivy-bibtex-insert-reference "Insert reference")
+     ("b" ivy-bibtex-insert-bibtex "Insert BibTeX entry")
+     ("l" ivy-bibtex-insert-org-file-link "Org-format link to pdf file")
+     )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Org mode configuration
 
@@ -339,6 +449,9 @@
     (when (not (file-directory-p pub-dir))
       (make-directory pub-dir))))
 
+;; spellchecking
+(add-hook 'org-mode-hook 'flyspell-mode)
+
 ;; images
 (setq org-image-actual-width nil)
 
@@ -352,8 +465,11 @@
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((python . t)
-   (ipython . t)
-   (shell . t)))
+   (shell . t)
+   (jupyter . t)))
+(setq org-babel-default-header-args:jupyter-python '((:async . "yes")
+                                                     (:session . "py")
+                                                     (:kernel . "python3")))
 (setq org-confirm-babel-evaluate nil)
 (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
@@ -361,12 +477,25 @@
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
 (define-key global-map "\C-cc" 'org-capture)
 (define-key global-map "\C-ca" 'org-agenda)
-(setq org-agenda-files '("~/Dropbox/Writing/gtd/gtd.org"))
-(setq org-capture-templates '(("i" "Inbox" entry
-                               (file+headline "~/Dropbox/Writing/gtd/gtd.org" "Inbox")
-                               "* TODO %i%?")))
-(setq org-refile-targets '(("~/Dropbox/Writing/gtd/gtd.org" :maxlevel . 1)))
-
+(setq org-agenda-files '("~/org"))
+(setq org-capture-templates
+      '(("t" "Task" entry (file "~/org/tasks.org") "* TODO %i%?")
+        ("p" "Paper" entry (file "~/org/papers.org") "* %i%?")
+        ("b" "Biochem note" entry (file+headline "~/org/biochem.org" "Notes") "* %i%?")
+        ("r" "Recipe" entry (file "~/org/recipes.org") "* %i%?")
+        ("d" "Diary entry" entry (file "~/org/diary.org") "* %i%?")
+        ("c" "Content" entry (file "~/org/content.org") "* %i%?")
+        ("s" "Shopping" entry (file "~/org/shopping.org") "* %i%?")
+        ("e" "Draft email" entry (file "~/org/draft_emails.org") "* %i%?")))
+(setq org-refile-use-outline-path 'file)
+(setq org-refile-targets '(("~/org/tasks.org" :level . 0)
+                           ("~/org/politics.org" :level . 0)
+                           ("~/org/biochem.org" :level . 0)
+                           ("~/org/shopping.org" :level . 0)
+                           ("~/org/draft_emails.org" :level . 0)
+                           ("~/org/content.org" :level . 0)
+                           ("~/org/recipes.org" :level . 0)
+                           ("~/org/diary.org" :level . 0)))
 ;; youtube links (Prefix is 'yt')
 (defvar yt-iframe-format
   ;; You may want to change your width and height.
@@ -375,9 +504,6 @@
           " src=\"https://www.youtube.com/embed/%s\""
           " frameborder=\"0\""
           " allowfullscreen>%s</iframe>"))
-
-(require 'ox-bibtex)
-(setq org-bibtex-file "/Users/tedgro/Dropbox/Reading/bibliography.bib")
 (org-add-link-type
  "yt"
  (lambda (handle)
@@ -391,8 +517,28 @@
      (latex (format "\href{%s}{%s}"
                     path (or desc "video"))))))
 
+(require 'ox-bibtex)
+(setq org-bibtex-file "/Users/tedgro/Dropbox/Reading/bibliography.bib")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
+
+;; function that searches up for the nearest makefile and compiles it
+(defun compile-parent (command)
+  (interactive
+   (let* ((make-directory (locate-dominating-file (buffer-file-name)
+                                                  "Makefile"))
+          (command (concat "make -k -C "
+                           (shell-quote-argument make-directory))))
+     (list (compilation-read-command command))))
+  (compile command))
+
+;; compile with C-c m
+;; NB use C-u C-c m to change the compilation command
+(global-set-key (kbd "C-c m") 'recompile)
+
+;; quicker keystrokes
+(setq echo-keystrokes 0.01)
+
 ;; Don't report auto-reverts
 (setq auto-revert-verbose nil)
 
@@ -427,41 +573,25 @@
 
 ;; Spell check with aspell
 (setq ispell-program-name "aspell")
-
+;; misc getting rid of furniture
 (tool-bar-mode -1)
+(menu-bar-mode -1)
 (toggle-scroll-bar -1)
+
+;; one-character confirm-or-deny
 (fset 'yes-or-no-p 'y-or-n-p)
 
-;; function for incrementing numbers with C-c +
-(defun increment-number-at-point ()
-  (interactive)
-  (skip-chars-backward "0-9")
-  (or (looking-at "[0-9]+")
-      (error "No number at point"))
-  (replace-match (number-to-string (1+ (string-to-number (match-string 0))))))
-(global-set-key (kbd "C-c +") 'increment-number-at-point)
-
+;; use ibuffer instead of buffer list
+(define-key (current-global-map) [remap list-buffers] 'ibuffer)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(csv-separators (quote ("," "	" ";")))
  '(custom-safe-themes
-   (quote
-    ("33af2d5cb040182b798c3a4ee6d16210e700a2fabaa409231e1c4a003cafd1c2" "6d9cb4d7b94002b476bfd18025c9ed62283a572b660e8fb988ea100aa6b8eeab" "8dcdc47af0290303002023237a77b5b412692d1b8658da819ab18caccfb811b5" "1436d643b98844555d56c59c74004eb158dc85fc55d2e7205f8d9b8c860e177f" default)))
+   '("07c3a4ab1bc1fcae15baa26b9245ca9e11f4876ad6908df2219ec58d153058c0" "224b4c57e164d6ad2edc4ab1c2a20fbd95ad15e44f8fb2b797001cd39dd59123" default))
  '(package-selected-packages
-   (quote
-    (flycheck-stan c-eldoc eldoc-stan company-stan commentary-theme faff-theme color-theme-sanityinc-solarized color-theme-sanityinc-solarized-light evil-collection ox-tufte ox-ipynb csv-mode pipenv color-theme-sanityinc-tomorrow zenburn-theme darktooth-theme dracula-theme gruvbox-theme which-key use-package try stan-snippets solarized-theme scala-mode pyenv-mode pdf-tools ox-pandoc ox-hugo org-plus-contrib org-bullets ob-ipython neotree matlab-mode magit lsp-ui lsp-python latex-preview-pane key-chord ivy-hydra ivy-bibtex htmlize helm-bibtex flycheck exec-path-from-shell evil ess elpy ein dumb-jump dockerfile-mode counsel-projectile company-lsp auctex aggressive-indent ag ace-window)))
- '(pdf-tools-handle-upgrades nil))
-;; (custom-set-faces
-;; custom-set-faces was added by Custom.
-;; If you edit it by hand, you could mess it up, so be careful.
-;; Your init file should contain only one such instance.
-;; If there is more than one, they won't work right.
-;; '(org-level-1 ((t (:inherit default :foreground "#83a598" :height 1))))
-;; '(org-level-2 ((t (:inherit default :foreground "#fabd2f" :height 1))))
-;; '(org-level-4 ((t (:inherit default :foreground "#fb4933" :weight normal :height 1)))))
+   '(vterm modus-vivendi-theme modus-operandi-theme zenburn-theme which-key use-package try stan-snippets solarized-theme scala-mode pyenv-mode pdf-tools ox-tufte ox-pandoc ox-hugo org-tree-slide org-plus-contrib org-bullets ob-ipython nov neotree matlab-mode magit lsp-ui lsp-python latex-preview-pane key-chord jupyter julia-mode ivy-hydra ivy-bibtex inf-ruby htmlize helm-bibtex gruvbox-theme flycheck-stan faff-theme evil-org evil-collection ess elpy elfeed-org eldoc-stan ein dumb-jump dracula-theme doom-themes dockerfile-mode darktooth-theme csv-mode counsel-projectile company-stan commentary-theme color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized c-eldoc auctex aggressive-indent ag ace-window)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
