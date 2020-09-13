@@ -272,8 +272,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Filetype-specific packages
 
 ;; vterm
-(use-package vterm
-    :ensure t)
+(use-package vterm)
 
 ;; Stan
 (use-package stan-mode
