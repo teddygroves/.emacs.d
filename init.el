@@ -1,8 +1,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; package and use-package
+(defvar in-termux-p
+  (and (equal (system-name) "localhost")
+       (not (equal user-login-name "mylaptopusername")))
+    "t if we are in termux emacs.")
+
 (require 'package)
 (setq package-enable-at-startup nil)
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.org/packages/") t)
+(add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
 (package-initialize)
 (server-start)
 (unless (package-installed-p 'use-package)
@@ -135,9 +141,7 @@
 	 ("M-g z" . dumb-jump-go-prefer-external-other-window))
   :after ivy
   :config
-  (setq dumb-jump-selector 'ivy)
-  :init
-  (dumb-jump-mode))
+  (setq dumb-jump-selector 'ivy))
 
 (use-package ag
   :ensure t)
@@ -272,7 +276,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Filetype-specific packages
 
 ;; vterm
-(use-package vterm)
+(use-package vterm
+  :ensure t)
 
 ;; Stan
 (use-package stan-mode
@@ -375,6 +380,7 @@
 (use-package pyvenv
   :ensure t)
 (use-package jupyter
+  :unless in-termux-p
   :ensure t)
 
 ;; bibtex
@@ -424,9 +430,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Org mode configuration
 
 ;; Use recent version of org mode with contributed packages
-(add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
-(unless (package-installed-p 'org-plus-contrib)  ;; Make sure the Org package is
-  (package-install 'org-plus-contrib))
+;; (unless (package-installed-p 'org-plus-contrib)  ;; Make sure the Org package is
+;;(package-install 'org-plus-contrib))
 
 ;; interface
 (setq org-src-fontify-natively t)
@@ -435,6 +440,7 @@
 
 ;; export
 (use-package ox-pandoc
+  :unless in-termux-p
   :ensure t
   :init (add-to-list 'exec-path "/usr/local/bin"))
 (require 'ox-publish)
@@ -461,14 +467,16 @@
    (car (bibtex-completion-find-pdf arg bibtex-completion-find-additional-pdfs))))
 
 ;; Org babel
-(org-babel-do-load-languages
+(unless in-termux-p (org-babel-do-load-languages
  'org-babel-load-languages
  '((python . t)
    (shell . t)
-   (jupyter . t)))
+   (jupyter . t))))
+
 (setq org-babel-default-header-args:jupyter-python '((:async . "yes")
                                                      (:session . "py")
                                                      (:kernel . "python3")))
+
 (setq org-confirm-babel-evaluate nil)
 (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
@@ -516,7 +524,7 @@
      (latex (format "\href{%s}{%s}"
                     path (or desc "video"))))))
 
-(require 'ox-bibtex)
+(unless in-termux-p (require 'ox-bibtex))
 (setq org-bibtex-file "/Users/tedgro/Dropbox/Reading/bibliography.bib")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
@@ -575,7 +583,7 @@
 ;; misc getting rid of furniture
 (tool-bar-mode -1)
 (menu-bar-mode -1)
-(toggle-scroll-bar -1)
+(unless in-termux-p (toggle-scroll-bar -1))
 
 ;; one-character confirm-or-deny
 (fset 'yes-or-no-p 'y-or-n-p)
