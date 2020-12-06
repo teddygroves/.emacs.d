@@ -79,6 +79,9 @@
   (load-theme 'tron-legacy t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; General purpose packages
 
+(add-hook 'dired-mode-hook
+          (lambda () (dired-hide-details-mode)))
+
 (use-package dired-x ;; so that C-x C-j always does dired-jump
   :demand t)
 
