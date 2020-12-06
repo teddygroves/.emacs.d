@@ -207,9 +207,9 @@
   (setq evil-want-keybinding nil)
   (setq evil-want-C-i-jump nil)
   :config
-  (evil-mode 1)
   (evil-set-initial-state 'vterm-mode 'emacs)
-  (evil-set-initial-state 'rst-mode 'emacs))
+  (evil-set-initial-state 'rst-mode 'emacs)
+  (evil-mode 1))
 
 (use-package evil-collection
   :after evil
@@ -219,7 +219,7 @@
 
 (use-package evil-org
   :ensure t
-  :after org
+  :after org evil
   :config
   (add-hook 'org-mode-hook 'evil-org-mode)
   (add-hook 'evil-org-mode-hook
