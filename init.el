@@ -45,28 +45,38 @@
   
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
-(use-package modus-vivendi-theme :ensure)
-(use-package modus-operandi-theme
+;; (use-package modus-vivendi-theme :ensure)
+;; (use-package modus-operandi-theme
+;;   :ensure t
+;;   :init
+;;   ;; NOTE: Everything is disabled by default.
+;;   (setq modus-operandi-theme-slanted-constructs t
+;;         modus-operandi-theme-bold-constructs t
+;;         ;; modus-operandi-theme-fringes 'subtle ; {nil,'subtle,'intense}
+;;         ;; modus-operandi-theme-3d-modeline t
+;;         modus-operandi-theme-faint-syntax t
+;;         ;; modus-operandi-theme-intense-hl-line t
+;;         modus-operandi-theme-intense-paren-match t
+;;         modus-operandi-theme-prompts 'subtle ; {nil,'subtle,'intense}
+;;         modus-operandi-theme-completions 'opinionated ; {nil,'moderate,'opinionated}
+;;         modus-operandi-theme-diffs nil ; {nil,'desaturated,'fg-only}
+;;         modus-operandi-theme-org-blocks 'rainbow ; {nil,'greyscale,'rainbow}
+;;         ;; modus-operandi-theme-variable-pitch-headings t
+;;         modus-operandi-theme-rainbow-headings t
+;;         ;; modus-operandi-theme-scale-headings t
+;;         )
+;;   :config
+;;   (load-theme 'modus-operandi t))
+;; (use-package minimal-theme
+;;   :ensure t
+;;   :config (load-theme 'minimal-light t))
+  
+(use-package tron-legacy-theme
   :ensure t
-  :init
-  ;; NOTE: Everything is disabled by default.
-  (setq modus-operandi-theme-slanted-constructs t
-        modus-operandi-theme-bold-constructs t
-        ;; modus-operandi-theme-fringes 'subtle ; {nil,'subtle,'intense}
-        ;; modus-operandi-theme-3d-modeline t
-        modus-operandi-theme-faint-syntax t
-        ;; modus-operandi-theme-intense-hl-line t
-        modus-operandi-theme-intense-paren-match t
-        modus-operandi-theme-prompts 'subtle ; {nil,'subtle,'intense}
-        modus-operandi-theme-completions 'opinionated ; {nil,'moderate,'opinionated}
-        modus-operandi-theme-diffs nil ; {nil,'desaturated,'fg-only}
-        modus-operandi-theme-org-blocks 'rainbow ; {nil,'greyscale,'rainbow}
-        ;; modus-operandi-theme-variable-pitch-headings t
-        modus-operandi-theme-rainbow-headings t
-        ;; modus-operandi-theme-scale-headings t
-        )
   :config
-  (load-theme 'modus-operandi t))
+  (setq tron-legacy-theme-vivid-cursor t)
+  (setq tron-legacy-theme-dark-fg-bright-comments t)
+  (load-theme 'tron-legacy t))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; General purpose packages
 
 (use-package dired-x ;; so that C-x C-j always does dired-jump
@@ -194,8 +204,9 @@
   (setq evil-want-keybinding nil)
   (setq evil-want-C-i-jump nil)
   :config
+  (evil-mode 1)
   (evil-set-initial-state 'vterm-mode 'emacs)
-  (evil-mode 1))
+  (evil-set-initial-state 'rst-mode 'emacs))
 
 (use-package evil-collection
   :after evil
@@ -374,14 +385,65 @@
   (exec-path-from-shell-copy-env "LC_ALL")
   (exec-path-from-shell-copy-env "LANG"))
 
+(use-package poly-R  ;; for editing and exporting Rmd files
+  :ensure t)
+
 ;; Python
-(setq python-shell-interpreter "ipython"
-      python-shell-interpreter-args "--simple-prompt -i")
+(setq python-shell-interpreter "jupyter-console"
+      python-shell-interpreter-args "--simple-prompt"
+      python-shell-prompt-detect-failure-warning nil)
+(setq python-shell-completion-native-enable nil)
+(setq python-indent-def-block-scale 1) ;; function arguments have normal indentation
+
 (use-package pyvenv
   :ensure t)
 (use-package jupyter
   :unless in-termux-p
   :ensure t)
+
+;; (use-package eval-in-repl
+;;   :ensure t
+;;   :config
+
+;;   (require 'eval-in-repl-python)
+;;   (setq eir-use-python-shell-send-string t)
+;;   (add-hook 'python-mode-hook
+;;             '(lambda ()
+;;                (local-set-key (kbd "<C-return>") 'eir-eval-in-python))))
+
+(use-package elpy
+  :ensure t
+  :init (elpy-enable)
+  :config (setq elpy-shell-echo-output nil))
+
+;;; Python Polymode (Markdown + Python)
+;;;
+;;; https://stackoverflow.com/questions/52489905/emacs-polymode-for-markdown-and-python
+;;; https://emacs.stackexchange.com/questions/20437/polymode-with-python-and-latex-mode/
+;;;
+;;; Further discussion and working solution at...
+;;;
+;;; https://github.com/polymode/polymode/issues/180
+ 
+;; define pweave polymodes
+(use-package poly-noweb
+  :ensure t)
+(use-package poly-markdown
+  :ensure t)
+ 
+;; Python/Markdown
+(defcustom pm-inner/noweb-python
+  (clone pm-inner/noweb
+         :name "noweb-python"
+         :mode 'python-mode)
+  "Noweb for Python"
+  :group 'poly-innermodes
+  :type 'object)
+ 
+(define-polymode poly-pweave-mode poly-markdown-mode
+  :innermodes '(pm-inner/noweb-python :inherit))
+ 
+(add-to-list 'auto-mode-alist '("\\.pymd" . poly-pweave-mode))
 
 ;; bibtex
 (use-package ivy-bibtex
@@ -480,17 +542,27 @@
 (setq org-confirm-babel-evaluate nil)
 (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
+;; Org agenda
+(setq org-agenda-files '("~/org/tasks.org"))
+(define-key global-map "\C-ca" 'org-agenda)
+(setq org-agenda-custom-commands
+      '(("c" "My custom agenda view"
+         ((agenda)
+          (tags-todo "Paper")
+          (tags-todo "Admin")
+          (tags-todo "Writing")
+          (tags-todo "Code")
+          (tags-todo "-Paper+-Admin+-Writing+-Code")))))
+
 ;; Gtd
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
 (define-key global-map "\C-cc" 'org-capture)
-(define-key global-map "\C-ca" 'org-agenda)
-(setq org-agenda-files '("~/org"))
 (setq org-capture-templates
       '(("t" "Task" entry (file "~/org/tasks.org") "* TODO %i%?")
         ("p" "Paper" entry (file "~/org/papers.org") "* %i%?")
         ("b" "Biochem note" entry (file+headline "~/org/biochem.org" "Notes") "* %i%?")
         ("r" "Recipe" entry (file "~/org/recipes.org") "* %i%?")
-        ("d" "Diary entry" entry (file "~/org/diary.org") "* %i%?")
+        ("d" "Diary entry" entry (file "~/org/diary.org") "* %T %i%?")
         ("c" "Content" entry (file "~/org/content.org") "* %i%?")
         ("s" "Shopping" entry (file "~/org/shopping.org") "* %i%?")
         ("e" "Draft email" entry (file "~/org/draft_emails.org") "* %i%?")))
@@ -580,6 +652,8 @@
 
 ;; Spell check with aspell
 (setq ispell-program-name "aspell")
+(setq ispell-dictionary "uk")
+
 ;; misc getting rid of furniture
 (tool-bar-mode -1)
 (menu-bar-mode -1)
@@ -596,12 +670,13 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("07c3a4ab1bc1fcae15baa26b9245ca9e11f4876ad6908df2219ec58d153058c0" "224b4c57e164d6ad2edc4ab1c2a20fbd95ad15e44f8fb2b797001cd39dd59123" default))
+   '("4780d7ce6e5491e2c1190082f7fe0f812707fc77455616ab6f8b38e796cbffa9" "cc0dbb53a10215b696d391a90de635ba1699072745bf653b53774706999208e3" "07c3a4ab1bc1fcae15baa26b9245ca9e11f4876ad6908df2219ec58d153058c0" "224b4c57e164d6ad2edc4ab1c2a20fbd95ad15e44f8fb2b797001cd39dd59123" default))
  '(package-selected-packages
-   '(vterm modus-vivendi-theme modus-operandi-theme zenburn-theme which-key use-package try stan-snippets solarized-theme scala-mode pyenv-mode pdf-tools ox-tufte ox-pandoc ox-hugo org-tree-slide org-plus-contrib org-bullets ob-ipython nov neotree matlab-mode magit lsp-ui lsp-python latex-preview-pane key-chord jupyter julia-mode ivy-hydra ivy-bibtex inf-ruby htmlize helm-bibtex gruvbox-theme flycheck-stan faff-theme evil-org evil-collection ess elpy elfeed-org eldoc-stan ein dumb-jump dracula-theme doom-themes dockerfile-mode darktooth-theme csv-mode counsel-projectile company-stan commentary-theme color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized c-eldoc auctex aggressive-indent ag ace-window)))
+   '(emacs-tron-theme tron-theme minimal-theme eval-in-repl eval-in-repl-python poly-R vterm modus-vivendi-theme modus-operandi-theme zenburn-theme which-key use-package try stan-snippets solarized-theme scala-mode pyenv-mode pdf-tools ox-tufte ox-pandoc ox-hugo org-tree-slide org-plus-contrib org-bullets ob-ipython nov neotree matlab-mode magit lsp-ui lsp-python latex-preview-pane key-chord jupyter julia-mode ivy-hydra ivy-bibtex inf-ruby htmlize helm-bibtex gruvbox-theme flycheck-stan faff-theme evil-org evil-collection ess elpy elfeed-org eldoc-stan ein dumb-jump dracula-theme doom-themes dockerfile-mode darktooth-theme csv-mode counsel-projectile company-stan commentary-theme color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized c-eldoc auctex aggressive-indent ag ace-window)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+(put 'downcase-region 'disabled nil)
