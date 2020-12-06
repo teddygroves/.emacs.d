@@ -568,6 +568,8 @@
         ("d" "Diary entry" entry (file "~/org/diary.org") "* %T %i%?")
         ("c" "Content" entry (file "~/org/content.org") "* %i%?")
         ("s" "Shopping" entry (file "~/org/shopping.org") "* %i%?")
+        ("z" "Programming tip" entry
+         (file+headline "~/org/programming_tips.org" "Inbox") "** %i%?")
         ("e" "Draft email" entry (file "~/org/draft_emails.org") "* %i%?")))
 (setq org-refile-use-outline-path 'file)
 (setq org-refile-targets '(("~/org/tasks.org" :level . 0)
