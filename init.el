@@ -575,6 +575,7 @@
 (setq org-refile-targets '(("~/org/tasks.org" :level . 0)
                            ("~/org/politics.org" :level . 0)
                            ("~/org/biochem.org" :level . 0)
+                           ("~/org/papers.org" :level . 0)
                            ("~/org/shopping.org" :level . 0)
                            ("~/org/draft_emails.org" :level . 0)
                            ("~/org/content.org" :level . 0)
