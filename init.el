@@ -24,59 +24,19 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
-(use-package doom-themes
-  :ensure t
-  :config
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-
-  ;; choose a theme
-  ;; (load-theme 'doom-solarized-light t)
-
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-  
-  ;; Enable custom neotree theme (all-the-icons must be installed!)
-  (doom-themes-neotree-config)
-  ;; or for treemacs users
-  (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
-  (doom-themes-treemacs-config)
-  
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
-;; (use-package modus-vivendi-theme :ensure)
-;; (use-package modus-operandi-theme
-;;   :ensure t
-;;   :init
-;;   ;; NOTE: Everything is disabled by default.
-;;   (setq modus-operandi-theme-slanted-constructs t
-;;         modus-operandi-theme-bold-constructs t
-;;         ;; modus-operandi-theme-fringes 'subtle ; {nil,'subtle,'intense}
-;;         ;; modus-operandi-theme-3d-modeline t
-;;         modus-operandi-theme-faint-syntax t
-;;         ;; modus-operandi-theme-intense-hl-line t
-;;         modus-operandi-theme-intense-paren-match t
-;;         modus-operandi-theme-prompts 'subtle ; {nil,'subtle,'intense}
-;;         modus-operandi-theme-completions 'opinionated ; {nil,'moderate,'opinionated}
-;;         modus-operandi-theme-diffs nil ; {nil,'desaturated,'fg-only}
-;;         modus-operandi-theme-org-blocks 'rainbow ; {nil,'greyscale,'rainbow}
-;;         ;; modus-operandi-theme-variable-pitch-headings t
-;;         modus-operandi-theme-rainbow-headings t
-;;         ;; modus-operandi-theme-scale-headings t
-;;         )
-;;   :config
-;;   (load-theme 'modus-operandi t))
-;; (use-package minimal-theme
-;;   :ensure t
-;;   :config (load-theme 'minimal-light t))
-  
 (use-package tron-legacy-theme
   :ensure t
   :config
+  (load-theme 'tron-legacy t)
   (setq tron-legacy-theme-vivid-cursor t)
-  (setq tron-legacy-theme-dark-fg-bright-comments t)
-  (load-theme 'tron-legacy t))
+  (setq tron-legacy-theme-dark-fg-bright-comments t))
+
+(use-package berrys-theme
+  :ensure t
+  :config
+  ;; (load-theme 'berrys t)
+  )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; General purpose packages
 
 (add-hook 'dired-mode-hook
@@ -428,12 +388,14 @@
 ;;;
 ;;; https://github.com/polymode/polymode/issues/180
  
-;; define pweave polymodes
+
 (use-package poly-noweb
   :ensure t)
-(use-package poly-markdown
+;; (use-package poly-markdown
+  ;; :ensure t)
+(use-package poly-rst
   :ensure t)
- 
+
 ;; Python/Markdown
 (defcustom pm-inner/noweb-python
   (clone pm-inner/noweb
@@ -546,7 +508,7 @@
 (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
 ;; Org agenda
-(setq org-agenda-files '("~/org/tasks.org"))
+(setq org-agenda-files '("~/org/work/tasks.org"))
 (define-key global-map "\C-ca" 'org-agenda)
 (setq org-agenda-custom-commands
       '(("c" "My custom agenda view"
@@ -555,22 +517,22 @@
           (tags-todo "Admin")
           (tags-todo "Writing")
           (tags-todo "Code")
-          (tags-todo "-Paper+-Admin+-Writing+-Code")))))
+          (tags-todo "-Paper&-Admin&-Writing&-Code")))))
 
 ;; Gtd
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
 (define-key global-map "\C-cc" 'org-capture)
 (setq org-capture-templates
-      '(("t" "Task" entry (file "~/org/tasks.org") "* TODO %i%?")
-        ("p" "Paper" entry (file "~/org/papers.org") "* %i%?")
-        ("b" "Biochem note" entry (file+headline "~/org/biochem.org" "Notes") "* %i%?")
+      '(("t" "Task" entry (file "~/org/work/tasks.org") "* TODO %i%?")
+        ("p" "Paper" entry (file "~/org/work/papers.org") "* %i%?")
+        ("b" "Biochem note" entry (file+headline "~/org/work/biochem.org" "Notes") "* %i%?")
         ("r" "Recipe" entry (file "~/org/recipes.org") "* %i%?")
         ("d" "Diary entry" entry (file "~/org/diary.org") "* %T %i%?")
         ("c" "Content" entry (file "~/org/content.org") "* %i%?")
         ("s" "Shopping" entry (file "~/org/shopping.org") "* %i%?")
         ("z" "Programming tip" entry
-         (file+headline "~/org/programming_tips.org" "Inbox") "** %i%?")
-        ("e" "Draft email" entry (file "~/org/draft_emails.org") "* %i%?")))
+         (file+headline "~/org/work/programming_tips.org" "Inbox") "** %i%?")
+        ("e" "Draft email" entry (file "~/org/work/draft_emails.org") "* %i%?")))
 (setq org-refile-use-outline-path 'file)
 (setq org-refile-targets '(("~/org/tasks.org" :level . 0)
                            ("~/org/politics.org" :level . 0)
@@ -678,7 +640,7 @@
  '(custom-safe-themes
    '("4780d7ce6e5491e2c1190082f7fe0f812707fc77455616ab6f8b38e796cbffa9" "cc0dbb53a10215b696d391a90de635ba1699072745bf653b53774706999208e3" "07c3a4ab1bc1fcae15baa26b9245ca9e11f4876ad6908df2219ec58d153058c0" "224b4c57e164d6ad2edc4ab1c2a20fbd95ad15e44f8fb2b797001cd39dd59123" default))
  '(package-selected-packages
-   '(emacs-tron-theme tron-theme minimal-theme eval-in-repl eval-in-repl-python poly-R vterm modus-vivendi-theme modus-operandi-theme zenburn-theme which-key use-package try stan-snippets solarized-theme scala-mode pyenv-mode pdf-tools ox-tufte ox-pandoc ox-hugo org-tree-slide org-plus-contrib org-bullets ob-ipython nov neotree matlab-mode magit lsp-ui lsp-python latex-preview-pane key-chord jupyter julia-mode ivy-hydra ivy-bibtex inf-ruby htmlize helm-bibtex gruvbox-theme flycheck-stan faff-theme evil-org evil-collection ess elpy elfeed-org eldoc-stan ein dumb-jump dracula-theme doom-themes dockerfile-mode darktooth-theme csv-mode counsel-projectile company-stan commentary-theme color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized c-eldoc auctex aggressive-indent ag ace-window)))
+   '(eink-theme berrys-theme poly-rst emacs-tron-theme tron-theme minimal-theme eval-in-repl eval-in-repl-python poly-R vterm modus-vivendi-theme modus-operandi-theme zenburn-theme which-key use-package try stan-snippets solarized-theme scala-mode pyenv-mode pdf-tools ox-tufte ox-pandoc ox-hugo org-tree-slide org-plus-contrib org-bullets ob-ipython nov neotree matlab-mode magit lsp-ui lsp-python latex-preview-pane key-chord jupyter julia-mode ivy-hydra ivy-bibtex inf-ruby htmlize helm-bibtex gruvbox-theme flycheck-stan faff-theme evil-org evil-collection ess elpy elfeed-org eldoc-stan ein dumb-jump dracula-theme doom-themes dockerfile-mode darktooth-theme csv-mode counsel-projectile company-stan commentary-theme color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized c-eldoc auctex aggressive-indent ag ace-window)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
