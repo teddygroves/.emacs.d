@@ -4,14 +4,6 @@
        (not (equal user-login-name "teddy")))
     "t if we are in termux emacs.")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; make sure environment variables are correct
-(use-package exec-path-from-shell
-  :ensure t
-  :if (memq window-system '(mac ns))
-  :config
-  (exec-path-from-shell-initialize))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; https://github.com/daviwil/emacs-from-scratch/wiki/LSP-Python-(pyright)-config-in-emacs-from-scratch
 
 (defvar bootstrap-version)
@@ -31,6 +23,15 @@
 (setq straight-use-package-by-default t)
 
 (straight-use-package 'org-plus-contrib)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; make sure environment variables are correct
+(use-package exec-path-from-shell
+  :ensure t
+  :if (memq window-system '(mac ns))
+  :config
+  (exec-path-from-shell-initialize))
+
+
 ;; ** Performance
 
 ;; These options improve performance for lsp in emacs. Use ~M-x~ ~lsp-doctor~
