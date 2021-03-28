@@ -1,19 +1,8 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; package and use-package
+;; variable that checks if we're in termux
 (defvar in-termux-p
   (and (equal (system-name) "localhost")
-       (not (equal user-login-name "mylaptopusername")))
+       (not (equal user-login-name "teddy")))
     "t if we are in termux emacs.")
-
-(require 'package)
-(setq package-enable-at-startup nil)
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.org/packages/") t)
-(add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
-(package-initialize)
-(server-start)
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; make sure environment variables are correct
 (use-package exec-path-from-shell
@@ -21,6 +10,511 @@
   :if (memq window-system '(mac ns))
   :config
   (exec-path-from-shell-initialize))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; https://github.com/daviwil/emacs-from-scratch/wiki/LSP-Python-(pyright)-config-in-emacs-from-scratch
+
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+(straight-use-package 'use-package)
+(setq straight-use-package-by-default t)
+
+(straight-use-package 'org-plus-contrib)
+;; ** Performance
+
+;; These options improve performance for lsp in emacs. Use ~M-x~ ~lsp-doctor~
+;; in lsp-mode to investigate performance of your config.
+
+;; check lsp documentation at
+;; [[https://emacs-lsp.github.io/lsp-mode/page/performance/][lsp performace]]
+
+;; The default is 800 kilobytes.  Measured in bytes.
+(setq gc-cons-threshold (* 100 1024 1024)) ;; 100 MB
+(setq read-process-output-max (* 1 1024 1024)) ;; 1 MB
+
+
+;; ** No littering
+;; Keep clean =~/.emacs.d= folder. 
+
+;; Check ~lsp~ files in =~/.emacs.d/var/lsp/*=.
+
+;; You can delete/modify this folder to hard reset lsp configuration in emacs.
+
+;; [[https://github.com/daviwil/emacs-from-scratch/blob/master/Emacs.org#keep-folders-clean][taken from EFS]] \\
+
+(use-package no-littering)
+
+;; no-littering doesn't set this by default so we must place
+;; auto save files in the same path as it uses for sessions
+(setq auto-save-file-name-transforms
+      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+
+
+;; * Evil
+
+;; evil mode [[https://evil.readthedocs.io/en/latest/overview.html#installation-via-package-el][source]]
+
+;; ** evil mode [[https://github.com/emacs-evil/evil][github repo]]
+
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-shift-width 2)
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  :custom
+  (evil-undo-system 'undo-tree)
+  :config
+
+  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+
+  ;; Use visual line motions even outside of visual-line-mode buffers
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+  (evil-set-initial-state 'vterm-mode 'emacs)
+  (evil-set-initial-state 'help-mode 'emacs)
+  (evil-set-initial-state 'inferior-python-mode 'emacs)
+  (evil-set-initial-state 'messages-buffer-mode 'emacs)
+  (evil-set-initial-state 'dashboard-mode 'emacs)
+  (evil-set-initial-state 'special-mode 'emacs)
+  (evil-set-initial-state 'view-mode 'emacs)
+  (evil-mode 1)
+  )
+
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :custom
+  (evil-collection-company-use-tng nil)
+  :config
+  (evil-collection-init 'compile)
+  (evil-collection-init 'info)
+  (evil-collection-init 'custom)
+  (evil-collection-init 'dired)
+  (evil-collection-init 'ivy)
+  (evil-collection-init 'flycheck)
+  (evil-collection-init 'xref)
+  (evil-collection-init 'magit)
+  (evil-collection-init 'which-key)
+  )
+
+;; ** evil-nerd-commentor
+
+;; Use ~M-/~ for comment/uncomment.
+
+;; [[https://github.com/redguardtoo/evil-nerd-commenter][source]]
+
+(use-package evil-nerd-commenter
+  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
+
+
+;; ** undo-tree
+
+(use-package undo-tree
+  :diminish undo-tree-mode
+  :config
+  (global-undo-tree-mode)
+  )
+
+;; * Ivy, counsel
+
+;; ** counsel
+
+(use-package counsel
+  :diminish ivy-mode
+  :diminish counsel-mode
+  :bind (("C-s" . swiper)
+         :map ivy-minibuffer-map
+         ("TAB" . ivy-alt-done))
+  :init
+  (ivy-mode 1)
+  (counsel-mode 1)
+  :config
+  (setq ivy-use-virtual-buffers t)
+  (setq enable-recursive-minibuffers t))
+
+;; ** ivy-misc [[https://github.com/Yevgnen/ivy-rich]]
+
+(use-package ivy-xref
+  :init
+  ;; xref initialization is different in Emacs 27 - there are two different
+  ;; variables which can be set rather than just one
+  (when (>= emacs-major-version 27)
+    (setq xref-show-definitions-function #'ivy-xref-show-defs))
+  ;; Necessary in Emacs <27. In Emacs 27 it will affect all xref-based
+  ;; commands other than xref-find-definitions (e.g. project-find-regexp)
+  ;; as well
+  (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
+
+(use-package ivy-rich
+  :init
+  (ivy-rich-mode 1))
+
+;; ** prescient
+
+(use-package ivy-prescient
+  :after counsel
+  :init
+  (ivy-prescient-mode)
+  (prescient-persist-mode)
+  )
+
+(use-package prescient
+  :diminish
+  :config
+  )
+
+;; * Treemacs
+
+(use-package treemacs)
+
+;; * Tools
+
+;; ** which-key
+
+(use-package which-key
+  :diminish which-key-mode
+  :config
+  (which-key-mode))
+
+
+;; ** magit
+
+;; [[https://magit.vc/][Magit]] is the best Git interface. Common Git
+;; operations are easy to execute quickly using Magit’s command panel system.
+
+(use-package magit
+  :defer t
+  :bind ("C-x g" . magit-status))
+
+;; ** projectile
+
+;; [[https://docs.projectile.mx/projectile/index.html][Projectile]] is a
+;; project management library for Emacs which makes it a lot easier to navigate
+;; around code projects for various languages. Many packages integrate with
+;; Projectile so it’s a good idea to have it installed even if you don’t use
+;; its commands directly.
+
+(use-package projectile
+  :diminish projectile-mode
+  :hook
+  (after-init . projectile-mode)
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (setq projectile-project-search-path '("~/Code" "~/Writing" "~/qmcm/projects"))
+  (setq projectile-switch-project-action 'projectile-dired)
+  :custom
+  (projectile-completion-system 'ivy)
+  (projectile-dynamic-mode-line nil)
+  (projectile-enable-caching t)
+  (projectile-indexing-method 'hybrid)
+  (projectile-track-known-projects-automatically nil))
+
+;; (use-package counsel-projectile
+  ;; :config (counsel-projectile-mode))
+
+;; ** eldoc
+
+(use-package eldoc
+  :diminish eldoc-mode
+  )
+
+
+;; * Company
+
+;; ** company-mode
+
+  (use-package company
+    :diminish company-mode
+    :bind (:map company-active-map
+                ("<tab>" . nil)
+                ("TAB" . nil)
+                ("M-<tab>" . company-complete-common-or-cycle)
+                ("M-<tab>" . company-complete-selection))
+    (:map lsp-mode-map
+          ("M-<tab>" . company-indent-or-complete-common))
+    :custom
+    (company-minimum-prefix-length 2)
+    (company-idle-delay 0.01)
+    :config
+    )
+
+;; ** prescient
+
+(use-package company-prescient
+  :after company
+  :config
+  (company-prescient-mode 1)
+  (prescient-persist-mode)
+  )
+
+;; * Yasnippet
+
+(use-package yasnippet-snippets)
+(use-package yasnippet
+  :diminish yas-minor-mode
+  :config
+  (yas-reload-all)
+)
+
+;; * Flycheck
+
+(use-package flycheck
+  :diminish flycheck-mode
+  :init
+  (setq flycheck-check-syntax-automatically '(save new-line)
+        flycheck-idle-change-delay 5.0
+        flycheck-display-errors-delay 0.9
+        flycheck-highlighting-mode 'symbols
+        flycheck-indication-mode 'left-fringe
+        flycheck-standard-error-navigation t
+        flycheck-deferred-syntax-check nil)
+  )
+
+;; * Lsp mode
+
+;; ** lsp-mode
+
+;; [[https://github.com/daviwil/dotfiles/blob/master/Emacs.org#language-server-support][EFS
+;; notes]] \\
+
+;; Nice article about main features of emacs lsp-mode
+;; ([[https://emacs-lsp.github.io/lsp-mode/page/main-features/][source)]] \\
+
+;; EFS video
+;; [[https://github.com/daviwil/emacs-from-scratch/blob/master/show-notes/Emacs-08.org][notes]]\\
+
+;; java specific lsp
+;; [[https://github.com/neppramod/java_emacs/blob/master/emacs-configuration.org][setting]]
+;; to learn how to setup lsp in emacs\\
+
+;; Nice article to switch on/off certain features of lsp
+;; ([[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][source)]]
+;; \\
+
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :hook 
+  (lsp-mode . lsp-enable-which-key-integration)
+  :custom
+  (lsp-diagnostics-provider :capf)
+  (lsp-headerline-breadcrumb-enable t)
+  (lsp-headerline-breadcrumb-segments '(project file symbols))
+  (lsp-lens-enable nil)
+  (lsp-disabled-clients '((python-mode . pyls)))
+  :init
+  (setq lsp-keymap-prefix "C-c l") ;; Or 'C-l', 's-l'
+  :config
+  )
+
+;; ** lsp-ivy [[https://github.com/emacs-lsp/lsp-ivy][source github]]\\
+
+;; lsp-ivy integrates Ivy with lsp-mode to make it easy to search for things by
+;; name in your code. When you run these commands, a prompt will appear in the
+;; minibuffer allowing you to type part of the name of a symbol in your
+;; code. Results will be populated in the minibuffer so that you can find what
+;; you’re looking for and jump to that location in the code upon selecting the
+;; result.\\
+
+;; Try these commands with ~M-x~:\\
+
+;;     ~lsp-ivy-workspace-symbol~ - Search for a symbol name in the current
+;;     project workspace\\
+
+;;     ~lsp-ivy-global-workspace-symbol~ - Search for a symbol name in all
+;;     active project workspaces\\
+
+(use-package lsp-ivy
+  :after lsp-mode
+  )
+
+;; ** lsp-ui
+
+;; Documentation: [[https://emacs-lsp.github.io/lsp-ui/]]
+
+;; - ~lsp-ui-doc-focus-frame~ to enter the documentation frame to navigate and
+;;   search around
+
+;; - ~lsp-ui-doc-unfocus-frame~ to leave documentation frame
+
+(use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode)
+  :after lsp-mode
+  :custom
+  (lsp-ui-doc-show-with-cursor nil)
+  :config
+  (setq lsp-ui-doc-position 'bottom)
+  )
+
+;; ** lsp-treemacs
+
+;; Provides an even nicer UI on top of lsp-mode using Treemacs\\
+
+;; - ~lsp-treemacs-symbols~ - Show a tree view of the symbols in the current
+;;   file
+
+;; - ~lsp-treemacs-references~ - Show a tree view for the references of the
+;;   symbol under the cursor
+
+;; - ~lsp-treemacs-error-list~ - Show a tree view for the diagnostic messages
+;;   in the project
+
+(use-package lsp-treemacs
+  :after (lsp-mode treemacs)
+  )
+
+
+;; * Python configuration
+
+;; [[https://github.com/daviwil/emacs-from-scratch/blob/master/show-notes/Emacs-IDE-02.org][efs
+;; series notes]]\\
+
+;; [[https://ddavis.io/posts/emacs-python-lsp]]\\
+
+;; some options are
+
+;; - [[https://emacs-lsp.github.io/lsp-mode/page/lsp-pyls/][pyls]] Palantir
+
+;; - [[https://emacs-lsp.github.io/lsp-python-ms][microsoft]] now depreciated by MS
+
+;; - [[https://emacs-lsp.github.io/lsp-pyright][pyright]] also by Microsoft
+
+;; ** pyright [[https://emacs-lsp.github.io/lsp-pyright/#configuration][config]] \\
+
+(use-package lsp-pyright
+  :hook
+  (python-mode . (lambda ()
+                   (require 'lsp-pyright)
+                   (lsp-deferred))))
+
+;; ** pyvenv
+
+;; Strongly recommend to use python virtualenv to python work properly in emacs.\\
+
+;; Assuming venvs are installed here =~/.venvs=\\
+
+;; Learn about setting python virtual env below\\
+
+;; [[https://blog.fredrikmeyer.net/2020/08/26/emacs-python-venv.html]]\\
+
+;; [[https://ddavis.io/posts/emacs-python-lsp]]\\
+
+;; You can use ~M-x pyvenv-activate~ to activate specific venv \\
+
+(use-package pyvenv
+  :ensure t
+  :init
+  (setenv "WORKON_HOME" "~/.venvs/")
+  :config
+  (pyvenv-mode t)
+  )
+
+  ;; Set correct Python interpreter
+  ;; (setq pyvenv-post-activate-hooks
+        ;; (list (lambda ()
+                ;; (setq python-shell-interpreter (concat pyvenv-virtual-env "bin/python")))))
+  ;; (setq pyvenv-post-deactivate-hooks
+        ;; (list (lambda ()
+                ;; (setq python-shell-interpreter "python3")))))
+
+
+;; ** formatting
+
+(use-package blacken
+  :init
+  (setq-default blacken-fast-unsafe t)
+  (setq-default blacken-line-length 80)
+  )
+
+;; ** python-mode
+
+(use-package python-mode
+  :hook
+  (python-mode . pyvenv-mode)
+  (python-mode . flycheck-mode)
+  (python-mode . company-mode)
+  (python-mode . blacken-mode)
+  (python-mode . yas-minor-mode)
+  :custom
+  (python-shell-interpreter "jupyter-console")
+  (python-shell-interpreter-args "--simple-prompt")
+  (python-shell-prompt-detect-failure-warning nil)
+  (python-shell-completion-native-enable nil)
+  (python-indent-def-block-scale 1) ;; function arguments have normal indentation
+  :bind
+  ("<C-return>" . python-shell-send-statement)
+  )
+
+(use-package jupyter
+  :unless in-termux-p
+  :ensure t)
+
+;; * Keybinding
+
+;; Have a look at
+;; [[https://www.masteringemacs.org/article/mastering-key-bindings-emacs][mastering
+;; emacs]] tips for emacs keybinding.\\
+
+;; ~C-c <LETTER>~ and ~F5-F9~ are meant for user bindings.\\
+
+;; For package maintainers, ~C-c C-<ANY>~ or ~C-c <DIGIT>~ or ~C-c [{};:<>]~
+;; are reserved for the major mode. Any other are reserved for minor modes,
+;; e.g. ~C-c @~ in =outline-minor-mode=. \\
+
+;; See ~(info "(elisp) Key Binding Conventions")~ for a more complete
+;; explanation for package maintainers. You, as a user, can of course use any
+;; key binding you like, but keep in mind that those bindings might conflict
+;; with the ones chosen by the package maintainer.\\
+
+;; ** General setup
+
+;; we will use general package
+;; ([[https://github.com/noctuid/general.el][source]]) for keybindings.
+
+(use-package general
+  :config
+  (general-evil-setup t)
+
+  (general-create-definer my/ctrl-c-keys
+    :prefix "C-c")
+  )
+
+;; ** Global keys
+
+;; use ~C-c~ prefix for global keybinding defined below
+(my/ctrl-c-keys
+  "t"  '(treemacs-select-window :which-key "treemacs-select")
+  )
+
+;; ** Lsp keybinding
+
+;; use ~SPC~ prefix for ~lsp-mode~ keybinding defined below. These keybindings
+;; are for ~evil~ normal mode.
+
+(general-define-key
+  :states '(normal visual)
+  :keymaps 'lsp-mode-map
+  :prefix "SPC"
+   "d" '(lsp-find-definition :which-key "find-definitions")
+   "r" '(lsp-find-references :which-key "find-references")
+   "h" '(lsp-describe-thing-at-point :which-key "help-detailed")
+   "e" '(lsp-ui-flycheck-list :which-key "flycheck-list")
+   "o" 'counsel-imenu
+   "x" 'lsp-execute-code-action)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
@@ -31,223 +525,20 @@
   (setq tron-legacy-theme-vivid-cursor t)
   (setq tron-legacy-theme-dark-fg-bright-comments t))
 
-(use-package berrys-theme
-  :ensure t
-  :config
-  ;; (load-theme 'berrys t)
-  )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; General purpose packages
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Misc Packages
 
 (add-hook 'dired-mode-hook
           (lambda () (dired-hide-details-mode)))
 
 (use-package dired-x ;; so that C-x C-j always does dired-jump
+  :straight nil
   :demand t)
-
+;; ace window
 (use-package ace-window
   :ensure t
   :config
   (global-set-key (kbd "M-o") 'ace-window)
   (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
-
-(use-package which-key
-  :ensure t
-  :config
-  (which-key-mode))
-
-(use-package company
-  :ensure t
-  :init (global-company-mode)
-  :pin melpa)
-
-(use-package counsel
-  :ensure t
-  :bind
-  (("M-y" . counsel-yank-pop)
-   :map ivy-minibuffer-map
-   ("M-y" . ivy-next-line)))
-
-(use-package ivy
-  :ensure t
-  :diminish (ivy-mode)
-  :bind (("C-x b" . ivy-switch-buffer))
-  :config
-  (ivy-mode 1)
-  (setq ivy-use-virtual-buffers t)
-  (setq ivy-display-style 'fancy))
-
-(use-package swiper
-  :ensure t
-  :bind (("C-s" . swiper)
-	 ("C-c C-r" . ivy-resume)
-	 ("M-x" . counsel-M-x)
-	 ("C-x C-f" . counsel-find-file))
-  :config
-  (progn
-    (ivy-mode 1)
-    (setq ivy-use-virtual-buffers t)
-    (setq ivy-display-style 'fancy)
-    (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)))
-
-(use-package ivy-hydra
-  :ensure t
-  :after ivy)
-
-(use-package projectile
-  :ensure t
-  :config
-  (projectile-global-mode)
-  (setq projectile-switch-project-action #'projectile-dired)
-  (setq projectile-completion-system 'ivy))
-
-(use-package counsel-projectile
-  :ensure t
-  :after counsel projectile
-  :config
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
-
-(use-package dumb-jump
-  :bind (("M-g o" . dumb-jump-go-other-window)
-	 ("M-g j" . dumb-jump-go)
-	 ("M-g x" . dumb-jump-go-prefer-external)
-	 ("M-g z" . dumb-jump-go-prefer-external-other-window))
-  :after ivy
-  :config
-  (setq dumb-jump-selector 'ivy))
-
-(use-package ag
-  :ensure t)
-
-(use-package yasnippet
-  :ensure t
-  :init
-  (yas-global-mode 1)
-  :bind (("M-s M-s" . yas-insert-snippet)))
-
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; elfeed
-;; (use-package elfeed
-;;   :ensure t
-;;   :defer t
-;;   :commands (elfeed)
-;;   :config
-;;   (global-set-key (kbd "C-x w") 'elfeed)
-;;   (setq-default elfeed-search-filter "@3-months-ago +unread +essay "))
-
-;; (setq elfeed-feeds
-;;       '("https://herbsutter.com/rss"))
-;; (use-package elfeed-org
-;;   :ensure t
-;;   :config
-;;   (elfeed-org)
-;;   (setq rmh-elfeed-org-files (list "/Users/tedgro/.emacs.d/elfeed.org")))
-
-;; (setq elfeed-show-mode-hook
-;;       (lambda ()
-;; 	(set-face-attribute
-;;          'variable-pitch (selected-frame)
-;;          :font (font-spec :family "Menlo" :size 12))
-;; 	(setq fill-column 80)
-;; 	(setq elfeed-show-entry-switch #'my-show-elfeed)))
-
-;; (defun my-show-elfeed (buffer)
-;;   (with-current-buffer buffer
-;;     (setq buffer-read-only nil)
-;;     (goto-char (point-min))
-;;     (re-search-forward "\n\n")
-;;     (fill-individual-paragraphs (point) (point-max))
-;;     (setq buffer-read-only t))
-;;   (switch-to-buffer buffer))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Evil mode
-(use-package evil
-  :ensure t
-  :init
-  (setq evil-want-keybinding nil)
-  (setq evil-want-C-i-jump nil)
-  :config
-  (evil-set-initial-state 'vterm-mode 'emacs)
-  (evil-set-initial-state 'rst-mode 'emacs)
-  (evil-mode 1))
-
-(use-package evil-collection
-  :after evil
-  :ensure t
-  :custom (evil-collection-company-use-tng nil)
-  :init (evil-collection-init))
-
-(use-package evil-org
-  :ensure t
-  :after org evil
-  :config
-  (add-hook 'org-mode-hook 'evil-org-mode)
-  (add-hook 'evil-org-mode-hook
-            (lambda ()
-              (evil-org-set-key-theme)))
-  (require 'evil-org-agenda)
-  (evil-org-agenda-set-keys))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; mode for reading epubs
-(use-package nov
-  :ensure t
-  :config
-  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
-  (setq nov-variable-pitch nil))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; lsp
-(use-package lsp-mode
-  :ensure t
-  :commands lsp
-  :config
-  ;; lsp-ui gives us the blue documentation boxes and the sidebar info
-  (use-package lsp-ui
-    :ensure t
-    :config
-    (setq lsp-ui-sideline-ignore-duplicate t)
-    (add-hook 'lsp-mode-hook 'lsp-ui-mode))
-  ;; make sure we have lsp-imenu everywhere we have LSP
-  ;; (require 'lsp-imenu)
-  ;; (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
-  ;; install LSP company backend for LSP-driven completion
-  (use-package company-lsp
-    :ensure t
-    :config
-    (setq company-lsp-async t)
-    (setq company-lsp-cache-candidates t)
-    (push 'company-lsp company-backends))
-  (use-package lsp-python-ms
-    :demand
-    :load-path "~/.emacs.d/git-repos/lsp-python-ms/"
-    :ensure nil
-    :hook (python-mode . lsp)
-    :config
-    ;; for dev build of language server
-    (setq lsp-python-ms-dir
-          (expand-file-name "/Users/tedgro/Code/cloned/python-language-server/output/bin/Release/"))
-    ;; for executable of language server, if it's not symlinked on your PATH
-    (setq lsp-python-ms-executable
-          "/Users/tedgro/Code/cloned/python-language-server/output/bin/Release/osx-x64/publish/Microsoft.Python.LanguageServer"))
-  (setq lsp-enable-indentation t)
-  (setq lsp-enable-completion-at-point t)
-  (setq lsp-prefer-flymake nil)
-  (setq lsp-ui-flycheck-enable t))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Magit
-(use-package magit
-  :ensure t
-  :bind (("C-x g" . magit-status)
-         ("C-x M-g" . magit-dispatch-popup)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; GPG
-(require 'epa-file)
-(setenv "GPG_AGENT_INFO" nil)
-(epa-file-enable)
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Filetype-specific packages
 
 ;; vterm
 (use-package vterm
@@ -319,17 +610,6 @@
   ;; No configuration options as of now.
   )
 
-;; Matlab
-;; Copied from [[https://github.com/thisirs/dotemacs/blob/master/lisp/init-matlab.el][here]]. 
-;; NB make sure the version is correct.
-(use-package matlab
-  :ensure matlab-mode
-  :mode ("\\.m$" . matlab-mode)
-  :config
-  (setq matlab-indent-function t)
-  (setq matlab-shell-command "/Applications/MATLAB_R2018b.app/bin/matlab")
-  (setq matlab-shell-command-switches (list "-nodesktop")))
-
 ;; Dockerfile mode
 (use-package dockerfile-mode
   :ensure t)
@@ -351,64 +631,8 @@
 (use-package poly-R  ;; for editing and exporting Rmd files
   :ensure t)
 
-;; Python
-(setq python-shell-interpreter "jupyter-console"
-      python-shell-interpreter-args "--simple-prompt"
-      python-shell-prompt-detect-failure-warning nil)
-(setq python-shell-completion-native-enable nil)
-(setq python-indent-def-block-scale 1) ;; function arguments have normal indentation
-
-(use-package pyvenv
+(use-package poly-org
   :ensure t)
-(use-package jupyter
-  :unless in-termux-p
-  :ensure t)
-
-;; (use-package eval-in-repl
-;;   :ensure t
-;;   :config
-
-;;   (require 'eval-in-repl-python)
-;;   (setq eir-use-python-shell-send-string t)
-;;   (add-hook 'python-mode-hook
-;;             '(lambda ()
-;;                (local-set-key (kbd "<C-return>") 'eir-eval-in-python))))
-
-(use-package elpy
-  :ensure t
-  :init (elpy-enable)
-  :config (setq elpy-shell-echo-output nil))
-
-;;; Python Polymode (Markdown + Python)
-;;;
-;;; https://stackoverflow.com/questions/52489905/emacs-polymode-for-markdown-and-python
-;;; https://emacs.stackexchange.com/questions/20437/polymode-with-python-and-latex-mode/
-;;;
-;;; Further discussion and working solution at...
-;;;
-;;; https://github.com/polymode/polymode/issues/180
- 
-
-(use-package poly-noweb
-  :ensure t)
-;; (use-package poly-markdown
-  ;; :ensure t)
-(use-package poly-rst
-  :ensure t)
-
-;; Python/Markdown
-(defcustom pm-inner/noweb-python
-  (clone pm-inner/noweb
-         :name "noweb-python"
-         :mode 'python-mode)
-  "Noweb for Python"
-  :group 'poly-innermodes
-  :type 'object)
- 
-(define-polymode poly-pweave-mode poly-markdown-mode
-  :innermodes '(pm-inner/noweb-python :inherit))
- 
-(add-to-list 'auto-mode-alist '("\\.pymd" . poly-pweave-mode))
 
 ;; bibtex
 (use-package ivy-bibtex
@@ -453,6 +677,7 @@
      ("b" ivy-bibtex-insert-bibtex "Insert BibTeX entry")
      ("l" ivy-bibtex-insert-org-file-link "Org-format link to pdf file")
      )))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Org mode configuration
 
@@ -508,36 +733,30 @@
 (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
 ;; Org agenda
-(setq org-agenda-files '("~/org/work/tasks.org"))
+(setq org-agenda-files (directory-files-recursively "~/qmcm/" "org$"))
 (define-key global-map "\C-ca" 'org-agenda)
 (setq org-agenda-custom-commands
-      '(("c" "My custom agenda view"
-         ((agenda)
-          (tags-todo "Paper")
-          (tags-todo "Admin")
-          (tags-todo "Writing")
-          (tags-todo "Code")
-          (tags-todo "-Paper&-Admin&-Writing&-Code")))))
+      '(("c" "My custom agenda view" ((agenda) (tags-todo "*")))))
 
 ;; Gtd
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
 (define-key global-map "\C-cc" 'org-capture)
 (setq org-capture-templates
-      '(("t" "Task" entry (file "~/org/work/tasks.org") "* TODO %i%?")
-        ("p" "Paper" entry (file "~/org/work/papers.org") "* %i%?")
-        ("b" "Biochem note" entry (file+headline "~/org/work/biochem.org" "Notes") "* %i%?")
+      '(("t" "QMCM Task" entry (file "~/qmcm/tasks.org") "* TODO %i%?")
+        ("p" "Paper" entry (file "~/qmcm/reading.org") "* %i%?")
+        ("b" "Biochem note" entry (file+headline "~/qmcm/biochem.org" "Notes") "* %i%?")
         ("r" "Recipe" entry (file "~/org/recipes.org") "* %i%?")
         ("d" "Diary entry" entry (file "~/org/diary.org") "* %T %i%?")
         ("c" "Content" entry (file "~/org/content.org") "* %i%?")
         ("s" "Shopping" entry (file "~/org/shopping.org") "* %i%?")
         ("z" "Programming tip" entry
          (file+headline "~/org/work/programming_tips.org" "Inbox") "** %i%?")
-        ("e" "Draft email" entry (file "~/org/work/draft_emails.org") "* %i%?")))
+        ("e" "Draft email" entry (file "~/qmcm/draft_emails.org") "* %i%?")))
 (setq org-refile-use-outline-path 'file)
-(setq org-refile-targets '(("~/org/tasks.org" :level . 0)
+(setq org-refile-targets '(("~/qmcm/tasks.org" :level . 0)
                            ("~/org/politics.org" :level . 0)
-                           ("~/org/biochem.org" :level . 0)
-                           ("~/org/papers.org" :level . 0)
+                           ("~/qmcm/biochem.org" :level . 0)
+                           ("~/qmcm/papers.org" :level . 0)
                            ("~/org/shopping.org" :level . 0)
                            ("~/org/draft_emails.org" :level . 0)
                            ("~/org/content.org" :level . 0)
@@ -567,21 +786,12 @@
 (unless in-termux-p (require 'ox-bibtex))
 (setq org-bibtex-file "/Users/tedgro/Dropbox/Reading/bibliography.bib")
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; python
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
-
-;; function that searches up for the nearest makefile and compiles it
-(defun compile-parent (command)
-  (interactive
-   (let* ((make-directory (locate-dominating-file (buffer-file-name)
-                                                  "Makefile"))
-          (command (concat "make -k -C "
-                           (shell-quote-argument make-directory))))
-     (list (compilation-read-command command))))
-  (compile command))
-
-;; compile with C-c m
-;; NB use C-u C-c m to change the compilation command
-(global-set-key (kbd "C-c m") 'recompile)
 
 ;; quicker keystrokes
 (setq echo-keystrokes 0.01)
@@ -637,14 +847,11 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("4780d7ce6e5491e2c1190082f7fe0f812707fc77455616ab6f8b38e796cbffa9" "cc0dbb53a10215b696d391a90de635ba1699072745bf653b53774706999208e3" "07c3a4ab1bc1fcae15baa26b9245ca9e11f4876ad6908df2219ec58d153058c0" "224b4c57e164d6ad2edc4ab1c2a20fbd95ad15e44f8fb2b797001cd39dd59123" default))
- '(package-selected-packages
-   '(eink-theme berrys-theme poly-rst emacs-tron-theme tron-theme minimal-theme eval-in-repl eval-in-repl-python poly-R vterm modus-vivendi-theme modus-operandi-theme zenburn-theme which-key use-package try stan-snippets solarized-theme scala-mode pyenv-mode pdf-tools ox-tufte ox-pandoc ox-hugo org-tree-slide org-plus-contrib org-bullets ob-ipython nov neotree matlab-mode magit lsp-ui lsp-python latex-preview-pane key-chord jupyter julia-mode ivy-hydra ivy-bibtex inf-ruby htmlize helm-bibtex gruvbox-theme flycheck-stan faff-theme evil-org evil-collection ess elpy elfeed-org eldoc-stan ein dumb-jump dracula-theme doom-themes dockerfile-mode darktooth-theme csv-mode counsel-projectile company-stan commentary-theme color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized c-eldoc auctex aggressive-indent ag ace-window)))
+ '(org-agenda-files
+   '("~/qmcm/hani/hani.org" "~/qmcm/marina/marina.org" "~/qmcm/nick/nick.org" "~/qmcm/projects/apoptosis/notes.org" "~/qmcm/projects/clonal_variation/technical_report.org" "~/qmcm/projects/cobracon_slides/notes.org" "~/qmcm/projects/doe/doe.org" "~/qmcm/projects/pandas_slides/pandas.org" "~/qmcm/projects/performance/performance.org" "~/qmcm/projects/proteomics/proteomics.org" "~/qmcm/projects/thermodynamics/thermodynamics.org" "~/qmcm/projects/programming_tips.org" "~/qmcm/projects/readme.org" "~/qmcm/shannara/shannara.org" "~/qmcm/viktor/viktor.org" "~/qmcm/vishnu/vishnu.org" "~/qmcm/biochem.org" "~/qmcm/kinetics_meetings.org" "~/qmcm/notes.org" "~/qmcm/reading.org" "~/qmcm/tasks.org" "~/qmcm/weekly_slides.org" "~/qmcm/weekly_work_plans.org")))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-(put 'downcase-region 'disabled nil)
