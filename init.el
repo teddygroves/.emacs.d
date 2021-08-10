@@ -1,4 +1,4 @@
-;; variable that checks if we're in termux
+;; Variable that checks if we're in termux
 (defvar in-termux-p
   (and (equal (system-name) "localhost")
        (not (equal user-login-name "teddy")))
@@ -22,7 +22,8 @@
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
-(straight-use-package 'org-plus-contrib)
+;; (straight-use-package 'org-plus-contrib)
+(straight-use-package '(org :local-repo nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; make sure environment variables are correct
 (use-package exec-path-from-shell
@@ -31,19 +32,8 @@
   :config
   (exec-path-from-shell-initialize))
 
-
-;; ** Performance
-
-;; These options improve performance for lsp in emacs. Use ~M-x~ ~lsp-doctor~
-;; in lsp-mode to investigate performance of your config.
-
-;; check lsp documentation at
-;; [[https://emacs-lsp.github.io/lsp-mode/page/performance/][lsp performace]]
-
-;; The default is 800 kilobytes.  Measured in bytes.
-(setq gc-cons-threshold (* 100 1024 1024)) ;; 100 MB
-(setq read-process-output-max (* 1 1024 1024)) ;; 1 MB
-
+(use-package zmq
+  :ensure t)
 
 ;; ** No littering
 ;; Keep clean =~/.emacs.d= folder. 
@@ -74,8 +64,6 @@
   (setq evil-shift-width 2)
   (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
-  :custom
-  (evil-undo-system 'undo-tree)
   :config
 
   (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
@@ -105,11 +93,20 @@
   (evil-collection-init 'custom)
   (evil-collection-init 'dired)
   (evil-collection-init 'ivy)
+  (evil-collection-init 'python)
   (evil-collection-init 'flycheck)
   (evil-collection-init 'xref)
   (evil-collection-init 'magit)
   (evil-collection-init 'which-key)
   )
+
+(use-package evil-org
+  :ensure t
+  :after org
+  :hook (org-mode . (lambda () evil-org-mode))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
 
 ;; ** evil-nerd-commentor
 
@@ -179,7 +176,6 @@
 
 ;; * Treemacs
 
-(use-package treemacs)
 
 ;; * Tools
 
@@ -216,7 +212,7 @@
   ("C-c p" . projectile-command-map)
   :init
   ;; NOTE: Set this to the folder where you keep your Git repos!
-  (setq projectile-project-search-path '("~/Code" "~/Writing" "~/qmcm/projects"))
+  (setq projectile-project-search-path '("~/Code" "~/Writing" "~/dtu/projects"))
   (setq projectile-switch-project-action 'projectile-dired)
   :custom
   (projectile-completion-system 'ivy)
@@ -239,20 +235,6 @@
 
 ;; ** company-mode
 
-  (use-package company
-    :diminish company-mode
-    :bind (:map company-active-map
-                ("<tab>" . nil)
-                ("TAB" . nil)
-                ("M-<tab>" . company-complete-common-or-cycle)
-                ("M-<tab>" . company-complete-selection))
-    (:map lsp-mode-map
-          ("M-<tab>" . company-indent-or-complete-common))
-    :custom
-    (company-minimum-prefix-length 2)
-    (company-idle-delay 0.01)
-    :config
-    )
 
 ;; ** prescient
 
@@ -270,6 +252,7 @@
   :diminish yas-minor-mode
   :config
   (yas-reload-all)
+  (add-hook 'org-mode-hook #'yas-minor-mode)
 )
 
 ;; * Flycheck
@@ -277,50 +260,95 @@
 (use-package flycheck
   :diminish flycheck-mode
   :init
-  (setq flycheck-check-syntax-automatically '(save new-line)
-        flycheck-idle-change-delay 5.0
+  (setq flycheck-idle-change-delay 5.0
         flycheck-display-errors-delay 0.9
+        flycheck-check-syntax-automatically '(idle-change save)
         flycheck-highlighting-mode 'symbols
-        flycheck-indication-mode 'left-fringe
-        flycheck-standard-error-navigation t
         flycheck-deferred-syntax-check nil)
+  :config
+  (flycheck-add-next-checker 'python-flake8 'python-pylint)
+  (flycheck-add-next-checker 'python-flake8 'python-pyright)
   )
+
+;; merlin
+(use-package tuareg
+  :ensure t)
+;; (use-package merlin
+  ;; :after lsp-mode
+  ;; :ensure t
+  ;; :config
+  ;; (add-hook 'tuareg-mode-hook #'merlin-mode)
+  ;; (require 'merlin-company))
 
 ;; * Lsp mode
 
-;; ** lsp-mode
-
-;; [[https://github.com/daviwil/dotfiles/blob/master/Emacs.org#language-server-support][EFS
-;; notes]] \\
-
-;; Nice article about main features of emacs lsp-mode
-;; ([[https://emacs-lsp.github.io/lsp-mode/page/main-features/][source)]] \\
-
-;; EFS video
-;; [[https://github.com/daviwil/emacs-from-scratch/blob/master/show-notes/Emacs-08.org][notes]]\\
-
-;; java specific lsp
-;; [[https://github.com/neppramod/java_emacs/blob/master/emacs-configuration.org][setting]]
-;; to learn how to setup lsp in emacs\\
-
-;; Nice article to switch on/off certain features of lsp
-;; ([[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][source)]]
-;; \\
-
 (use-package lsp-mode
-  :commands (lsp lsp-deferred)
-  :hook 
-  (lsp-mode . lsp-enable-which-key-integration)
-  :custom
-  (lsp-diagnostics-provider :capf)
-  (lsp-headerline-breadcrumb-enable t)
-  (lsp-headerline-breadcrumb-segments '(project file symbols))
-  (lsp-lens-enable nil)
-  (lsp-disabled-clients '((python-mode . pyls)))
   :init
-  (setq lsp-keymap-prefix "C-c l") ;; Or 'C-l', 's-l'
+  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  (setq lsp-keymap-prefix "C-c l")
+  (setq gc-cons-threshold 100000000) ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
+  (setq read-process-output-max (* 1024 1024)) ;; 1mb https://emacs-lsp.github.io/lsp-mode/page/performance/
+  (setq lsp-log-io nil)
+  (setq lsp-idle-delay 0.500)
+  (setq lsp-pyright-multi-root nil)
+  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+         (python-mode . lsp-deferred)
+         ;; if you want which-key integration
+         (lsp-mode . lsp-enable-which-key-integration))
+  :commands lsp lsp-deferred)
+
+
+;; https://emacs-lsp.github.io/lsp-mode/page/faq/#how-do-i-force-lsp-mode-to-forget-the-workspace-folders-for-multi-root
+(advice-add 'lsp :before (lambda (&rest _args) (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht)))))
+
+;; lsp-related packages
+(use-package lsp-ui :after lsp-mode :commands lsp-ui-mode)
+(use-package lsp-ivy :after lsp-mode :commands lsp-ivy-workspace-symbol)
+(use-package treemacs)
+(use-package lsp-treemacs :after (lsp-mode treemacs) :commands lsp-treemacs-errors-list)
+(use-package lsp-pyright
+  :after lsp-mode
+  :hook (python-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))
+  :custom (lsp-pyright-use-library-code-for-types t)
+  )
+
+(use-package company
+  :diminish company-mode
+  :bind
+  (:map company-active-map
+        ("<tab>" . nil)
+        ("TAB" . nil)
+        ("M-<tab>" . company-complete-common-or-cycle)
+        ("M-<tab>" . company-complete-selection))
+  ;; (:map lsp-mode-map ("M-<tab>" . company-indent-or-complete-common))
+  :custom
+  (company-minimum-prefix-length 2)
+  (company-idle-delay 0.01)
   :config
   )
+
+(use-package general
+  :config
+  (general-evil-setup t)
+
+  (general-create-definer my/ctrl-c-keys
+    :prefix "C-c")
+
+  (my/ctrl-c-keys "t"  '(treemacs-select-window :which-key "treemacs-select")))
+
+(general-define-key
+  :states '(normal visual)
+  ;; :keymaps 'lsp-mode-map
+  :prefix "SPC"
+   "d" '(lsp-find-definition :which-key "find-definitions")
+   "r" '(lsp-find-references :which-key "find-references")
+   "h" '(lsp-describe-thing-at-point :which-key "help-detailed")
+   "e" '(lsp-ui-flycheck-list :which-key "flycheck-list")
+   "SPC" 'python-shell-send-statement
+   "o" 'counsel-imenu
+   "x" 'lsp-execute-code-action)
+
+
 
 ;; ** lsp-ivy [[https://github.com/emacs-lsp/lsp-ivy][source github]]\\
 
@@ -339,9 +367,6 @@
 ;;     ~lsp-ivy-global-workspace-symbol~ - Search for a symbol name in all
 ;;     active project workspaces\\
 
-(use-package lsp-ivy
-  :after lsp-mode
-  )
 
 ;; ** lsp-ui
 
@@ -352,14 +377,14 @@
 
 ;; - ~lsp-ui-doc-unfocus-frame~ to leave documentation frame
 
-(use-package lsp-ui
-  :hook (lsp-mode . lsp-ui-mode)
-  :after lsp-mode
-  :custom
-  (lsp-ui-doc-show-with-cursor nil)
-  :config
-  (setq lsp-ui-doc-position 'bottom)
-  )
+;; (use-package lsp-ui
+  ;; :hook (lsp-mode . lsp-ui-mode)
+  ;; :after lsp-mode
+  ;; :custom
+  ;; (lsp-ui-doc-show-with-cursor nil)
+  ;; :config
+  ;; (setq lsp-ui-doc-position 'bottom)
+  ;; )
 
 ;; ** lsp-treemacs
 
@@ -374,9 +399,9 @@
 ;; - ~lsp-treemacs-error-list~ - Show a tree view for the diagnostic messages
 ;;   in the project
 
-(use-package lsp-treemacs
-  :after (lsp-mode treemacs)
-  )
+;; (use-package lsp-treemacs
+  ;; :after (lsp-mode treemacs)
+  ;; )
 
 
 ;; * Python configuration
@@ -396,11 +421,6 @@
 
 ;; ** pyright [[https://emacs-lsp.github.io/lsp-pyright/#configuration][config]] \\
 
-(use-package lsp-pyright
-  :hook
-  (python-mode . (lambda ()
-                   (require 'lsp-pyright)
-                   (lsp-deferred))))
 
 ;; ** pyvenv
 
@@ -422,23 +442,27 @@
   (setenv "WORKON_HOME" "~/.venvs/")
   :config
   (pyvenv-mode t)
-  )
 
   ;; Set correct Python interpreter
-  ;; (setq pyvenv-post-activate-hooks
-        ;; (list (lambda ()
-                ;; (setq python-shell-interpreter (concat pyvenv-virtual-env "bin/python")))))
-  ;; (setq pyvenv-post-deactivate-hooks
-        ;; (list (lambda ()
-                ;; (setq python-shell-interpreter "python3")))))
+  (setq pyvenv-post-activate-hooks
+        (list (lambda ()
+                (setq python-shell-interpreter (concat pyvenv-virtual-env "bin/jupyter-console")))))
+  (setq pyvenv-post-deactivate-hooks
+        (list (lambda ()
+                (setq python-shell-interpreter "jupyter-console")))))
 
 
 ;; ** formatting
+(use-package py-isort
+  :ensure t
+  :init
+  (add-hook 'before-save-hook 'py-isort-before-save))
 
 (use-package blacken
   :init
   (setq-default blacken-fast-unsafe t)
-  (setq-default blacken-line-length 80)
+  ;; (setq-default blacken-line-length 80)
+  ;; (setq-default blacken-allow-py36 t)
   )
 
 ;; ** python-mode
@@ -456,13 +480,14 @@
   (python-shell-prompt-detect-failure-warning nil)
   (python-shell-completion-native-enable nil)
   (python-indent-def-block-scale 1) ;; function arguments have normal indentation
+  (py-closing-list-dedents-bos t)  ;; list parentheses have inline indentation
   :bind
   ("<C-return>" . python-shell-send-statement)
   )
 
-(use-package jupyter
-  :unless in-termux-p
-  :ensure t)
+;; (use-package jupyter
+  ;; :unless in-termux-p
+  ;; :ensure t)
 
 ;; * Keybinding
 
@@ -486,47 +511,84 @@
 ;; we will use general package
 ;; ([[https://github.com/noctuid/general.el][source]]) for keybindings.
 
-(use-package general
-  :config
-  (general-evil-setup t)
-
-  (general-create-definer my/ctrl-c-keys
-    :prefix "C-c")
-  )
 
 ;; ** Global keys
 
 ;; use ~C-c~ prefix for global keybinding defined below
-(my/ctrl-c-keys
-  "t"  '(treemacs-select-window :which-key "treemacs-select")
-  )
 
 ;; ** Lsp keybinding
 
 ;; use ~SPC~ prefix for ~lsp-mode~ keybinding defined below. These keybindings
 ;; are for ~evil~ normal mode.
 
-(general-define-key
-  :states '(normal visual)
-  :keymaps 'lsp-mode-map
-  :prefix "SPC"
-   "d" '(lsp-find-definition :which-key "find-definitions")
-   "r" '(lsp-find-references :which-key "find-references")
-   "h" '(lsp-describe-thing-at-point :which-key "help-detailed")
-   "e" '(lsp-ui-flycheck-list :which-key "flycheck-list")
-   "o" 'counsel-imenu
-   "x" 'lsp-execute-code-action)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Mode line
 
+
+;; nice clock format
+(setq display-time-format "W%W %d%b %l:%M"
+      display-time-default-load-average nil)
+(display-time-mode 1)
+
+(use-package minions
+  :hook (doom-modeline-mode . minions-mode))
+
+;; You must run (all-the-icons-install-fonts) one time after
+;; installing this package!
+(use-package doom-modeline
+  :after eshell     ;; Make sure it gets hooked after eshell
+  :hook (after-init . doom-modeline-init)
+  :custom-face
+  ;; (mode-line ((t (:height 0.85))))
+  ;; (mode-line-inactive ((t (:height 0.85))))
+  :custom
+  (doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
+  (doom-modeline-height 15)
+  (doom-modeline-bar-width 6)
+  (doom-modeline-lsp t)
+  (doom-modeline-github t)
+  (doom-modeline-mu4e nil)
+  (doom-modeline-irc nil)
+  (doom-modeline-minor-modes nil)
+  (doom-modeline-persp-name nil)
+  (doom-modeline-buffer-encoding nil)
+  (doom-modeline-buffer-file-name-style 'truncate-except-project)
+  (doom-modeline-major-mode-icon nil)
+  :init
+  (setq doom-modeline-percent-position '(-3 "")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
-(use-package tron-legacy-theme
-  :ensure t
-  :config
-  (load-theme 'tron-legacy t)
-  (setq tron-legacy-theme-vivid-cursor t)
-  (setq tron-legacy-theme-dark-fg-bright-comments t))
+;; (use-package tron-legacy-theme
+  ;; :ensure t
+  ;; :config
+  ;; (load-theme 'tron-legacy t)
+  ;; (setq tron-legacy-theme-vivid-cursor t)
+  ;; (setq tron-legacy-theme-dark-fg-bright-comments t))
+
+(use-package spacegray-theme :defer t)
+(use-package doom-themes :defer t)
+(load-theme 'doom-palenight t)
+(doom-themes-visual-bell-config)
+
+;; (use-package modus-themes
+;;   :ensure                         ; omit this to use the built-in themes
+;;   :init
+;;   ;; Add all your customizations prior to loading the themes
+;;   (setq modus-themes-slanted-constructs t
+;;         modus-themes-bold-constructs nil
+;;         modus-themes-region 'no-extend)
+
+;;   ;; Load the theme files before enabling a theme (else you get an error).
+;;   (modus-themes-load-themes)
+;;   :config
+;;   ;; Load the theme of your choice:
+;;   (modus-themes-load-operandi) ;; OR (modus-themes-load-vivendi)
+;;   :bind ("<f5>" . modus-themes-toggle))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Misc Packages
+
+;; dired customisation
+(when (string= system-type "darwin")  ;; don't use ls-dired in macos
+  (setq dired-use-ls-dired nil))
 
 (add-hook 'dired-mode-hook
           (lambda () (dired-hide-details-mode)))
@@ -543,7 +605,9 @@
 
 ;; vterm
 (use-package vterm
-  :ensure t)
+  :ensure t
+  :custom
+  (vterm-buffer-name-string "vterm %s"))
 
 ;; Stan
 (use-package stan-mode
@@ -556,60 +620,36 @@
   ;; The officially recommended offset is 2.
   (setq stan-indentation-offset 2))
 
-;;; company-stan.el
-(use-package company-stan
-  ;; Uncomment if directly loading from your development repo
-  ;; :load-path "your-path/stan-mode/company-stan/"
-  :hook (stan-mode . company-stan-setup)
-  ;;
-  :config
-  ;; Whether to use fuzzy matching in `company-stan'
-  (setq company-stan-fuzzy 1))
+;; ;;; company-stan.el
+;; (use-package company-stan
+;;   ;; Uncomment if directly loading from your development repo
+;;   ;; :load-path "your-path/stan-mode/company-stan/"
+;;   :hook (stan-mode . company-stan-setup)
+;;   ;;
+;;   :config
+;;   ;; Whether to use fuzzy matching in `company-stan'
+;;   (setq company-stan-fuzzy 1))
 
-;;; eldoc-stan.el
-(use-package eldoc-stan
-  ;; Uncomment if directly loading from your development repo
-  ;; :load-path "your-path/stan-mode/eldoc-stan/"
-  :hook (stan-mode . eldoc-stan-setup)
-  ;;
-  :config
-  ;; No configuration options as of now.
-  )
+;; ;;; eldoc-stan.el
+;; (use-package eldoc-stan
+;;   ;; Uncomment if directly loading from your development repo
+;;   ;; :load-path "your-path/stan-mode/eldoc-stan/"
+;;   :hook (stan-mode . eldoc-stan-setup)
+;;   ;;
+;;   :config
+;;   ;; No configuration options as of now.
+;;   )
 
-;;; flycheck-stan.el
-(use-package flycheck-stan
-  ;; Add a hook to setup `flycheck-stan' upon `stan-mode' entry
-  :hook ((stan-mode . flycheck-stan-stanc2-setup)
-         (stan-mode . flycheck-stan-stanc3-setup))
-  :config
-  ;; A string containing the name or the path of the stanc2 executable
-  ;; If nil, defaults to `stanc2'
-  (setq flycheck-stanc-executable nil)
-  ;; A string containing the name or the path of the stanc2 executable
-  ;; If nil, defaults to `stanc3'
-  (setq flycheck-stanc3-executable nil))
+;; ;;; stan-snippets.el
+;; (use-package stan-snippets
+;;   ;; Uncomment if directly loading from your development repo
+;;   ;; :load-path "your-path/stan-mode/stan-snippets/"
+;;   :hook (stan-mode . stan-snippets-initialize)
+;;   ;;
+;;   :config
+;;   ;; No configuration options as of now.
+;;   )
 
-;;; stan-snippets.el
-(use-package stan-snippets
-  ;; Uncomment if directly loading from your development repo
-  ;; :load-path "your-path/stan-mode/stan-snippets/"
-  :hook (stan-mode . stan-snippets-initialize)
-  ;;
-  :config
-  ;; No configuration options as of now.
-  )
-
-;;; ac-stan.el
-(use-package ac-stan
-  ;; Uncomment if directly loading from your development repo
-  ;; :load-path "path-to-your-repo/stan-mode/ac-stan/"
-  ;; Delete the line below if using.
-  :disabled t
-  :hook (stan-mode . stan-ac-mode-setup)
-  ;;
-  :config
-  ;; No configuration options as of now.
-  )
 
 ;; Dockerfile mode
 (use-package dockerfile-mode
@@ -629,11 +669,14 @@
   (exec-path-from-shell-copy-env "LC_ALL")
   (exec-path-from-shell-copy-env "LANG"))
 
-(use-package poly-R  ;; for editing and exporting Rmd files
-  :ensure t)
+;; (use-package poly-R  ;; for editing and exporting Rmd files
+;;   :ensure t)
 
-(use-package poly-org
-  :ensure t)
+;; (use-package poly-org
+;;   :hook (org-mode . poly-org-mode)
+;;   (flycheck-disable-checker lsp)
+;;   :init (evil-set-initial-state 'poly-org-mode 'normal)
+;;   :ensure t)
 
 ;; bibtex
 (use-package ivy-bibtex
@@ -666,9 +709,9 @@
           (markdown-mode . bibtex-completion-format-citation-pandoc-citeproc)
           (default       . bibtex-completion-format-citation-default)))
   (setq ivy-bibtex-default-action 'ivy-bibtex-insert-citation)
-  (setq bibtex-completion-bibliography "/Users/tedgro/Dropbox/Reading/bibliography.bib")
+  (setq bibtex-completion-bibliography "/Users/tedgro/Reading/bibliography.bib")
   (setq bibtex-completion-pdf-field "File")
-  (setq bibtex-completion-library-path "/Users/tedgro/Dropbox/Reading/pdf")
+  (setq bibtex-completion-library-path "/Users/tedgro/Reading/pdf")
   (setq bibtex-completion-notes-path "/Users/tedgro/Writing/reading_notes/reading_notes.org")
   (ivy-set-actions
    'ivy-bibtex
@@ -720,44 +763,68 @@
    (car (bibtex-completion-find-pdf arg bibtex-completion-find-additional-pdfs))))
 
 ;; Org babel
-(unless in-termux-p (org-babel-do-load-languages
- 'org-babel-load-languages
- '((python . t)
-   (shell . t)
-   (jupyter . t))))
 
-(setq org-babel-default-header-args:jupyter-python '((:async . "yes")
-                                                     (:session . "py")
-                                                     (:kernel . "python3")))
+(use-package ob-async
+  :ensure t
+  :unless in-termux-p)
 
-(setq org-confirm-babel-evaluate nil)
-(add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
+(use-package jupyter
+  :ensure t
+  :unless in-termux-p)
+
+(unless in-termux-p
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '(
+     (emacs-lisp . t)
+     (python . t)
+     (shell . t)
+     (jupyter . t))
+   )
+  ;; Syntax highlight in #+BEGIN_SRC blocks
+  (setq org-src-fontify-natively t)
+  ;; Don't prompt before running code in org
+  (setq org-confirm-babel-evaluate nil)
+  (setq ob-async-no-async-languages-alist '("jupyter-python" "jupyter-julia"))
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+)
+
+;; (unless in-termux-p (org-babel-do-load-languages
+;;  'org-babel-load-languages
+;;  '((python . t)
+;;    (shell . t)
+;;    (jupyter . t))))
+
+;; (setq org-babel-default-header-args:jupyter-python '((:async . "yes")
+;;                                                      (:session . "py")
+;;                                                      (:kernel . "python3")))
+
+;; (setq org-confirm-babel-evaluate nil)
+;; (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
 ;; Org agenda
-(setq org-agenda-files (directory-files-recursively "~/qmcm/" "org$"))
+(setq org-agenda-files (append '("~/Dropbox/inbox.org")
+                               (directory-files-recursively "~/dtu/" "org$")))
 (define-key global-map "\C-ca" 'org-agenda)
 (setq org-agenda-custom-commands
-      '(("c" "My custom agenda view" ((agenda) (tags-todo "*")))))
+      '(("c" "My custom agenda view" ((agenda) (tags-todo "*")))
+        ("w" "Work view" ((agenda) (tags-todo "+work-inactive")))))
 
 ;; Gtd
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
 (define-key global-map "\C-cc" 'org-capture)
 (setq org-capture-templates
-      '(("t" "QMCM Task" entry (file "~/qmcm/tasks.org") "* TODO %i%?")
-        ("p" "Paper" entry (file "~/qmcm/reading.org") "* %i%?")
-        ("b" "Biochem note" entry (file+headline "~/qmcm/biochem.org" "Notes") "* %i%?")
-        ("r" "Recipe" entry (file "~/org/recipes.org") "* %i%?")
-        ("d" "Diary entry" entry (file "~/org/diary.org") "* %T %i%?")
-        ("c" "Content" entry (file "~/org/content.org") "* %i%?")
-        ("s" "Shopping" entry (file "~/org/shopping.org") "* %i%?")
-        ("z" "Programming tip" entry
-         (file+headline "~/org/work/programming_tips.org" "Inbox") "** %i%?")
-        ("e" "Draft email" entry (file "~/qmcm/draft_emails.org") "* %i%?")))
+      '(("t" "Todo" entry (file+headline "~/Dropbox/inbox.org" "Tasks")
+         "** TODO %i%?\n%T")
+        ("n" "Note" entry (file+headline "~/Dropbox/inbox.org" "Notes")
+         "** %i%?\n%T")
+        ("s" "Shopping" entry (file+headline "~/Dropbox/inbox.org" "Shopping")
+         "** TODO %i%?\n%T")))
 (setq org-refile-use-outline-path 'file)
-(setq org-refile-targets '(("~/qmcm/tasks.org" :level . 0)
+(setq org-refile-targets '(("~/dtu/tasks.org" :level . 0)
                            ("~/org/politics.org" :level . 0)
-                           ("~/qmcm/biochem.org" :level . 0)
-                           ("~/qmcm/papers.org" :level . 0)
+                           ("~/dtu/biochem.org" :level . 0)
+                           ("~/dtu/papers.org" :level . 0)
                            ("~/org/shopping.org" :level . 0)
                            ("~/org/draft_emails.org" :level . 0)
                            ("~/org/content.org" :level . 0)
@@ -784,15 +851,20 @@
      (latex (format "\href{%s}{%s}"
                     path (or desc "video"))))))
 
-(unless in-termux-p (require 'ox-bibtex))
-(setq org-bibtex-file "/Users/tedgro/Dropbox/Reading/bibliography.bib")
+;; (unless in-termux-p (require 'ox-bibtex))
+;; (setq org-bibtex-file "/Users/tedgro/Dropbox/Reading/bibliography.bib")
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; python
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TRAMP
+(setq tramp-default-method "ssh")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
+
+;; (add-to-list 'auto-mode-alist '("\\.stan\\'" . c++-mode))
+
+;; don't show loads of warnings
+(setq warning-minimum-level :error)
 
 ;; quicker keystrokes
 (setq echo-keystrokes 0.01)
@@ -841,15 +913,25 @@
 ;; one-character confirm-or-deny
 (fset 'yes-or-no-p 'y-or-n-p)
 
-;; use ibuffer instead of buffer list
-(define-key (current-global-map) [remap list-buffers] 'ibuffer)
+;; fix mac meta and super keys
+(setq-default mac-option-modifier 'meta)
+(setq-default mac-command-modifier 'super)
+(global-set-key (kbd "s-k") 'kill-this-buffer)
+
+
+;; font
+(mac-auto-operator-composition-mode t)
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(column-number-mode t)
+ '(menu-bar-mode nil)
  '(org-agenda-files
-   '("~/qmcm/hani/hani.org" "~/qmcm/marina/marina.org" "~/qmcm/nick/nick.org" "~/qmcm/projects/apoptosis/notes.org" "~/qmcm/projects/clonal_variation/technical_report.org" "~/qmcm/projects/cobracon_slides/notes.org" "~/qmcm/projects/doe/doe.org" "~/qmcm/projects/pandas_slides/pandas.org" "~/qmcm/projects/performance/performance.org" "~/qmcm/projects/proteomics/proteomics.org" "~/qmcm/projects/thermodynamics/thermodynamics.org" "~/qmcm/projects/programming_tips.org" "~/qmcm/projects/readme.org" "~/qmcm/shannara/shannara.org" "~/qmcm/viktor/viktor.org" "~/qmcm/vishnu/vishnu.org" "~/qmcm/biochem.org" "~/qmcm/kinetics_meetings.org" "~/qmcm/notes.org" "~/qmcm/reading.org" "~/qmcm/tasks.org" "~/qmcm/weekly_slides.org" "~/qmcm/weekly_work_plans.org")))
+   '("~/Dropbox/inbox.org" "~/dtu/ccc/ccc.org" "~/dtu/people/hani/hani.org" "~/dtu/people/jason/jason.org" "~/dtu/people/lars/lars.org" "~/dtu/people/marina/marina.org" "~/dtu/people/nick/nick.org" "~/dtu/people/shannara/shannara.org" "~/dtu/people/viktor/viktor.org" "~/dtu/people/vishnu/vishnu.org" "~/dtu/projects/apoptosis/notes.org" "~/dtu/projects/bio_stancon_2021/brenda_abstract.org" "~/dtu/projects/brenda_km/brenda_todo.org" "~/dtu/projects/clonal_variation/technical_report.org" "~/dtu/projects/cobracon_slides/notes.org" "~/dtu/projects/doe/doe.org" "~/dtu/projects/gtfa/notes.org" "~/dtu/projects/pandas_slides/pandas.org" "~/dtu/projects/performance/performance.org" "~/dtu/projects/proteomics/proteomics.org" "~/dtu/projects/thermodynamics/thermodynamics.org" "~/dtu/projects/programming_tips.org" "~/dtu/projects/readme.org" "~/dtu/slides/presentation-2021-04-21.org" "~/dtu/slides/weekly_slides.org" "~/dtu/well_being_dialogues_2021/notes.org" "~/dtu/biochem.org" "~/dtu/kinetics_meetings.org" "~/dtu/notes.org" "~/dtu/qmcm.org" "~/dtu/reading.org" "~/dtu/tasks.org"))
+ '(tool-bar-mode nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
