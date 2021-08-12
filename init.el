@@ -816,10 +816,9 @@
 (setq org-agenda-custom-commands
       '(("c" "My custom agenda view" ((agenda) (tags-todo "*")))
         ("w" "Work view" ((agenda) (tags-todo "+work-inactive")))))
-(unless in-termux-p
-  (setq org-agenda-files
-        (append '(org-inbox)
-                (directory-files-recursively "~/dtu/" "org$"))))
+(setq org-agenda-files
+      (cons org-inbox (directory-files-recursively "~/dtu/" "org$")))
+
 ;; org todo
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
 
