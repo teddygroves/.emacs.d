@@ -33,6 +33,7 @@
   (exec-path-from-shell-initialize))
 
 (use-package zmq
+  :unless in-termux-p
   :ensure t)
 
 ;; ** No littering
@@ -803,33 +804,34 @@
 ;; (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
 ;; Org agenda
-(setq org-agenda-files (append '("~/Dropbox/inbox.org")
-                               (directory-files-recursively "~/dtu/" "org$")))
 (define-key global-map "\C-ca" 'org-agenda)
 (setq org-agenda-custom-commands
       '(("c" "My custom agenda view" ((agenda) (tags-todo "*")))
         ("w" "Work view" ((agenda) (tags-todo "+work-inactive")))))
-
+(unless in-termux-p
+  (setq org-agenda-files
+        (append '("~/Dropbox/inbox.org")
+                (directory-files-recursively "~/dtu/" "org$"))))
 ;; Gtd
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
 (define-key global-map "\C-cc" 'org-capture)
-(setq org-capture-templates
-      '(("t" "Todo" entry (file+headline "~/Dropbox/inbox.org" "Tasks")
-         "** TODO %i%?\n%T")
-        ("n" "Note" entry (file+headline "~/Dropbox/inbox.org" "Notes")
-         "** %i%?\n%T")
-        ("s" "Shopping" entry (file+headline "~/Dropbox/inbox.org" "Shopping")
-         "** TODO %i%?\n%T")))
+(unless in-termux-p
+  (setq org-capture-templates
+        '(("t" "Todo" entry (file+headline "~/Dropbox/inbox.org" "Tasks") "** TODO %i%?\n%T")
+          ("n" "Note" entry (file+headline "~/Dropbox/inbox.org" "Notes") "** %i%?\n%T")
+          ("s" "Shopping" entry (file+headline "~/Dropbox/inbox.org" "Shopping") "** TODO %i%?\n%T"))))
+
 (setq org-refile-use-outline-path 'file)
-(setq org-refile-targets '(("~/dtu/tasks.org" :level . 0)
-                           ("~/org/politics.org" :level . 0)
-                           ("~/dtu/biochem.org" :level . 0)
-                           ("~/dtu/papers.org" :level . 0)
-                           ("~/org/shopping.org" :level . 0)
-                           ("~/org/draft_emails.org" :level . 0)
-                           ("~/org/content.org" :level . 0)
-                           ("~/org/recipes.org" :level . 0)
-                           ("~/org/diary.org" :level . 0)))
+(unless in-termux-p
+  (setq org-refile-targets '(("~/dtu/tasks.org" :level . 0)
+                             ("~/org/politics.org" :level . 0)
+                             ("~/dtu/biochem.org" :level . 0)
+                             ("~/dtu/papers.org" :level . 0)
+                             ("~/org/shopping.org" :level . 0)
+                             ("~/org/draft_emails.org" :level . 0)
+                             ("~/org/content.org" :level . 0)
+                             ("~/org/recipes.org" :level . 0)
+                             ("~/org/diary.org" :level . 0))))
 ;; youtube links (Prefix is 'yt')
 (defvar yt-iframe-format
   ;; You may want to change your width and height.
@@ -929,12 +931,4 @@
  ;; If there is more than one, they won't work right.
  '(column-number-mode t)
  '(menu-bar-mode nil)
- '(org-agenda-files
-   '("~/Dropbox/inbox.org" "~/dtu/ccc/ccc.org" "~/dtu/people/hani/hani.org" "~/dtu/people/jason/jason.org" "~/dtu/people/lars/lars.org" "~/dtu/people/marina/marina.org" "~/dtu/people/nick/nick.org" "~/dtu/people/shannara/shannara.org" "~/dtu/people/viktor/viktor.org" "~/dtu/people/vishnu/vishnu.org" "~/dtu/projects/apoptosis/notes.org" "~/dtu/projects/bio_stancon_2021/brenda_abstract.org" "~/dtu/projects/brenda_km/brenda_todo.org" "~/dtu/projects/clonal_variation/technical_report.org" "~/dtu/projects/cobracon_slides/notes.org" "~/dtu/projects/doe/doe.org" "~/dtu/projects/gtfa/notes.org" "~/dtu/projects/pandas_slides/pandas.org" "~/dtu/projects/performance/performance.org" "~/dtu/projects/proteomics/proteomics.org" "~/dtu/projects/thermodynamics/thermodynamics.org" "~/dtu/projects/programming_tips.org" "~/dtu/projects/readme.org" "~/dtu/slides/presentation-2021-04-21.org" "~/dtu/slides/weekly_slides.org" "~/dtu/well_being_dialogues_2021/notes.org" "~/dtu/biochem.org" "~/dtu/kinetics_meetings.org" "~/dtu/notes.org" "~/dtu/qmcm.org" "~/dtu/reading.org" "~/dtu/tasks.org"))
- '(tool-bar-mode nil))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
  )
