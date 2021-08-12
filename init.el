@@ -883,6 +883,8 @@
 
 (use-package olivetti
  :ensure t
+ :custom
+ (olivetti-body-width (if in-termux-p 60 80))
  :config
  (use-package olivetti :ensure t)
  (require 'olivetti)
