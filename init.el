@@ -809,23 +809,29 @@
 ;; (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
 ;; Org agenda
+(setq org-inbox
+      (if in-termux-p "~/storage/shared/DropsyncFiles/inbox.org"
+        "~/Dropbox/DropsyncFiles/inbox.org"))
 (define-key global-map "\C-ca" 'org-agenda)
 (setq org-agenda-custom-commands
       '(("c" "My custom agenda view" ((agenda) (tags-todo "*")))
         ("w" "Work view" ((agenda) (tags-todo "+work-inactive")))))
 (unless in-termux-p
   (setq org-agenda-files
-        (append '("~/Dropbox/inbox.org")
+        (append '(org-inbox)
                 (directory-files-recursively "~/dtu/" "org$"))))
-;; Gtd
+;; org todo
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
+
+;; org capture
 (define-key global-map "\C-cc" 'org-capture)
 (unless in-termux-p
   (setq org-capture-templates
-        '(("t" "Todo" entry (file+headline "~/Dropbox/inbox.org" "Tasks") "** TODO %i%?\n%T")
-          ("n" "Note" entry (file+headline "~/Dropbox/inbox.org" "Notes") "** %i%?\n%T")
-          ("s" "Shopping" entry (file+headline "~/Dropbox/inbox.org" "Shopping") "** TODO %i%?\n%T"))))
+        '(("t" "Todo" entry (file+headline org-inbox "Tasks") "** TODO %i%?\n%T")
+          ("n" "Note" entry (file+headline org-inbox "Notes") "** %i%?\n%T")
+          ("s" "Shopping" entry (file+headline org-inbox "Shopping") "** TODO %i%?\n%T"))))
 
+;; org refile
 (setq org-refile-use-outline-path 'file)
 (unless in-termux-p
   (setq org-refile-targets '(("~/dtu/tasks.org" :level . 0)
