@@ -890,6 +890,7 @@
    (lambda ()
      (unless (memq major-mode '(minibuffer-mode which-key-mode))
        (olivetti-mode 1))))
+(if in-termux-p (setq-default fringe-mode nil))
  (global-olivetti-mode 1)
  )
 
