@@ -536,7 +536,6 @@
 ;; installing this package!
 (use-package doom-modeline
   :after eshell     ;; Make sure it gets hooked after eshell
-  :hook (after-init . doom-modeline-init)
   :custom-face
   ;; (mode-line ((t (:height 0.85))))
   ;; (mode-line-inactive ((t (:height 0.85))))
@@ -554,7 +553,12 @@
   (doom-modeline-buffer-file-name-style 'truncate-except-project)
   (doom-modeline-major-mode-icon nil)
   :init
-  (setq doom-modeline-percent-position '(-3 "")))
+  (setq doom-modeline-percent-position '(-3 ""))
+  (doom-modeline-mode 1)
+  :config
+  ;; (setq-default header-line-format mode-line-format)
+  ;; (setq-default mode-line-format nil)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
 ;; (use-package tron-legacy-theme
@@ -566,9 +570,10 @@
 
 (use-package spacegray-theme :defer t)
 (use-package doom-themes :defer t)
-(load-theme 'doom-palenight t)
-(doom-themes-visual-bell-config)
-
+(use-package modus-themes :defer t)
+;; (load-theme 'doom-palenight t)
+;; (doom-themes-visual-bell-config)
+(load-theme 'modus-operandi t)
 ;; (use-package modus-themes
 ;;   :ensure                         ; omit this to use the built-in themes
 ;;   :init
@@ -858,10 +863,51 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TRAMP
 (setq tramp-default-method "ssh")
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; mini frame
+(use-package mini-frame
+  :ensure t
+  :init (mini-frame-mode)
+  :custom
+  (mini-frame-show-parameters
+   '((top . 100)
+     (width . 0.7)
+     (left . 0.5)
+     (height . 15))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; orderless
+(use-package orderless
+  :ensure t
+  :custom (completion-styles '(orderless)))
+
+(use-package olivetti
+ :ensure t
+ :config
+ (use-package olivetti :ensure t)
+ (require 'olivetti)
+ (define-global-minor-mode global-olivetti-mode olivetti-mode
+   (lambda ()
+     (unless (memq major-mode '(minibuffer-mode which-key-mode))
+       (olivetti-mode 1))))
+ (global-olivetti-mode 1)
+ )
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
 
+
 ;; (add-to-list 'auto-mode-alist '("\\.stan\\'" . c++-mode))
+
+;; modeline at top
+;; (setq-default header-line-format mode-line-format)
+;; (setq-default mode-line-format nil)
+
+;; no cursor in unselected windows
+(setq-default cursor-in-non-selected-windows nil)
+
+;; margins
+(setq-default fringes-outside-margins t)
+        (setq-default left-margin-width 1)
+        (setq-default right-margin-width 1)
 
 ;; don't show loads of warnings
 (setq warning-minimum-level :error)
