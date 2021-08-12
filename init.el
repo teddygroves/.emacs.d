@@ -825,11 +825,10 @@
 
 ;; org capture
 (define-key global-map "\C-cc" 'org-capture)
-(unless in-termux-p
-  (setq org-capture-templates
+(setq org-capture-templates
         '(("t" "Todo" entry (file+headline org-inbox "Tasks") "** TODO %i%?\n%T")
           ("n" "Note" entry (file+headline org-inbox "Notes") "** %i%?\n%T")
-          ("s" "Shopping" entry (file+headline org-inbox "Shopping") "** TODO %i%?\n%T"))))
+          ("s" "Shopping" entry (file+headline org-inbox "Shopping") "** TODO %i%?\n%T")))
 
 ;; org refile
 (setq org-refile-use-outline-path 'file)
