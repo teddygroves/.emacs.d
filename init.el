@@ -23,7 +23,9 @@
 (setq straight-use-package-by-default t)
 
 ;; (straight-use-package 'org-plus-contrib)
-(straight-use-package '(org :local-repo nil))
+;; (straight-use-package '(org :local-repo nil))
+(use-package org
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; make sure environment variables are correct
 (use-package exec-path-from-shell
@@ -88,6 +90,9 @@
   :ensure t
   :custom
   (evil-collection-company-use-tng nil)
+  (evil-collection-setup-minibuffer t)
+  :init
+  (evil-collection-init)
   :config
   (evil-collection-init 'compile)
   (evil-collection-init 'info)
@@ -526,7 +531,7 @@
 
 
 ;; nice clock format
-(setq display-time-format "W%W %d%b %l:%M"
+(setq display-time-format "W%W %d%b %k:%M"
       display-time-default-load-average nil)
 (display-time-mode 1)
 
@@ -571,24 +576,22 @@
 
 (use-package spacegray-theme :defer t)
 (use-package doom-themes :defer t)
-(use-package modus-themes :defer t)
+;; (use-package modus-themes
+  ;; :defer t
+  ;; :custom (modus-themes-org-blocks "rainbow")
+  ;; :init
+  ;; (load-theme 'modus-operandi t)
+  ;; )
 ;; (load-theme 'doom-palenight t)
 ;; (doom-themes-visual-bell-config)
-(load-theme 'modus-operandi t)
-;; (use-package modus-themes
-;;   :ensure                         ; omit this to use the built-in themes
-;;   :init
-;;   ;; Add all your customizations prior to loading the themes
-;;   (setq modus-themes-slanted-constructs t
-;;         modus-themes-bold-constructs nil
-;;         modus-themes-region 'no-extend)
-
-;;   ;; Load the theme files before enabling a theme (else you get an error).
-;;   (modus-themes-load-themes)
-;;   :config
-;;   ;; Load the theme of your choice:
-;;   (modus-themes-load-operandi) ;; OR (modus-themes-load-vivendi)
-;;   :bind ("<f5>" . modus-themes-toggle))
+(use-package modus-themes
+  :ensure
+  :init
+  (setq modus-themes-org-blocks 'gray-background)
+  (modus-themes-load-themes)
+  :config
+  (modus-themes-load-operandi)
+  :bind ("<f5>" . modus-themes-toggle))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Misc Packages
 
@@ -812,12 +815,15 @@
 (setq org-inbox
       (if in-termux-p "~/storage/shared/DropsyncFiles/inbox.org"
         "~/Dropbox/DropsyncFiles/inbox.org"))
+(setq dtu-notes-dir
+      (if in-termux-p "~/storage/shared/DropsyncFiles/dtu_notes"
+        "~/Dropbox/DropsyncFiles/dtu_notes"))
 (define-key global-map "\C-ca" 'org-agenda)
 (setq org-agenda-custom-commands
       '(("c" "My custom agenda view" ((agenda) (tags-todo "*")))
         ("w" "Work view" ((agenda) (tags-todo "+work-inactive")))))
 (setq org-agenda-files
-      (cons org-inbox (directory-files-recursively "~/dtu/" "org$")))
+      (cons org-inbox (directory-files-recursively dtu-notes-dir "org$")))
 
 ;; org todo
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
@@ -832,10 +838,7 @@
 ;; org refile
 (setq org-refile-use-outline-path 'file)
 (unless in-termux-p
-  (setq org-refile-targets '(("~/dtu/tasks.org" :level . 0)
-                             ("~/org/politics.org" :level . 0)
-                             ("~/dtu/biochem.org" :level . 0)
-                             ("~/dtu/papers.org" :level . 0)
+  (setq org-refile-targets '(("~/org/politics.org" :level . 0)
                              ("~/org/shopping.org" :level . 0)
                              ("~/org/draft_emails.org" :level . 0)
                              ("~/org/content.org" :level . 0)
