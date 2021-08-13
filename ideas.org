@@ -1,0 +1,9 @@
+#+TITLE: Ideas for emacs configuration
+
+* [[https://github.com/bdarcus/bibtex-actions][Bibtex actions]]
+Requires Vertico or Selectrum
+* [[https://github.com/minad/vertico][Vertico]]
+Alternative to ivy, generally seems nicer
+
+There is a whole family of related packages: marginalia, consult, embark,
+orderless
