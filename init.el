@@ -90,7 +90,7 @@
   :ensure t
   :custom
   (evil-collection-company-use-tng nil)
-  (evil-collection-setup-minibuffer t)
+  ;; (evil-collection-setup-minibuffer t)
   :init
   (evil-collection-init)
   :config
@@ -98,7 +98,7 @@
   (evil-collection-init 'info)
   (evil-collection-init 'custom)
   (evil-collection-init 'dired)
-  (evil-collection-init 'ivy)
+  ;; (evil-collection-init 'ivy)
   (evil-collection-init 'python)
   (evil-collection-init 'flycheck)
   (evil-collection-init 'xref)
@@ -133,57 +133,166 @@
   )
 
 ;; * Ivy, counsel
-
-;; ** counsel
-
-(use-package counsel
-  :diminish ivy-mode
-  :diminish counsel-mode
-  :bind (("C-s" . swiper)
-         :map ivy-minibuffer-map
-         ("TAB" . ivy-alt-done))
+(use-package vertico
+  :ensure t
+  :bind (:map vertico-map
+         ("C-j" . vertico-next)
+         ("C-k" . vertico-previous)
+         ("C-f" . vertico-exit)
+         :map minibuffer-local-map
+         ("M-h" . backward-kill-word))
+  :custom
+  (vertico-cycle t)
   :init
-  (ivy-mode 1)
-  (counsel-mode 1)
+  (vertico-mode))
+
+(use-package savehist
+  :init
+  (savehist-mode))
+
+(use-package marginalia
+  :after vertico
+  :ensure t
+  :custom
+  (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
+  :init
+  (marginalia-mode))
+
+(use-package consult
+  :ensure t
+  :init
+  ;; Optionally configure the register formatting. This improves the register
+  ;; preview for `consult-register', `consult-register-load',
+  ;; `consult-register-store' and the Emacs built-ins.
+  (setq register-preview-delay 0
+        register-preview-function #'consult-register-format)
+
+  ;; Optionally tweak the register preview window.
+  ;; This adds thin lines, sorting and hides the mode line of the window.
+  (advice-add #'register-preview :override #'consult-register-window)
+
+  ;; Optionally replace `completing-read-multiple' with an enhanced version.
+  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+
+  ;; Use Consult to select xref locations with preview
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
+
+  ;; Configure other variables and modes in the :config section,
+  ;; after lazily loading the package.
   :config
-  (setq ivy-use-virtual-buffers t)
-  (setq enable-recursive-minibuffers t))
 
-;; ** ivy-misc [[https://github.com/Yevgnen/ivy-rich]]
+  ;; Optionally configure preview. The default value
+  ;; is 'any, such that any key triggers the preview.
+  ;; (setq consult-preview-key 'any)
+  ;; (setq consult-preview-key (kbd "M-."))
+  ;; (setq consult-preview-key (list (kbd "<S-down>") (kbd "<S-up>")))
+  ;; For some commands and buffer sources it is useful to configure the
+  ;; :preview-key on a per-command basis using the `consult-customize' macro.
+  (consult-customize
+   consult-theme
+   :preview-key '(:debounce 0.2 any)
+   consult-ripgrep consult-git-grep consult-grep
+   consult-bookmark consult-recent-file consult-xref
+   consult--source-file consult--source-project-file consult--source-bookmark
+   :preview-key (kbd "M-."))
 
-(use-package ivy-xref
-  :init
-  ;; xref initialization is different in Emacs 27 - there are two different
-  ;; variables which can be set rather than just one
-  (when (>= emacs-major-version 27)
-    (setq xref-show-definitions-function #'ivy-xref-show-defs))
-  ;; Necessary in Emacs <27. In Emacs 27 it will affect all xref-based
-  ;; commands other than xref-find-definitions (e.g. project-find-regexp)
-  ;; as well
-  (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
+  ;; Optionally configure the narrowing key.
+  ;; Both < and C-+ work reasonably well.
+  (setq consult-narrow-key "<") ;; (kbd "C-+")
 
-(use-package ivy-rich
-  :init
-  (ivy-rich-mode 1))
+  ;; Optionally make narrowing help available in the minibuffer.
+  ;; You may want to use `embark-prefix-help-command' or which-key instead.
+  ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
 
-;; ** prescient
-
-(use-package ivy-prescient
-  :after counsel
-  :init
-  (ivy-prescient-mode)
-  (prescient-persist-mode)
+  ;; Optionally configure a function which returns the project root directory.
+  ;; There are multiple reasonable alternatives to chose from.
+  ;;;; 1. project.el (project-roots)
+  (setq consult-project-root-function
+        (lambda ()
+          (when-let (project (project-current))
+            (car (project-roots project)))))
+  ;;;; 2. projectile.el (projectile-project-root)
+  ;; (autoload 'projectile-project-root "projectile")
+  ;; (setq consult-project-root-function #'projectile-project-root)
+  ;;;; 3. vc.el (vc-root-dir)
+  ;; (setq consult-project-root-function #'vc-root-dir)
+  ;;;; 4. locate-dominating-file
+  ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
   )
 
-(use-package prescient
-  :diminish
+(use-package embark
+  :ensure t
+
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+  :init
+
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
   :config
+
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+;; Consult users will also want the embark-consult package.
+(use-package embark-consult
+  :ensure t
+  :after (embark consult)
+  :demand t ; only necessary if you have the hook below
+  ;; if you want to have consult previews as you move around an
+  ;; auto-updating embark collect buffer
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+
+(use-package bibtex-actions
+  :bind (("C-c b" . bibtex-actions-insert-citation)
+         :map minibuffer-local-map
+         ("M-b" . bibtex-actions-insert-preset))
+  :after embark bibtex-completion
+  :config
+  ;; Make the 'bibtex-actions' bindings and targets available to `embark'.
+  (add-to-list 'embark-target-finders 'bibtex-actions-citation-key-at-point)
+  (add-to-list 'embark-keymap-alist '(bibtex . bibtex-actions-map))
+  (add-to-list 'embark-keymap-alist '(citation-key . bibtex-actions-buffer-map))
+  ;; Make sure to set this to ensure 'bibtex-actions-open-link' command works correctly.
+  (setq bibtex-completion-additional-search-fields '(doi url)
+        bibtex-completion-pdf-extension ".pdf"
+        bibtex-completion-pdf-field "File"
+        bibtex-completion-pdf-open-function
+        (lambda (fpath)
+          (call-process "open" nil 0 nil "-a" "/Applications/Skim.app" fpath))
+	bibtex-completion-bibliography "/Users/tedgro/Reading/bibliography.bib")
+;; use consult-completing-read for enhanced interface
+(advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
   )
 
-;; * Treemacs
 
 
-;; * Tools
+;; (use-package oc-bibtex-actions
+;;   :ensure t
+;;   :straight bibtex-actions
+;;   :bind (("C-c b" . org-cite-insert)
+;;          ("M-o" . org-open-at-point)
+;;          :map minibuffer-local-map
+;;          ("M-b" . bibtex-actions-insert-preset))
+;;   ;; :after (embark oc)
+;;   :config
+;;   ;; make sure to set this to ensure open commands work correctly
+;; (setq my/bibs '("/Users/tedgro/Reading/bibliography.bib"))
+;;   (setq bibtex-completion-additional-search-fields '(doi url)
+;; 	bibtex-completion-bibliography my/bibs
+;; 	org-cite-global-bibliography my/bibs))
+
+;; Use consult-completing-read for enhanced interface.
+;; (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
 
 ;; ** which-key
 
@@ -221,7 +330,7 @@
   (setq projectile-project-search-path '("~/Code" "~/Writing" "~/dtu/projects"))
   (setq projectile-switch-project-action 'projectile-dired)
   :custom
-  (projectile-completion-system 'ivy)
+  ;; (projectile-completion-system 'ivy)
   (projectile-dynamic-mode-line nil)
   (projectile-enable-caching t)
   (projectile-indexing-method 'hybrid)
@@ -309,7 +418,7 @@
 
 ;; lsp-related packages
 (use-package lsp-ui :after lsp-mode :commands lsp-ui-mode)
-(use-package lsp-ivy :after lsp-mode :commands lsp-ivy-workspace-symbol)
+;; (use-package lsp-ivy :after lsp-mode :commands lsp-ivy-workspace-symbol)
 (use-package treemacs)
 (use-package lsp-treemacs :after (lsp-mode treemacs) :commands lsp-treemacs-errors-list)
 (use-package lsp-pyright
@@ -351,7 +460,7 @@
    "h" '(lsp-describe-thing-at-point :which-key "help-detailed")
    "e" '(lsp-ui-flycheck-list :which-key "flycheck-list")
    "SPC" 'python-shell-send-statement
-   "o" 'counsel-imenu
+   ;; "o" 'counsel-imenu
    "x" 'lsp-execute-code-action)
 
 
@@ -688,48 +797,48 @@
 ;;   :ensure t)
 
 ;; bibtex
-(use-package ivy-bibtex
-  :ensure t
-  :bind (("M-i" . ivy-bibtex))
-  :config
-  (defun bibtex-completion-format-citation-org-cite (keys)
-    "Format ebib references for keys in KEYS."
-    (s-join ", "
-            (--map (format "cite:%s" it) keys)
-            ))
+;; (use-package ivy-bibtex
+;;   :ensure t
+;;   :bind (("M-i" . ivy-bibtex))
+;;   :config
+;;   (defun bibtex-completion-format-citation-org-cite (keys)
+;;     "Format ebib references for keys in KEYS."
+;;     (s-join ", "
+;;             (--map (format "cite:%s" it) keys)
+;;             ))
 
-  (defun bibtex-completion-insert-org-file-link (keys)
-    "Insert an org mode format link to the pdf"
-    (insert (s-join ", "
-                    (cl-loop
-                     for key in keys
-                     for entry = (bibtex-completion-get-entry key)
-                     for title = (bibtex-completion-apa-get-value "title" entry)
-                     for pdf = (car (bibtex-completion-find-pdf key))
-                     collect (org-link-make-string pdf title)))))
-  (ivy-bibtex-ivify-action ;; makes this function available to ivy-bibtex
-   bibtex-completion-insert-org-file-link ivy-bibtex-insert-org-file-link)
-  (setq bibtex-completion-pdf-open-function
-        (lambda (fpath)
-          (call-process "open" nil 0 nil "-a" "/Applications/Skim.app" fpath)))
-  (setq bibtex-completion-format-citation-functions
-        '((org-mode      . bibtex-completion-format-citation-org-cite)
-          (latex-mode    . bibtex-completion-format-citation-cite)
-          (markdown-mode . bibtex-completion-format-citation-pandoc-citeproc)
-          (default       . bibtex-completion-format-citation-default)))
-  (setq ivy-bibtex-default-action 'ivy-bibtex-insert-citation)
-  (setq bibtex-completion-bibliography "/Users/tedgro/Reading/bibliography.bib")
-  (setq bibtex-completion-pdf-field "File")
-  (setq bibtex-completion-library-path "/Users/tedgro/Reading/pdf")
-  (setq bibtex-completion-notes-path "/Users/tedgro/Writing/reading_notes/reading_notes.org")
-  (ivy-set-actions
-   'ivy-bibtex
-   '(("p" ivy-bibtex-open-pdf "Open PDF file (if present)")
-     ("c" ivy-bibtex-insert-citation "Insert citation")
-     ("r" ivy-bibtex-insert-reference "Insert reference")
-     ("b" ivy-bibtex-insert-bibtex "Insert BibTeX entry")
-     ("l" ivy-bibtex-insert-org-file-link "Org-format link to pdf file")
-     )))
+;;   (defun bibtex-completion-insert-org-file-link (keys)
+;;     "Insert an org mode format link to the pdf"
+;;     (insert (s-join ", "
+;;                     (cl-loop
+;;                      for key in keys
+;;                      for entry = (bibtex-completion-get-entry key)
+;;                      for title = (bibtex-completion-apa-get-value "title" entry)
+;;                      for pdf = (car (bibtex-completion-find-pdf key))
+;;                      collect (org-link-make-string pdf title)))))
+;;   (ivy-bibtex-ivify-action ;; makes this function available to ivy-bibtex
+;;    bibtex-completion-insert-org-file-link ivy-bibtex-insert-org-file-link)
+;;   (setq bibtex-completion-pdf-open-function
+;;         (lambda (fpath)
+;;           (call-process "open" nil 0 nil "-a" "/Applications/Skim.app" fpath)))
+;;   (setq bibtex-completion-format-citation-functions
+;;         '((org-mode      . bibtex-completion-format-citation-org-cite)
+;;           (latex-mode    . bibtex-completion-format-citation-cite)
+;;           (markdown-mode . bibtex-completion-format-citation-pandoc-citeproc)
+;;           (default       . bibtex-completion-format-citation-default)))
+;;   (setq ivy-bibtex-default-action 'ivy-bibtex-insert-citation)
+;;   (setq bibtex-completion-bibliography "/Users/tedgro/Reading/bibliography.bib")
+;;   (setq bibtex-completion-pdf-field "File")
+;;   (setq bibtex-completion-library-path "/Users/tedgro/Reading/pdf")
+;;   (setq bibtex-completion-notes-path "/Users/tedgro/Writing/reading_notes/reading_notes.org")
+;;   (ivy-set-actions
+;;    'ivy-bibtex
+;;    '(("p" ivy-bibtex-open-pdf "Open PDF file (if present)")
+;;      ("c" ivy-bibtex-insert-citation "Insert citation")
+;;      ("r" ivy-bibtex-insert-reference "Insert reference")
+;;      ("b" ivy-bibtex-insert-bibtex "Insert BibTeX entry")
+;;      ("l" ivy-bibtex-insert-org-file-link "Org-format link to pdf file")
+;;      )))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Org mode configuration
