@@ -7,3 +7,5 @@ Alternative to ivy, generally seems nicer
 
 There is a whole family of related packages: marginalia, consult, embark,
 orderless
+
+* [[https://systemcrafters.cc/][System crafters website]]

@@ -4,16 +4,19 @@
        (not (equal user-login-name "teddy")))
     "t if we are in termux emacs.")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; https://github.com/daviwil/emacs-from-scratch/wiki/LSP-Python-(pyright)-config-in-emacs-from-scratch
+;; explanation of how straight works and why you need to bootstrap it
+;; https://systemcrafters.cc/advanced-package-management/using-straight-el/
 
+;; a lot of this config is copied from here
+;; https://github.com/daviwil/emacs-from-scratch/wiki/LSP-Python-(pyright)-config-in-emacs-from-scratch
 (defvar bootstrap-version)
 (let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+       (expand-file-name "straight/repos/straight.el/bootstrap.el"
+                         user-emacs-directory))
       (bootstrap-version 5))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+        (url-retrieve-synchronously "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
          'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
@@ -24,8 +27,41 @@
 
 ;; (straight-use-package 'org-plus-contrib)
 ;; (straight-use-package '(org :local-repo nil))
+
+;; org mode
+;; todo: copy random bits of org config from below to here
 (use-package org
   :ensure t)
+
+;; org roam (for taking notes, not on termux for now)
+(use-package org-roam
+  :after org
+  :unless in-termux-p
+  :ensure t
+  :init
+  (setq org-roam-v2-ack t)
+  :custom
+  (org-roam-directory "~/Dropbox/DropsyncFiles/org-roam")
+  (org-roam-completion-everywhere t)
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert)
+         :map org-mode-map
+         ("C-M-i" . completion-at-point)
+         :map org-roam-dailies-map
+         ("Y" . org-roam-dailies-capture-yesterday)
+         ("T" . org-roam-dailies-capture-tomorrow))
+  :bind-keymap
+  ("C-c n d" . org-roam-dailies-map)
+  :config
+  (require 'org-roam-dailies) ;; Ensure the keymap is available
+  (add-to-list 'display-buffer-alist
+              '("\\*org-roam\\*"
+                (display-buffer-in-direction)
+                (direction . right)
+                (window-width . 0.33)
+                (window-height . fit-window-to-buffer)))
+  (org-roam-db-autosync-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; make sure environment variables are correct
 (use-package exec-path-from-shell
@@ -63,6 +99,9 @@
 
 (use-package evil
   :ensure t
+  :after undo-tree
+  :custom
+  (evil-undo-system 'undo-tree)
   :init
   (setq evil-shift-width 2)
   (setq evil-want-integration t)
@@ -129,10 +168,25 @@
 (use-package undo-tree
   :diminish undo-tree-mode
   :config
-  (global-undo-tree-mode)
-  )
+  (global-undo-tree-mode))
 
-;; * Ivy, counsel
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Minibuffer
+
+;; mini-frame https://github.com/muffinmad/emacs-mini-frame
+;; It puts the minibuffer in the middle of the screen
+(use-package mini-frame
+  :ensure t
+  :init (mini-frame-mode)
+  :custom
+  (mini-frame-show-parameters
+   '((top . 100)
+     (width . 0.7)
+     (left . 0.5)
+     (height . 15))))
+
+;; vertico 
+;; https://github.com/minad/vertico
+;; https://systemcrafters.cc/emacs-tips/streamline-completions-with-vertico/
 (use-package vertico
   :ensure t
   :bind (:map vertico-map
@@ -146,15 +200,30 @@
   :init
   (vertico-mode))
 
+;; vertico-directory makes directory search in minibuffer a bit nicer
+(use-package vertico-directory
+  :straight (:local-repo "vertico/extensions")
+  :ensure t
+  :bind (:map vertico-map
+              ("RET" . vertico-directory-enter)
+              ("DEL" . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word))
+  ;; Tidy shadowed file names
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+
 (use-package savehist
+  :ensure t
   :init
   (savehist-mode))
 
 (use-package marginalia
   :after vertico
   :ensure t
+  :bind (:map minibuffer-local-map ("M-A" . marginalia-cycle))
   :custom
-  (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
+  (marginalia-annotators '(marginalia-annotators-heavy
+                           marginalia-annotators-light nil))
   :init
   (marginalia-mode))
 
@@ -275,25 +344,6 @@
   )
 
 
-
-;; (use-package oc-bibtex-actions
-;;   :ensure t
-;;   :straight bibtex-actions
-;;   :bind (("C-c b" . org-cite-insert)
-;;          ("M-o" . org-open-at-point)
-;;          :map minibuffer-local-map
-;;          ("M-b" . bibtex-actions-insert-preset))
-;;   ;; :after (embark oc)
-;;   :config
-;;   ;; make sure to set this to ensure open commands work correctly
-;; (setq my/bibs '("/Users/tedgro/Reading/bibliography.bib"))
-;;   (setq bibtex-completion-additional-search-fields '(doi url)
-;; 	bibtex-completion-bibliography my/bibs
-;; 	org-cite-global-bibliography my/bibs))
-
-;; Use consult-completing-read for enhanced interface.
-;; (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
-
 ;; ** which-key
 
 (use-package which-key
@@ -346,19 +396,11 @@
   )
 
 
-;; * Company
-
-;; ** company-mode
-
-
 ;; ** prescient
 
-(use-package company-prescient
-  :after company
+(use-package prescient
   :config
-  (company-prescient-mode 1)
-  (prescient-persist-mode)
-  )
+  (prescient-persist-mode))
 
 ;; * Yasnippet
 
@@ -385,7 +427,7 @@
   (flycheck-add-next-checker 'python-flake8 'python-pyright)
   )
 
-;; merlin
+;; ocaml
 (use-package tuareg
   :ensure t)
 ;; (use-package merlin
@@ -714,6 +756,7 @@
 (use-package dired-x ;; so that C-x C-j always does dired-jump
   :straight nil
   :demand t)
+
 ;; ace window
 (use-package ace-window
   :ensure t
@@ -786,59 +829,6 @@
   :config
   (exec-path-from-shell-copy-env "LC_ALL")
   (exec-path-from-shell-copy-env "LANG"))
-
-;; (use-package poly-R  ;; for editing and exporting Rmd files
-;;   :ensure t)
-
-;; (use-package poly-org
-;;   :hook (org-mode . poly-org-mode)
-;;   (flycheck-disable-checker lsp)
-;;   :init (evil-set-initial-state 'poly-org-mode 'normal)
-;;   :ensure t)
-
-;; bibtex
-;; (use-package ivy-bibtex
-;;   :ensure t
-;;   :bind (("M-i" . ivy-bibtex))
-;;   :config
-;;   (defun bibtex-completion-format-citation-org-cite (keys)
-;;     "Format ebib references for keys in KEYS."
-;;     (s-join ", "
-;;             (--map (format "cite:%s" it) keys)
-;;             ))
-
-;;   (defun bibtex-completion-insert-org-file-link (keys)
-;;     "Insert an org mode format link to the pdf"
-;;     (insert (s-join ", "
-;;                     (cl-loop
-;;                      for key in keys
-;;                      for entry = (bibtex-completion-get-entry key)
-;;                      for title = (bibtex-completion-apa-get-value "title" entry)
-;;                      for pdf = (car (bibtex-completion-find-pdf key))
-;;                      collect (org-link-make-string pdf title)))))
-;;   (ivy-bibtex-ivify-action ;; makes this function available to ivy-bibtex
-;;    bibtex-completion-insert-org-file-link ivy-bibtex-insert-org-file-link)
-;;   (setq bibtex-completion-pdf-open-function
-;;         (lambda (fpath)
-;;           (call-process "open" nil 0 nil "-a" "/Applications/Skim.app" fpath)))
-;;   (setq bibtex-completion-format-citation-functions
-;;         '((org-mode      . bibtex-completion-format-citation-org-cite)
-;;           (latex-mode    . bibtex-completion-format-citation-cite)
-;;           (markdown-mode . bibtex-completion-format-citation-pandoc-citeproc)
-;;           (default       . bibtex-completion-format-citation-default)))
-;;   (setq ivy-bibtex-default-action 'ivy-bibtex-insert-citation)
-;;   (setq bibtex-completion-bibliography "/Users/tedgro/Reading/bibliography.bib")
-;;   (setq bibtex-completion-pdf-field "File")
-;;   (setq bibtex-completion-library-path "/Users/tedgro/Reading/pdf")
-;;   (setq bibtex-completion-notes-path "/Users/tedgro/Writing/reading_notes/reading_notes.org")
-;;   (ivy-set-actions
-;;    'ivy-bibtex
-;;    '(("p" ivy-bibtex-open-pdf "Open PDF file (if present)")
-;;      ("c" ivy-bibtex-insert-citation "Insert citation")
-;;      ("r" ivy-bibtex-insert-reference "Insert reference")
-;;      ("b" ivy-bibtex-insert-bibtex "Insert BibTeX entry")
-;;      ("l" ivy-bibtex-insert-org-file-link "Org-format link to pdf file")
-;;      )))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Org mode configuration
@@ -933,6 +923,11 @@
         ("w" "Work view" ((agenda) (tags-todo "+work-inactive")))))
 (setq org-agenda-files
       (cons org-inbox (directory-files-recursively dtu-notes-dir "org$")))
+(setq org-agenda-prefix-format " %i %?-12t% s")
+;; default: ((agenda . " %i %-12:c%?-12t% s")
+;;  (todo . " %i %-12:c")
+;;  (tags . " %i %-12:c")
+;;  (search . " %i %-12:c"))
 
 ;; org todo
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
@@ -981,16 +976,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TRAMP
 (setq tramp-default-method "ssh")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; mini frame
-(use-package mini-frame
-  :ensure t
-  :init (mini-frame-mode)
-  :custom
-  (mini-frame-show-parameters
-   '((top . 100)
-     (width . 0.7)
-     (left . 0.5)
-     (height . 15))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; orderless
 (use-package orderless
