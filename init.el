@@ -43,9 +43,22 @@
   :custom
   (org-roam-directory "~/Dropbox/DropsyncFiles/org-roam")
   (org-roam-completion-everywhere t)
+  (org-roam-dailies-capture-templates
+   '(("d" "default" entry  "* %<%I:%M %p>: %?"
+      :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
+  (org-roam-capture-templates
+   '(("d" "default" plain "%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+title: ${title}\n")
+      :unnarrowed t)
+     ("p" "Paper" plain "\n\n* Reference\n%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+title: ${title}\n")
+      :unnarrowed t)))
   :bind (("C-c n l" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
          ("C-c n i" . org-roam-node-insert)
+         ("C-c n n" . org-roam-capture)
          :map org-mode-map
          ("C-M-i" . completion-at-point)
          :map org-roam-dailies-map
@@ -105,9 +118,8 @@
   :init
   (setq evil-shift-width 2)
   (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
   :config
-
+  (setq evil-want-keybinding nil)
   (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
   (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
 
@@ -229,6 +241,7 @@
 
 (use-package consult
   :ensure t
+  :demand t
   :init
   ;; Optionally configure the register formatting. This improves the register
   ;; preview for `consult-register', `consult-register-load',
@@ -241,8 +254,8 @@
   (advice-add #'register-preview :override #'consult-register-window)
 
   ;; Optionally replace `completing-read-multiple' with an enhanced version.
-  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
-
+  (advice-add #'completing-read-multiple :override
+              #'consult-completing-read-multiple)
   ;; Use Consult to select xref locations with preview
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
@@ -291,27 +304,19 @@
   )
 
 (use-package embark
+  :straight (:type git :host github :repo "oantolin/embark")
+  :demand t
   :ensure t
+  :bind (("C-." . embark-act)         ;; pick some comfortable binding
+         ("C-;" . embark-dwim)        ;; good alternative: M-.
+         ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+  :init (setq prefix-help-command #'embark-prefix-help-command)
+  :config (add-to-list
+           'display-buffer-alist
+           '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+             nil
+             (window-parameters (mode-line-format . none)))))
 
-  :bind
-  (("C-." . embark-act)         ;; pick some comfortable binding
-   ("C-;" . embark-dwim)        ;; good alternative: M-.
-   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-
-  :init
-
-  ;; Optionally replace the key help with a completing-read interface
-  (setq prefix-help-command #'embark-prefix-help-command)
-
-  :config
-
-  ;; Hide the mode line of the Embark live/completions buffers
-  (add-to-list 'display-buffer-alist
-               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                 nil
-                 (window-parameters (mode-line-format . none)))))
-
-;; Consult users will also want the embark-consult package.
 (use-package embark-consult
   :ensure t
   :after (embark consult)
@@ -321,28 +326,42 @@
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
+(setq )
+;; bibtex actions
+(use-package bibtex-completion
+  :demand t
+  :ensure t
+  :config
+  (setq bibtex-completion-additional-search-fields '(doi url)
+        bibtex-completion-pdf-extension ".pdf"
+        bibtex-completion-bibliography '("/Users/tedgro/Reading/bibliography.bib")
+        bibtex-completion-pdf-field "file"
+        bibtex-completion-pdf-open-function
+        (lambda (fpath) (call-process "open" nil 0 nil "-a" "/Applications/Skim.app" fpath))))
+
+(use-package parsebib
+  :demand t
+  :straight (:type git :host github :repo "joostkremers/parsebib")
+  :ensure t)
+
 (use-package bibtex-actions
+  :ensure t
+  :demand t
+  :straight (:type git :host github :repo "bdarcus/bibtex-actions"
+                   ;; :branch "file-field"
+                   )
   :bind (("C-c b" . bibtex-actions-insert-citation)
          :map minibuffer-local-map
          ("M-b" . bibtex-actions-insert-preset))
-  :after embark bibtex-completion
+  :after (embark parsebib bibtex-completion)
   :config
-  ;; Make the 'bibtex-actions' bindings and targets available to `embark'.
   (add-to-list 'embark-target-finders 'bibtex-actions-citation-key-at-point)
-  (add-to-list 'embark-keymap-alist '(bibtex . bibtex-actions-map))
+  (add-to-list 'embark-keymap-alist '(bib-reference . bibtex-actions-map))
   (add-to-list 'embark-keymap-alist '(citation-key . bibtex-actions-buffer-map))
-  ;; Make sure to set this to ensure 'bibtex-actions-open-link' command works correctly.
-  (setq bibtex-completion-additional-search-fields '(doi url)
-        bibtex-completion-pdf-extension ".pdf"
-        bibtex-completion-pdf-field "File"
-        bibtex-completion-pdf-open-function
-        (lambda (fpath)
-          (call-process "open" nil 0 nil "-a" "/Applications/Skim.app" fpath))
-	bibtex-completion-bibliography "/Users/tedgro/Reading/bibliography.bib")
-;; use consult-completing-read for enhanced interface
-(advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
-  )
-
+  (advice-add #'completing-read-multiple
+              :override #'consult-completing-read-multiple)
+  (setq bibtex-actions-file-variable "file"
+        bibtex-actions-bibliography '("/Users/tedgro/Reading/bibliography.bib")))
 
 ;; ** which-key
 
@@ -924,6 +943,7 @@
 (setq org-agenda-files
       (cons org-inbox (directory-files-recursively dtu-notes-dir "org$")))
 (setq org-agenda-prefix-format " %i %?-12t% s")
+(setq org-agenda-hide-tags-regexp "work")
 ;; default: ((agenda . " %i %-12:c%?-12t% s")
 ;;  (todo . " %i %-12:c")
 ;;  (tags . " %i %-12:c")
