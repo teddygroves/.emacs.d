@@ -173,7 +173,7 @@
   (evil-collection-init 'magit)
   (evil-collection-init 'which-key)
   (evil-collection-init 'which-key)
-  (evil-collection-init 'mu4e)
+  (unless in-termux-p (evil-collection-init 'mu4e))
   )
 
 (use-package evil-org
@@ -754,7 +754,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package mu4e-alert
   :unless in-termux-p
-  :ensure t
   :init
   (setq mu4e-alert-interesting-mail-query
         "flag:unread AND NOT flag:trashed AND (maildir:/Gmail/Inbox OR maildir:/dtu/Inbox)")
@@ -805,7 +804,7 @@
   (doom-modeline-bar-width 6)
   (doom-modeline-lsp t)
   (doom-modeline-github t)
-  (doom-modeline-mu4e t)
+  (doom-modeline-mu4e (if in-termux-p nil t))
   (doom-modeline-irc nil)
   (doom-modeline-minor-modes nil)
   (doom-modeline-persp-name nil)
@@ -816,7 +815,8 @@
   (setq doom-modeline-percent-position '(-3 ""))
   (doom-modeline-mode 1)
   :config
-  (mu4e-alert-enable-mode-line-display)
+  (unless in-termux-p
+      (mu4e-alert-enable-mode-line-display))
   ;; (setq-default header-line-format mode-line-format)
   ;; (setq-default mode-line-format nil)
   )
@@ -1077,10 +1077,11 @@
   (soccer-time-local-time-utc-offset "+0300"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Email
+(unless in-termux-p
 (use-package mu4e
+  :unless in-termux-p
   :straight (:local-repo "/usr/local/share/emacs/site-lisp/mu/mu4e/"
              :pre-build ())
-  :unless in-termux-p
   :ensure nil
   ;; :load-path "/usr/share/emacs/site-lisp/mu4e/"
   ;; :defer 20 ; Wait until 20 seconds after startup
@@ -1219,7 +1220,7 @@
       (:maildir "/dtu/Inbox"  :key ?I)
       (:maildir "/dtu/Drafts"    :key ?D)
 
-      )))
+      ))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
 
