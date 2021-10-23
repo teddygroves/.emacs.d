@@ -24,14 +24,28 @@
 
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
+(setq straight-repository-branch "develop")
 
 ;; (straight-use-package 'org-plus-contrib)
 ;; (straight-use-package '(org :local-repo nil))
 
 ;; org mode
 ;; todo: copy random bits of org config from below to here
-(use-package org
+
+(use-package citeproc
   :ensure t)
+
+(use-package org
+  :straight (:repo "https://git.savannah.gnu.org/git/emacs/org-mode.git")
+  :after citeproc
+  :ensure t
+  :custom
+  (org-cite-csl-styles-dir "~/Zotero/styles")
+  (org-cite-csl-locales-dir "~/.emacs.d/straight/repos/org/etc/csl")
+  (org-latex-pdf-process
+      '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+        "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+        "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")))
 
 ;; org roam (for taking notes, not on termux for now)
 (use-package org-roam
@@ -41,7 +55,7 @@
   :init
   (setq org-roam-v2-ack t)
   :custom
-  (org-roam-directory "~/Dropbox/DropsyncFiles/org-roam")
+  (org-roam-directory "~/Dropbox/DropsyncFiles/org/org-roam")
   (org-roam-completion-everywhere t)
   (org-roam-dailies-capture-templates
    '(("d" "default" entry  "* %<%I:%M %p>: %?"
@@ -52,6 +66,10 @@
                          "#+title: ${title}\n")
       :unnarrowed t)
      ("p" "Paper" plain "\n\n* Reference\n%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+title: ${title}\n")
+      :unnarrowed t)
+     ("w" "Website" plain "\n\n* Link\n%?"
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                          "#+title: ${title}\n")
       :unnarrowed t)))
@@ -149,18 +167,20 @@
   (evil-collection-init 'info)
   (evil-collection-init 'custom)
   (evil-collection-init 'dired)
-  ;; (evil-collection-init 'ivy)
   (evil-collection-init 'python)
   (evil-collection-init 'flycheck)
   (evil-collection-init 'xref)
   (evil-collection-init 'magit)
   (evil-collection-init 'which-key)
+  (evil-collection-init 'which-key)
+  (evil-collection-init 'mu4e)
   )
 
 (use-package evil-org
   :ensure t
-  :after org
-  :hook (org-mode . (lambda () evil-org-mode))
+  :after evil org
+  :init
+  (add-hook 'org-mode-hook #'evil-org-mode)
   :config
   (require 'evil-org-agenda)
   (evil-org-agenda-set-keys))
@@ -186,15 +206,15 @@
 
 ;; mini-frame https://github.com/muffinmad/emacs-mini-frame
 ;; It puts the minibuffer in the middle of the screen
-(use-package mini-frame
-  :ensure t
-  :init (mini-frame-mode)
-  :custom
-  (mini-frame-show-parameters
-   '((top . 100)
-     (width . 0.7)
-     (left . 0.5)
-     (height . 15))))
+;; (use-package mini-frame
+;;   :ensure t
+;;   :init (mini-frame-mode)
+;;   :custom
+;;   (mini-frame-show-parameters
+;;    '((top . 100)
+;;      (width . 0.7)
+;;      (left . 0.5)
+;;      (height . 15))))
 
 ;; vertico 
 ;; https://github.com/minad/vertico
@@ -327,7 +347,10 @@
   (embark-collect-mode . consult-preview-at-point-mode))
 
 (setq )
+
 ;; bibtex actions
+(defvar my/bibs '("/Users/tedgro/Reading/bibliography.bib"))
+
 (use-package bibtex-completion
   :demand t
   :ensure t
@@ -344,24 +367,44 @@
   :straight (:type git :host github :repo "joostkremers/parsebib")
   :ensure t)
 
-(use-package bibtex-actions
+(use-package oc-bibtex-actions
   :ensure t
   :demand t
-  :straight (:type git :host github :repo "bdarcus/bibtex-actions"
-                   ;; :branch "file-field"
-                   )
-  :bind (("C-c b" . bibtex-actions-insert-citation)
+  :straight (:type git :host github :repo "bdarcus/bibtex-actions")
+  :bind (("C-c b" . org-cite-insert)
+         ("M-o" . org-open-at-point)
          :map minibuffer-local-map
          ("M-b" . bibtex-actions-insert-preset))
-  :after (embark parsebib bibtex-completion)
+  :after (embark oc citeproc)
   :config
-  (add-to-list 'embark-target-finders 'bibtex-actions-citation-key-at-point)
-  (add-to-list 'embark-keymap-alist '(bib-reference . bibtex-actions-map))
-  (add-to-list 'embark-keymap-alist '(citation-key . bibtex-actions-buffer-map))
-  (advice-add #'completing-read-multiple
-              :override #'consult-completing-read-multiple)
-  (setq bibtex-actions-file-variable "file"
-        bibtex-actions-bibliography '("/Users/tedgro/Reading/bibliography.bib")))
+  (setq bibtex-actions-bibliography my/bibs
+        org-cite-global-bibliography my/bibs
+        org-cite-insert-processor 'oc-bibtex-actions
+        org-cite-follow-processor 'oc-bibtex-actions
+        org-cite-activate-processor 'basic))
+
+;; Use consult-completing-read for enhanced interface.
+(advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+
+
+;; (use-package bibtex-actions
+;;   :ensure t
+;;   :demand t
+;;   :straight (:type git :host github :repo "bdarcus/bibtex-actions"
+;;                    ;; :branch "file-field"
+;;                    )
+;;   :bind (("C-c b" . bibtex-actions-insert-citation)
+;;          :map minibuffer-local-map
+;;          ("M-b" . bibtex-actions-insert-preset))
+;;   :after (embark parsebib bibtex-completion)
+;;   :config
+;;   (add-to-list 'embark-target-finders 'bibtex-actions-citation-key-at-point)
+;;   (add-to-list 'embark-keymap-alist '(bib-reference . bibtex-actions-map))
+;;   (add-to-list 'embark-keymap-alist '(citation-key . bibtex-actions-buffer-map))
+;;   (advice-add #'completing-read-multiple
+;;               :override #'consult-completing-read-multiple)
+;;   (setq bibtex-actions-file-variable "file"
+;;         bibtex-actions-bibliography '("/Users/tedgro/Reading/bibliography.bib")))
 
 ;; ** which-key
 
@@ -397,9 +440,10 @@
   :init
   ;; NOTE: Set this to the folder where you keep your Git repos!
   (setq projectile-project-search-path '("~/Code" "~/Writing" "~/dtu/projects"))
-  (setq projectile-switch-project-action 'projectile-dired)
+  ;; (setq projectile-switch-project-action 'projectile-dired)
   :custom
   ;; (projectile-completion-system 'ivy)
+  (projectile-switch-project-action 'projectile-find-file)
   (projectile-dynamic-mode-line nil)
   (projectile-enable-caching t)
   (projectile-indexing-method 'hybrid)
@@ -466,7 +510,10 @@
   (setq read-process-output-max (* 1024 1024)) ;; 1mb https://emacs-lsp.github.io/lsp-mode/page/performance/
   (setq lsp-log-io nil)
   (setq lsp-idle-delay 0.500)
-  (setq lsp-pyright-multi-root nil)
+  (with-eval-after-load 'lsp-mode
+    (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.mypy_cache\\'"))
+  (setq lsp-file-watch-threshold 3000)
+  :config (setq lsp-headerline-breadcrumb-enable nil)
   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
          (python-mode . lsp-deferred)
          ;; if you want which-key integration
@@ -475,18 +522,28 @@
 
 
 ;; https://emacs-lsp.github.io/lsp-mode/page/faq/#how-do-i-force-lsp-mode-to-forget-the-workspace-folders-for-multi-root
-(advice-add 'lsp :before (lambda (&rest _args) (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht)))))
+;; (advice-add 'lsp :before (lambda (&rest _args) (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht)))))
 
 ;; lsp-related packages
-(use-package lsp-ui :after lsp-mode :commands lsp-ui-mode)
-;; (use-package lsp-ivy :after lsp-mode :commands lsp-ivy-workspace-symbol)
-(use-package treemacs)
-(use-package lsp-treemacs :after (lsp-mode treemacs) :commands lsp-treemacs-errors-list)
+
+;; (use-package lsp-ui
+  ;; :after lsp-mode
+  ;; :commands lsp-ui-mode)
+
+;; (use-package treemacs)
+
+;; (use-package lsp-treemacs :after (lsp-mode treemacs) :commands lsp-treemacs-errors-list)
+
 (use-package lsp-pyright
   :after lsp-mode
   :hook (python-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))
   :custom (lsp-pyright-use-library-code-for-types t)
+  (lsp-pyright-venv-path "/Users/tedgro/.venvs")
+  (lsp-pyright-venv-directory "/Users/tedgro/.venvs")
+  (lsp-pyright-multi-root nil)
+  (lsp-pyright-stub-path "/Users/tedgro/Code/cloned/python-type-stubs")
   )
+
 
 (use-package company
   :diminish company-mode
@@ -553,14 +610,11 @@
 
 ;; - ~lsp-ui-doc-unfocus-frame~ to leave documentation frame
 
-;; (use-package lsp-ui
-  ;; :hook (lsp-mode . lsp-ui-mode)
-  ;; :after lsp-mode
-  ;; :custom
-  ;; (lsp-ui-doc-show-with-cursor nil)
-  ;; :config
-  ;; (setq lsp-ui-doc-position 'bottom)
-  ;; )
+(use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode)
+  :after lsp-mode
+  :custom
+  (lsp-ui-doc-enable nil))
 
 ;; ** lsp-treemacs
 
@@ -697,8 +751,38 @@
 ;; use ~SPC~ prefix for ~lsp-mode~ keybinding defined below. These keybindings
 ;; are for ~evil~ normal mode.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Mode line
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package mu4e-alert
+  :unless in-termux-p
+  :ensure t
+  :init
+  (setq mu4e-alert-interesting-mail-query
+        "flag:unread AND NOT flag:trashed AND (maildir:/Gmail/Inbox OR maildir:/dtu/Inbox)")
+  :config
+  (mu4e-alert-disable-notifications)
+  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
+(use-package doom-themes
+  :ensure t
+  :config
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t)
+  (load-theme 'doom-palenight t)
+
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Enable custom neotree theme (all-the-icons must be installed!)
+  ;; (doom-themes-neotree-config)
+  ;; or for treemacs users
+  ;; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+  ;; (doom-themes-treemacs-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Mode line
 
 ;; nice clock format
 (setq display-time-format "W%W %d%b %k:%M"
@@ -711,7 +795,7 @@
 ;; You must run (all-the-icons-install-fonts) one time after
 ;; installing this package!
 (use-package doom-modeline
-  :after eshell     ;; Make sure it gets hooked after eshell
+  :after eshell doom-themes     ;; load after eshell and doom theme
   :custom-face
   ;; (mode-line ((t (:height 0.85))))
   ;; (mode-line-inactive ((t (:height 0.85))))
@@ -721,7 +805,7 @@
   (doom-modeline-bar-width 6)
   (doom-modeline-lsp t)
   (doom-modeline-github t)
-  (doom-modeline-mu4e nil)
+  (doom-modeline-mu4e t)
   (doom-modeline-irc nil)
   (doom-modeline-minor-modes nil)
   (doom-modeline-persp-name nil)
@@ -732,36 +816,10 @@
   (setq doom-modeline-percent-position '(-3 ""))
   (doom-modeline-mode 1)
   :config
+  (mu4e-alert-enable-mode-line-display)
   ;; (setq-default header-line-format mode-line-format)
   ;; (setq-default mode-line-format nil)
   )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
-;; (use-package tron-legacy-theme
-  ;; :ensure t
-  ;; :config
-  ;; (load-theme 'tron-legacy t)
-  ;; (setq tron-legacy-theme-vivid-cursor t)
-  ;; (setq tron-legacy-theme-dark-fg-bright-comments t))
-
-(use-package spacegray-theme :defer t)
-(use-package doom-themes :defer t)
-;; (use-package modus-themes
-  ;; :defer t
-  ;; :custom (modus-themes-org-blocks "rainbow")
-  ;; :init
-  ;; (load-theme 'modus-operandi t)
-  ;; )
-;; (load-theme 'doom-palenight t)
-;; (doom-themes-visual-bell-config)
-(use-package modus-themes
-  :ensure
-  :init
-  (setq modus-themes-org-blocks 'gray-background)
-  (modus-themes-load-themes)
-  :config
-  (modus-themes-load-operandi)
-  :bind ("<f5>" . modus-themes-toggle))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Misc Packages
 
@@ -862,20 +920,20 @@
 (setq org-adapt-indentation nil)
 
 ;; export
-(use-package ox-pandoc
-  :unless in-termux-p
-  :ensure t
-  :init (add-to-list 'exec-path "/usr/local/bin"))
-(require 'ox-publish)
-(defvar org-export-output-directory-prefix  ;; Export to export_<file_type>
-  "export_"
-  "prefix of directory used for org-mode export")
-(defadvice org-export-output-file-name (before org-add-export-dir activate)
-  "Modifies org-export to place exported files in a different directory"
-  (when (not pub-dir)
-    (setq pub-dir (concat org-export-output-directory-prefix (substring extension 1)))
-    (when (not (file-directory-p pub-dir))
-      (make-directory pub-dir))))
+;; (use-package ox-pandoc
+;;   :unless in-termux-p
+;;   :ensure t
+;;   :init (add-to-list 'exec-path "/usr/local/bin"))
+;; (require 'ox-publish)
+;; (defvar org-export-output-directory-prefix  ;; Export to export_<file_type>
+;;   "export_"
+;;   "prefix of directory used for org-mode export")
+;; (defadvice org-export-output-file-name (before org-add-export-dir activate)
+;;   "Modifies org-export to place exported files in a different directory"
+;;   (when (not pub-dir)
+;;     (setq pub-dir (concat org-export-output-directory-prefix (substring extension 1)))
+;;     (when (not (file-directory-p pub-dir))
+;;       (make-directory pub-dir))))
 
 ;; spellchecking
 (add-hook 'org-mode-hook 'flyspell-mode)
@@ -916,58 +974,46 @@
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
 )
 
-;; (unless in-termux-p (org-babel-do-load-languages
-;;  'org-babel-load-languages
-;;  '((python . t)
-;;    (shell . t)
-;;    (jupyter . t))))
-
-;; (setq org-babel-default-header-args:jupyter-python '((:async . "yes")
-;;                                                      (:session . "py")
-;;                                                      (:kernel . "python3")))
-
 ;; (setq org-confirm-babel-evaluate nil)
 ;; (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
 ;; Org agenda
-(setq org-inbox
-      (if in-termux-p "~/storage/shared/DropsyncFiles/inbox.org"
-        "~/Dropbox/DropsyncFiles/inbox.org"))
-(setq dtu-notes-dir
-      (if in-termux-p "~/storage/shared/DropsyncFiles/dtu_notes"
-        "~/Dropbox/DropsyncFiles/dtu_notes"))
+(setq dropsync-dir-parent (if in-termux-p "~/storage/shared/" "~/Dropbox/"))
+(setq dropsync-dir (concat dropsync-dir-parent "DropsyncFiles/"))
+(setq org-dir (concat dropsync-dir "org/"))
+(setq todo-file (concat org-dir "tasks.org"))
+(setq dtu-notes-file (concat org-dir "dtu.org"))
+(setq draft-file (concat org-dir "draft.org"))
+
+(setq org-agenda-window-setup 'only-window)  ;; agenda is full screen
 (define-key global-map "\C-ca" 'org-agenda)
 (setq org-agenda-custom-commands
-      '(("c" "My custom agenda view" ((agenda) (tags-todo "*")))
-        ("w" "Work view" ((agenda) (tags-todo "+work-inactive")))))
-(setq org-agenda-files
-      (cons org-inbox (directory-files-recursively dtu-notes-dir "org$")))
+      '(("w" "Work view"
+         ((agenda)
+          (tags-todo "admin")
+          (tags-todo "reading")
+          (tags-todo "-admin-reading"))
+         ((org-agenda-filter-preset '("+work"))))
+        ("l" "Life view"
+         ((agenda) (todo))
+         ((org-agenda-filter-preset '("+life"))))))
+(setq org-agenda-files (file-expand-wildcards (concat org-dir "*.org")))
 (setq org-agenda-prefix-format " %i %?-12t% s")
 (setq org-agenda-hide-tags-regexp "work")
-;; default: ((agenda . " %i %-12:c%?-12t% s")
-;;  (todo . " %i %-12:c")
-;;  (tags . " %i %-12:c")
-;;  (search . " %i %-12:c"))
 
 ;; org todo
 (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
 
 ;; org capture
 (define-key global-map "\C-cc" 'org-capture)
+(add-hook 'org-capture-mode-hook #'org-align-all-tags)
 (setq org-capture-templates
-        '(("t" "Todo" entry (file+headline org-inbox "Tasks") "** TODO %i%?\n%T")
-          ("n" "Note" entry (file+headline org-inbox "Notes") "** %i%?\n%T")
-          ("s" "Shopping" entry (file+headline org-inbox "Shopping") "** TODO %i%?\n%T")))
+      '(("w" "Work todo" entry (file todo-file) "* TODO %i%? :work:\n%T")
+        ("l" "Life todo" entry (file todo-file) "* TODO %i%? :life:\n%T")
+        ("e" "Email" entry (file todo-file) "* TODO %a")
+        ("t" "Misc todo" entry (file todo-file) "* TODO %i%?\n%T")
+        ("d" "Draft" entry (file draft-file) "* %i%?\n%T")))
 
-;; org refile
-(setq org-refile-use-outline-path 'file)
-(unless in-termux-p
-  (setq org-refile-targets '(("~/org/politics.org" :level . 0)
-                             ("~/org/shopping.org" :level . 0)
-                             ("~/org/draft_emails.org" :level . 0)
-                             ("~/org/content.org" :level . 0)
-                             ("~/org/recipes.org" :level . 0)
-                             ("~/org/diary.org" :level . 0))))
 ;; youtube links (Prefix is 'yt')
 (defvar yt-iframe-format
   ;; You may want to change your width and height.
@@ -997,10 +1043,16 @@
 (setq tramp-default-method "ssh")
 
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; orderless
 (use-package orderless
   :ensure t
-  :custom (completion-styles '(orderless)))
+  :init
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
+
 
 (use-package olivetti
  :ensure t
@@ -1011,15 +1063,168 @@
  (require 'olivetti)
  (define-global-minor-mode global-olivetti-mode olivetti-mode
    (lambda ()
-     (unless (memq major-mode '(minibuffer-mode which-key-mode))
+     (unless (memq major-mode '(minibuffer-mode which-key-mode mu4e-headers-mode))
        (olivetti-mode 1))))
 (if in-termux-p (setq-default fringe-mode nil))
  (global-olivetti-mode 1)
  )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; soccer
+(use-package soccer
+  :straight (soccer :type git :host github :repo "md-arif-shaikh/soccer")
+
+  :custom
+  (soccer-time-local-time-utc-offset "+0300"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Email
+(use-package mu4e
+  :straight (:local-repo "/usr/local/share/emacs/site-lisp/mu/mu4e/"
+             :pre-build ())
+  :unless in-termux-p
+  :ensure nil
+  ;; :load-path "/usr/share/emacs/site-lisp/mu4e/"
+  ;; :defer 20 ; Wait until 20 seconds after startup
+  :config
+
+  ;; message on right hand side:
+  ;; see https://www.djcbsoftware.nl/code/mu/mu4e/Split-view.html
+  ;; (setq mu4e-split-view 'vertical)
+  (setq mu4e-headers-visible-columns 100)
+
+  ;; This is set to 't' to avoid mail syncing issues when using mbsync
+  (setq mu4e-change-filenames-when-moving t)
+
+  ;; searches that return newsletters
+  (setq tg/news_queries
+   '("from:plura-list@pluralistic.net"          ;; Plura-list
+     "from:huw@substack.com"                    ;; Utopian drivel
+     "list:tl_1154865.tinyletter.com"           ;; Time for some mage theory
+     "list:tl_1405305.tinyletter.com"           ;; Michael Betancourt
+     "list:3983822d8f.193801.list-id.mcsv.net"                 ;; Cortado
+     "list:e39e7b4c29a565f8cbebeb66a.384876.list-id.mcsv.net"  ;; Olly
+     "list:24810bc6de7dd14c076735f2d.688814.list-id.mcsv.net"  ;; souldren
+     "list:514009622.xt.local"                  ;; Giddy
+     "from:office@exlibris.berlin"))            ;; Ex libris
+
+  ;; Don't show related messages
+  (setq mu4e-headers-include-related nil)
+
+  ;;
+  (defun tg/mu4e-narrow-unread ()
+    "Narrow search to unread"
+    (interactive)
+    (mu4e-headers-search-narrow "flag:unread"))
+  (define-key mu4e-headers-mode-map (kbd "M-u") 'tg/mu4e-narrow-unread)
+
+  ;; bookmarks
+  (setq mu4e-bookmarks
+    '((:name  "Unread messages"
+       :query "flag:unread AND NOT flag:trashed AND (maildir:/Gmail/Inbox OR maildir:/dtu/Inbox)"
+       :key ?u)
+      (:name "Today's messages"
+       :query "date:today..now AND (maildir:/Gmail/Inbox OR maildir:/dtu/Inbox)"
+       :key ?t)
+      (:name "Last 7 days"
+       :query "date:7d..now AND NOT maildir:\"/Gmail/[Google mail]/All Mail\ AND NOT maildir:\"/Gmail/[Google mail]/Sent Mail\""
+        :key ?w)
+      (:name  "Note to self"
+       :query "from:groves.teddy@gmail.com AND maildir:\"/Gmail/Inbox\""
+       :key   ?n)
+      (:name  "OpenTECR mailing list"
+       :query "list:opentecr.googlegroups.com"
+       :key   ?o)
+      (:name  "Newsletters"
+       :query (string-join tg/news_queries " OR ")
+       :key   ?l)
+      (:name  "Github"
+       :query "from:notifications@github.com"
+       :key   ?g)
+      (:name  "Discourse"
+       :query "from:mc_stan@discoursemail.com"
+       :key   ?d)))
+
+  ;; date format in headers view
+  (setq mu4e-headers-date-format "%Y-%m-%d")
+
+  ;; capture emails
+  (define-key mu4e-view-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
+  (define-key mu4e-headers-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
+
+  ;; Refresh mail using isync every 10 minutes
+  (setq mu4e-update-interval (* 10 60))
+
+  ;; isync setup
+  (setq mu4e-get-mail-command "mbsync -a")
+  (setq mu4e-maildir "~/Mail")
+
+  ;; slightly nicer rendering of html emails
+  (setq mu4e-html2text-command "html2text -utf8 -width 72")
+
+  ;; set up msmtp
+  (setq message-send-mail-function 'message-send-mail-with-sendmail)
+  (setq sendmail-program (executable-find "msmtp"))
+  (setq message-sendmail-envelope-from 'header)
+
+  ;; nicer comosing
+  (setq mu4e-compose-format-flowed t)
+
+  ;; no confirmation before quit
+  (setq mu4e-confirm-quit nil)
+
+  ;; cc and bcc fields
+  (add-hook 'mu4e-compose-mode-hook
+            (defun timu/add-cc-and-bcc ()
+              "My Function to automatically add Cc & Bcc: headers."
+              (save-excursion (message-add-header "Cc:\n"))
+              (save-excursion (message-add-header "Bcc:\n"))))
+
+  ;; contexts (need one of these for work email maybe someday)
+  (setq mu4e-contexts
+        (list
+         ;; Personal account
+         (make-mu4e-context
+          :name "Gmail"
+          :match-func
+          (lambda (msg)
+            (when msg
+              (string-prefix-p "/Gmail" (mu4e-message-field msg :maildir))))
+            :vars '((user-mail-address . "groves.teddy@gmail.com")
+                    (user-full-name    . "Teddy Groves")
+                    (mu4e-compose-signature . "Teddy via Gmail")
+                    (mu4e-drafts-folder  . "/Gmail/[Google mail]/Drafts")
+                    (mu4e-sent-folder  . "/Gmail/[Google mail]/Sent Mail")
+                    (mu4e-refile-folder  . "/Gmail/[Google mail]/All Mail")
+                    (mu4e-trash-folder  . "/Gmail/[Google mail]/Trash")))
+         (make-mu4e-context
+          :name "dtu"
+          :match-func
+          (lambda (msg)
+            (when msg
+              (string-prefix-p "/dtu" (mu4e-message-field msg :maildir))))
+            :vars '((user-mail-address . "tedgro@dtu.dk")
+                    (user-full-name    . "Teddy Groves")
+                    (mu4e-compose-signature . "Teddy Groves via DTU email")
+                    (mu4e-drafts-folder  . "/dtu/Drafts")
+                    (mu4e-sent-folder  . "/dtu/Sent Items")
+                    (mu4e-refile-folder  . "/dtu/Archive")
+                    (mu4e-trash-folder  . "/dtu/Deleted Items")))
+         ))
+
+  (setq mu4e-maildir-shortcuts
+    '((:maildir "/Gmail/Inbox"    :key ?i)
+      (:maildir "/Gmail/[Google mail]/Sent Mail" :key ?s)
+      (:maildir "/Gmail/[Google mail]/Trash"     :key ?t)
+      (:maildir "/Gmail/[Google mail]/Drafts"    :key ?d)
+      (:maildir "/Gmail/[Google mail]/All Mail"  :key ?a)
+      (:maildir "/dtu/Inbox"  :key ?I)
+      (:maildir "/dtu/Drafts"    :key ?D)
+
+      )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
 
+;; right option key behaves as normal, for umlauts etc
+(setq ns-right-alternate-modifier 'none)
 
 ;; (add-to-list 'auto-mode-alist '("\\.stan\\'" . c++-mode))
 
