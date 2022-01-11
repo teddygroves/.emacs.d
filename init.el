@@ -209,7 +209,7 @@
 
 
 ;; org roam (for taking notes, not on termux for now)
-(use-package emacssql-sqlite3
+(use-package emacsql-sqlite3
   :ensure t)
 
 (use-package org-roam
