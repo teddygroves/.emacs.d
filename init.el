@@ -220,7 +220,9 @@
     (let ((consult-ripgrep "rg --null --multiline --ignore-case --type org --line-buffered --color=always --max-columns=500 --no-heading --line-number . -e ARG OPTS"))
         (consult-ripgrep org-roam-directory)))
   :custom
-  (org-roam-directory "~/Dropbox/DropsyncFiles/org/org-roam")
+  (org-roam-directory (if in-termux-p
+                          "~/storage/shared/DropsyncFiles/org/org-roam"
+                          "~/Dropbox/DropsyncFiles/org/org-roam"))
   (org-roam-completion-everywhere t)
   (org-roam-dailies-capture-templates
    '(("d" "default" entry  "* %<%I:%M %p>: %?"
@@ -257,6 +259,7 @@
   ("C-c n d" . org-roam-dailies-map)
   :config
   (if in-termux-p
+      ;; from https://babbagefiles.xyz/org-roam-on-android/ 
       (defun org-roam-db ()
         "Entrypoint to the Org-roam sqlite database.
  Initializes and stores the database, and the database connection.
