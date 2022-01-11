@@ -284,6 +284,77 @@
 (setq auto-save-file-name-transforms
       `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
 
+;; * Evil
+
+;; evil mode [[https://evil.readthedocs.io/en/latest/overview.html#installation-via-package-el][source]]
+
+;; ** evil mode [[https://github.com/emacs-evil/evil][github repo]]
+
+(use-package evil
+  :ensure t
+  :after undo-tree
+  :custom
+  (evil-undo-system 'undo-tree)
+  :init
+  (setq evil-shift-width 2)
+  (setq evil-want-integration t)
+  :config
+  (setq evil-want-keybinding nil)
+  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+
+  ;; Use visual line motions even outside of visual-line-mode buffers
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+  (evil-set-initial-state 'vterm-mode 'emacs)
+  (evil-set-initial-state 'help-mode 'emacs)
+  (evil-set-initial-state 'inferior-python-mode 'emacs)
+  (evil-set-initial-state 'messages-buffer-mode 'emacs)
+  (evil-set-initial-state 'dashboard-mode 'emacs)
+  (evil-set-initial-state 'special-mode 'emacs)
+  (evil-set-initial-state 'view-mode 'emacs)
+  (evil-mode 1)
+  )
+
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :custom
+  (evil-collection-company-use-tng nil)
+  ;; (evil-collection-setup-minibuffer t)
+  :init
+  (evil-collection-init)
+  :config
+  (evil-collection-init 'compile)
+  (evil-collection-init 'info)
+  (evil-collection-init 'custom)
+  (evil-collection-init 'dired)
+  (evil-collection-init 'python)
+  (evil-collection-init 'flycheck)
+  (evil-collection-init 'xref)
+  (evil-collection-init 'magit)
+  (evil-collection-init 'which-key)
+  (evil-collection-init 'which-key)
+  (unless in-termux-p (evil-collection-init 'mu4e))
+  )
+
+(use-package evil-org
+  :ensure t
+  :after evil org
+  :init
+  (add-hook 'org-mode-hook #'evil-org-mode)
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+
+;; ** evil-nerd-commentor
+
+;; Use ~M-/~ for comment/uncomment.
+
+;; [[https://github.com/redguardtoo/evil-nerd-commenter][source]]
+
+(use-package evil-nerd-commenter
+  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
 
 ;; ** undo-tree
 (use-package undo-tree
@@ -1005,7 +1076,6 @@ If ripgrep is not installed, use grep instead."
 (use-package mu4e-alert
   :after mu4e
   :unless in-termux-p
-  :ensure t
   :init
   (setq mu4e-alert-interesting-mail-query
         "flag:unread AND (maildir:/gmail/Inbox OR maildir:/dtu/Inbox)")
@@ -1057,7 +1127,7 @@ If ripgrep is not installed, use grep instead."
   (doom-modeline-bar-width 6)
   (doom-modeline-lsp t)
   (doom-modeline-github t)
-  (doom-modeline-mu4e t)
+  (doom-modeline-mu4e (if in-termux-p nil t))
   (doom-modeline-irc nil)
   (doom-modeline-minor-modes nil)
   (doom-modeline-persp-name nil)
@@ -1068,7 +1138,8 @@ If ripgrep is not installed, use grep instead."
   (setq doom-modeline-percent-position '(-3 ""))
   (doom-modeline-mode 1)
   :config
-  (mu4e-alert-enable-mode-line-display)
+  (unless in-termux-p
+      (mu4e-alert-enable-mode-line-display))
   ;; (setq-default header-line-format mode-line-format)
   ;; (setq-default mode-line-format nil)
   )
@@ -1242,10 +1313,11 @@ If ripgrep is not installed, use grep instead."
   (soccer-time-local-time-utc-offset "+0300"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Email
+(unless in-termux-p
 (use-package mu4e
+  :unless in-termux-p
   :straight (:local-repo "/usr/local/share/emacs/site-lisp/mu/mu4e/"
              :pre-build ())
-  :unless in-termux-p
   :ensure nil
   ;; :load-path "/usr/share/emacs/site-lisp/mu4e/"
   ;; :defer 20 ; Wait until 20 seconds after startup
@@ -1382,7 +1454,6 @@ If ripgrep is not installed, use grep instead."
   :commands hledger-enable-reporting
   :bind (("C-c j" . hledger-run-command))
   :custom (hledger-jfile "~/finance/2021.journal"))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
 
