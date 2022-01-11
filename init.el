@@ -211,7 +211,6 @@
 ;; org roam (for taking notes, not on termux for now)
 (use-package org-roam
   :after org consult
-  :unless in-termux-p
   :ensure t
   :init
   (setq org-roam-v2-ack t)
