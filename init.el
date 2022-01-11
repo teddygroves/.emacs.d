@@ -26,34 +26,200 @@
 (setq straight-use-package-by-default t)
 (setq straight-repository-branch "develop")
 
-;; (straight-use-package 'org-plus-contrib)
-;; (straight-use-package '(org :local-repo nil))
+;; auctex
+(use-package auctex
+  :defer t
+  :ensure t)
 
-;; org mode
-;; todo: copy random bits of org config from below to here
+
+;;; evil mode and friends
+(use-package evil
+  :ensure t
+  :after undo-tree
+  :custom
+  (evil-undo-system 'undo-tree)
+  :init
+  (setq evil-shift-width 2)
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  :config
+  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+  ;; tab does org-cycle in normal mode
+  (evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
+  ;; Use visual line motions even outside of visual-line-mode buffers
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+  (evil-set-initial-state 'vterm-mode 'emacs)
+  (evil-set-initial-state 'help-mode 'emacs)
+  (evil-set-initial-state 'inferior-python-mode 'emacs)
+  (evil-set-initial-state 'messages-buffer-mode 'emacs)
+  (evil-set-initial-state 'dashboard-mode 'emacs)
+  (evil-set-initial-state 'special-mode 'emacs)
+  (evil-set-initial-state 'view-mode 'emacs)
+  (evil-mode 1)
+  )
+
+(use-package evil-collection
+  :after evil
+  :ensure t
+  ;; :custom (evil-collection-company-use-tng nil)
+  :config
+  (with-eval-after-load 'info (evil-collection-info-setup))
+  (with-eval-after-load 'custom (evil-collection-custom-setup))
+  (with-eval-after-load 'dired (evil-collection-dired-setup))
+  (with-eval-after-load 'python (evil-collection-python-setup))
+  (with-eval-after-load 'flycheck (evil-collection-flycheck-setup))
+  (with-eval-after-load 'magit (evil-collection-magit-setup))
+  (with-eval-after-load 'which-key (evil-collection-which-key-setup))
+  (with-eval-after-load 'mu4e (evil-collection-mu4e-setup)))
+
+;; evil org mode, but just for the agenda
+(use-package evil-org
+  :after org
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+
+;; ** evil-nerd-commentor
+
+;; Use ~M-/~ for comment/uncomment.
+
+;; [[https://github.com/redguardtoo/evil-nerd-commenter][source]]
+
+(use-package evil-nerd-commenter
+  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
+
+;; (use-package evil-org
+  ;; :ensure t
+  ;; :after evil org
+  ;; :init
+  ;; (add-hook 'org-mode-hook #'evil-org-mode)
+  ;; :config
+  ;; (require 'evil-org-agenda)
+  ;; (evil-org-agenda-set-keys)
+
+;; 
+(use-package cdlatex
+  :demand t
+  :ensure t)
 
 (use-package citeproc
   :ensure t)
 
+;; org mode
 (use-package org
+  :mode (("\\.org$" . org-mode))
   :straight (:repo "https://git.savannah.gnu.org/git/emacs/org-mode.git")
-  :after citeproc
+  :after citeproc cdlatex jupyter
+  :demand t
   :ensure t
+  :init
+  ;; org-cdlatex mode https://orgmode.org/manual/CDLaTeX-mode.html
+  (add-hook 'org-mode-hook #'turn-on-org-cdlatex)
+  ;; spellchecking
+  (add-hook 'org-mode-hook 'flyspell-mode)
+  ;; capture
+  (define-key global-map "\C-cc" 'org-capture)
+  (add-hook 'org-capture-mode-hook #'org-align-all-tags)
+  ;; agenda
+  (define-key global-map "\C-ca" 'org-agenda)
+  (setq dropsync-dir-parent (if in-termux-p "~/storage/shared/" "~/Dropbox/"))
+  (setq dropsync-dir (concat dropsync-dir-parent "DropsyncFiles/"))
+  (setq org-dir (concat dropsync-dir "org/"))
+  (setq todo-file (concat org-dir "tasks.org"))
+  (setq dtu-notes-file (concat org-dir "dtu.org"))
+  (setq draft-file (concat org-dir "draft.org"))
+  (setq org-agenda-window-setup 'only-window)  ;; agenda is full screen
+  (setq org-agenda-custom-commands
+   '(("w" "Work view"
+     ((agenda)
+       (tags-todo "admin")
+       (tags-todo "reading")
+       (tags-todo "-admin-reading"))
+     ((org-agenda-filter-preset '("+work"))))
+     ("l" "Life view"
+     ((agenda) (todo))
+     ((org-agenda-filter-preset '("+life"))))))
+  (setq org-agenda-files (file-expand-wildcards (concat org-dir "*.org")))
+  (setq org-agenda-prefix-format " %i %?-12t% s")
+  (setq org-agenda-hide-tags-regexp "work")
+  :config
+  (unless in-termux-p
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (python . t)
+       (shell . t)
+       (jupyter . t)))
+    ;; Don't prompt before running code in org
+    (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  )
+  ;; todo
+  (setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
+  ;; export syntax highlighting
+  (setq org-html-htmlize-output-type 'css)
+  ;; ;; https://emacs.stackexchange.com/questions/3374/set-the-background-of-org-exported-code-blocks-according-to-theme
+  ;; (defun my/org-inline-css-hook (exporter)
+  ;;   "Insert custom inline css to automatically set the
+  ;; background of code to whatever theme I'm using's background"
+  ;;   (when (eq exporter 'html)
+  ;;     (let* ((my-pre-bg (face-background 'default))
+  ;;           (my-pre-fg (face-foreground 'default)))
+  ;;       (setq
+  ;;       org-html-head-extra
+  ;;       (concat
+  ;;         org-html-head-extra
+  ;;         (format "<style type=\"text/css\">\n pre.src {background-color: %s; color: %s;}</style>\n"
+  ;;                 my-pre-bg my-pre-fg))))))
+
+  ;; (add-hook 'org-export-before-processing-hook 'my/org-inline-css-hook)
+
+  ;; execute src blocks with C-<return>
+  (define-key org-mode-map (kbd "<C-return>") 'org-babel-execute-src-block-maybe)
   :custom
+
+  (org-image-actual-width 500)
+  ;; babel
+  (org-confirm-babel-evaluate nil)
+  (ob-async-no-async-languages-alist '("jupyter-python" "jupyter-julia"))
+  (org-image-actual-width nil) ;; images
+  (org-src-fontify-natively t) ;; Syntax highlight in #+BEGIN_SRC blocks
+  (org-edit-src-content-indentation 0)
+  (org-indent_mode nil)
+  (org-adapt-indentation nil)
   (org-cite-csl-styles-dir "~/Zotero/styles")
   (org-cite-csl-locales-dir "~/.emacs.d/straight/repos/org/etc/csl")
   (org-latex-pdf-process
       '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
         "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
-        "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f")))
+        "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+  ;; capture
+  (org-capture-templates
+   '(("w" "Work todo" entry (file todo-file) "* TODO %i%? :work:\n%T")
+     ("l" "Life todo" entry (file todo-file) "* TODO %i%? :life:\n%T")
+     ("e" "Email" entry (file todo-file) "* TODO %a")
+     ("t" "Misc todo" entry (file todo-file) "* TODO %i%?\n%T")
+     ("d" "Draft" entry (file draft-file) "* %i%?\n%T")))
+  )
+
+(use-package ob-async
+  :ensure t
+  :unless in-termux-p)
+
 
 ;; org roam (for taking notes, not on termux for now)
 (use-package org-roam
-  :after org
+  :after org consult
   :unless in-termux-p
   :ensure t
   :init
   (setq org-roam-v2-ack t)
+  (defun tg/org-roam-rg-search ()
+    "Search org-roam directory using consult-ripgrep. With live-preview."
+    (interactive)
+    (let ((consult-ripgrep "rg --null --multiline --ignore-case --type org --line-buffered --color=always --max-columns=500 --no-heading --line-number . -e ARG OPTS"))
+        (consult-ripgrep org-roam-directory)))
   :custom
   (org-roam-directory "~/Dropbox/DropsyncFiles/org/org-roam")
   (org-roam-completion-everywhere t)
@@ -61,22 +227,28 @@
    '(("d" "default" entry  "* %<%I:%M %p>: %?"
       :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
   (org-roam-capture-templates
-   '(("d" "default" plain "%?"
+   '(("d" "Default" plain "%?"
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+title: ${title}\n")
+                         "#+title: ${title}\n#+filetags:")
       :unnarrowed t)
-     ("p" "Paper" plain "\n\n* Reference\n%?"
+     ("m" "Meeting" plain "%?"
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+title: ${title}\n")
+                         "#+title: %<%Y%m%d%H%M%S>-${title}\n#+filetags: :meeting:")
       :unnarrowed t)
-     ("w" "Website" plain "\n\n* Link\n%?"
+     ("w" "Work" plain "%?"
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+title: ${title}\n")
-      :unnarrowed t)))
+                         "#+title: ${title}\n#+filetags: :work:")
+      :unnarrowed t)
+     ("c" "Cat log" entry "** %T\n%?"
+      :if-new (node "Cat log")
+      :empty-lines-before 1
+      :unnarrowed t)
+     ))
   :bind (("C-c n l" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
          ("C-c n i" . org-roam-node-insert)
          ("C-c n n" . org-roam-capture)
+         ("C-c n s" . tg/org-roam-rg-search)
          :map org-mode-map
          ("C-M-i" . completion-at-point)
          :map org-roam-dailies-map
@@ -106,97 +278,14 @@
   :ensure t)
 
 ;; ** No littering
-;; Keep clean =~/.emacs.d= folder. 
-
-;; Check ~lsp~ files in =~/.emacs.d/var/lsp/*=.
-
-;; You can delete/modify this folder to hard reset lsp configuration in emacs.
-
-;; [[https://github.com/daviwil/emacs-from-scratch/blob/master/Emacs.org#keep-folders-clean][taken from EFS]] \\
-
 (use-package no-littering)
-
 ;; no-littering doesn't set this by default so we must place
 ;; auto save files in the same path as it uses for sessions
 (setq auto-save-file-name-transforms
       `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
 
 
-;; * Evil
-
-;; evil mode [[https://evil.readthedocs.io/en/latest/overview.html#installation-via-package-el][source]]
-
-;; ** evil mode [[https://github.com/emacs-evil/evil][github repo]]
-
-(use-package evil
-  :ensure t
-  :after undo-tree
-  :custom
-  (evil-undo-system 'undo-tree)
-  :init
-  (setq evil-shift-width 2)
-  (setq evil-want-integration t)
-  :config
-  (setq evil-want-keybinding nil)
-  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-
-  ;; Use visual line motions even outside of visual-line-mode buffers
-  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-  (evil-set-initial-state 'vterm-mode 'emacs)
-  (evil-set-initial-state 'help-mode 'emacs)
-  (evil-set-initial-state 'inferior-python-mode 'emacs)
-  (evil-set-initial-state 'messages-buffer-mode 'emacs)
-  (evil-set-initial-state 'dashboard-mode 'emacs)
-  (evil-set-initial-state 'special-mode 'emacs)
-  (evil-set-initial-state 'view-mode 'emacs)
-  (evil-mode 1)
-  )
-
-(use-package evil-collection
-  :after evil
-  :ensure t
-  :custom
-  (evil-collection-company-use-tng nil)
-  ;; (evil-collection-setup-minibuffer t)
-  :init
-  (evil-collection-init)
-  :config
-  (evil-collection-init 'compile)
-  (evil-collection-init 'info)
-  (evil-collection-init 'custom)
-  (evil-collection-init 'dired)
-  (evil-collection-init 'python)
-  (evil-collection-init 'flycheck)
-  (evil-collection-init 'xref)
-  (evil-collection-init 'magit)
-  (evil-collection-init 'which-key)
-  (evil-collection-init 'which-key)
-  (evil-collection-init 'mu4e)
-  )
-
-(use-package evil-org
-  :ensure t
-  :after evil org
-  :init
-  (add-hook 'org-mode-hook #'evil-org-mode)
-  :config
-  (require 'evil-org-agenda)
-  (evil-org-agenda-set-keys))
-
-;; ** evil-nerd-commentor
-
-;; Use ~M-/~ for comment/uncomment.
-
-;; [[https://github.com/redguardtoo/evil-nerd-commenter][source]]
-
-(use-package evil-nerd-commenter
-  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
-
-
 ;; ** undo-tree
-
 (use-package undo-tree
   :diminish undo-tree-mode
   :config
@@ -221,6 +310,7 @@
 ;; https://systemcrafters.cc/emacs-tips/streamline-completions-with-vertico/
 (use-package vertico
   :ensure t
+  :after orderless
   :bind (:map vertico-map
          ("C-j" . vertico-next)
          ("C-k" . vertico-previous)
@@ -228,6 +318,17 @@
          :map minibuffer-local-map
          ("M-h" . backward-kill-word))
   :custom
+  (defun basic-remote-try-completion (string table pred point)
+    (and (vertico--remote-p string)
+         (completion-basic-try-completion string table pred point)))
+  (defun basic-remote-all-completions (string table pred point)
+    (and (vertico--remote-p string)
+         (completion-basic-all-completions string table pred point)))
+  (add-to-list
+   'completion-styles-alist
+   '(basic-remote basic-remote-try-completion basic-remote-all-completions nil))
+  (setq completion-styles '(orderless)
+        completion-category-overrides '((file (styles basic-remote partial-completion))))
   (vertico-cycle t)
   :init
   (vertico-mode))
@@ -259,6 +360,7 @@
   :init
   (marginalia-mode))
 
+
 (use-package consult
   :ensure t
   :demand t
@@ -276,7 +378,7 @@
   ;; Optionally replace `completing-read-multiple' with an enhanced version.
   (advice-add #'completing-read-multiple :override
               #'consult-completing-read-multiple)
-  ;; Use Consult to select xref locations with preview
+ ;; Use Consult to select xref locations with preview
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
 
@@ -321,7 +423,25 @@
   ;; (setq consult-project-root-function #'vc-root-dir)
   ;;;; 4. locate-dominating-file
   ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
+
   )
+
+(use-package consult-yasnippet
+  :after consult
+  :ensure t)
+
+(use-package consult-lsp
+ ;; provides these commands:
+
+ ;; consult-lsp-diagnostics
+ ;;     Select diagnostics from current workspace. Pass prefix argument to search all workspaces
+
+ ;; consult-lsp-symbols
+ ;;     Select symbols from current workspace. Pass prefix argument to search all workspaces.
+
+ ;; consult-lsp-file-symbols
+ ;;     Interactively select a symbol from the current file, in a manner similar to consult-line. 
+  :ensure t)
 
 (use-package embark
   :straight (:type git :host github :repo "oantolin/embark")
@@ -346,42 +466,111 @@
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
-(setq )
+(use-package corfu
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-auto t)                 ;; Enable auto completion
+  (corfu-count 15)
+  (corfu-min-width 20)
+  (corfu-max-width 100)
+  (corfu-commit-predicate nil)   ;; Do not commit selected candidates on next input
+  (corfu-quit-at-boundary t)     ;; Automatically quit at word boundary
+  (corfu-quit-no-match 0.5)        ;; Automatically quit if there is no match
+  (corfu-preview-current nil)    ;; Disable current candidate preview
+  (corfu-preselect-first nil)    ;; Disable candidate preselection
+  (corfu-echo-documentation 0.25) ;; documentation in the echo area
+  ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+
+  ;; You may want to enable Corfu only for certain modes.
+  ;; :hook ((prog-mode . corfu-mode)
+  ;;        (shell-mode . corfu-mode)
+  ;;        (eshell-mode . corfu-mode))
+
+  ;; Recommended: Enable Corfu globally.
+  ;; This is recommended since dabbrev can be used globally (M-/).
+  :init
+  (corfu-global-mode)
+
+  :config
+  (with-eval-after-load "eldoc" (eldoc-add-command-completions "corfu-"))
+  (advice-add 'corfu--setup :after 'evil-normalize-keymaps)
+  (advice-add 'corfu--teardown :after 'evil-normalize-keymaps)
+  (evil-make-overriding-map corfu-map)
+  :bind (:map corfu-map
+         ("C-<return>" . corfu-insert)
+         ("C-J" . corfu-next)
+         ("C-K" . corfu-previous)
+         ("C-<return>" . corfu-insert)))
+
+;; corfu-related external config
+(setq tab-always-indent 'complete)
+(setq read-extended-command-predicate
+      #'command-completion-default-include-p)
+
+(use-package dabbrev
+  ;; Swap M-/ and C-M-/
+  :bind (("M-/" . dabbrev-completion)
+         ("C-M-/" . dabbrev-expand)))
 
 ;; bibtex actions
 (defvar my/bibs '("/Users/tedgro/Reading/bibliography.bib"))
 
-(use-package bibtex-completion
-  :demand t
-  :ensure t
-  :config
-  (setq bibtex-completion-additional-search-fields '(doi url)
-        bibtex-completion-pdf-extension ".pdf"
-        bibtex-completion-bibliography '("/Users/tedgro/Reading/bibliography.bib")
-        bibtex-completion-pdf-field "file"
-        bibtex-completion-pdf-open-function
-        (lambda (fpath) (call-process "open" nil 0 nil "-a" "/Applications/Skim.app" fpath))))
+;; (use-package bibtex-completion
+;;   :demand t
+;;   :ensure t
+;;   :config
+;;   (setq bibtex-completion-additional-search-fields '(doi url)
+;;         bibtex-completion-pdf-extension ".pdf"
+;;         bibtex-completion-bibliography '("/Users/tedgro/Reading/bibliography.bib")
+;;         bibtex-completion-pdf-field "file"
+;;         bibtex-completion-pdf-open-function
+;;         (lambda (fpath) (call-process "open" nil 0 nil "-a" "/Applications/Skim.app" fpath))))
 
 (use-package parsebib
   :demand t
   :straight (:type git :host github :repo "joostkremers/parsebib")
   :ensure t)
 
-(use-package oc-bibtex-actions
-  :ensure t
-  :demand t
-  :straight (:type git :host github :repo "bdarcus/bibtex-actions")
-  :bind (("C-c b" . org-cite-insert)
-         ("M-o" . org-open-at-point)
-         :map minibuffer-local-map
-         ("M-b" . bibtex-actions-insert-preset))
-  :after (embark oc citeproc)
-  :config
-  (setq bibtex-actions-bibliography my/bibs
-        org-cite-global-bibliography my/bibs
-        org-cite-insert-processor 'oc-bibtex-actions
-        org-cite-follow-processor 'oc-bibtex-actions
-        org-cite-activate-processor 'basic))
+;; (use-package citar
+;;   :ensure t
+;;   :demand t
+;;   :straight (:type git :host github :repo "bdarcus/citar")
+;;   :bind (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
+;;   ;; (("C-c b" . org-cite-insert)
+;;          ;; ("M-o" . org-open-at-point)
+;;          ;; :map minibuffer-local-map
+;;          ;; ("M-b" . bibtex-actions-insert-preset))
+;;   :after (embark oc citeprocciteproc)
+;;   :custom
+;;   (defun citar--fields-in-formats ()
+;;     "Find the fields to mentioned in the templates."
+;;     (seq-mapcat #'citar--fields-for-format
+;;                 (list (citar-get-template 'main)
+;;                       (citar-get-template 'suffix)
+;;                       (citar-get-template 'preview)
+;;                       (citar-get-template 'note))))
+;;   (citar-bibliography my/bibs)
+;;   (citar-at-point-function 'embark-act)
+;;   (citar-file-open-function 'citar-file-open-external)
+;;   (org-cite-global-bibliography my/bibs)
+;;   (org-cite-insert-processor 'citar)
+;;   (org-cite-follow-processor 'citar)
+;;   (org-cite-activate-processor 'citar))
+
+(use-package citar
+  :no-require
+  :straight (:type git :host github :repo "bdarcus/citar")
+  :custom
+  (org-cite-global-bibliography '("/Users/tedgro/Reading/bibliography.bib"))
+  (org-cite-insert-processor 'citar)
+  (org-cite-follow-processor 'citar)
+  (org-cite-activate-processor 'citar)
+  (citar-file-open-function 'citar-file-open-external)
+  ;; optional: org-cite-insert is also bound to C-c C-x C-@
+  :bind
+  (:map org-mode-map :package org ("C-c b" . #'org-cite-insert)))
+
+
 
 ;; Use consult-completing-read for enhanced interface.
 (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
@@ -423,6 +612,56 @@
   :defer t
   :bind ("C-x g" . magit-status))
 
+;; customize project.el
+;; copied from here: https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
+(use-package project
+  :straight nil
+  :custom
+  (project-switch-commands '((project-dired "Root" "r")
+                             (project-find-file "File" "f")
+                             (magit-project-status "Git" "g")
+                             (tg/project-search "Search" "s")
+                             (tg/vterm-dwim "Terminal" "t"))))
+
+(defun tg/project-name (&optional project)
+  "Return the name for PROJECT.
+If PROJECT is not specified, assume current project root."
+  (when-let (root (or project (tg/project-root)))
+    (file-name-nondirectory
+     (directory-file-name
+      (file-name-directory root)))))
+
+(defun tg/project-search ()
+  "Run ripgrep against project root.
+If ripgrep is not installed, use grep instead."
+  (interactive)
+  (let ((root (tg/project-root)))
+    (if (not (executable-find "rg"))
+        (consult-grep root)
+      (message "Could not find executable 'rg', using 'grep' instead")
+      (consult-ripgrep root))))
+
+(defun tg/project-root ()
+  "Return the current project root."
+  (when-let (project (project-current))
+    (project-root project)))
+
+(defun tg/vterm-dwim (&optional argument)
+  "Invoke `vterm' according to context and current location."
+  (interactive "P")
+  (unless (require 'vterm nil :noerror)
+    (error "Package 'vterm' not found"))
+  (let ((project (tg/project-root)))
+    (if (or argument (not project))
+        (vterm)
+      (let* ((buffer (format "*vterm: %s*" (tg/project-name project)))
+             (replace (string= buffer (buffer-name)))
+             (buffer (if replace (generate-new-buffer-name buffer) buffer)))
+        (if (buffer-live-p (get-buffer buffer))
+            (pop-to-buffer buffer)
+          (let ((default-directory project))
+            (vterm buffer)))))))
+
 ;; ** projectile
 
 ;; [[https://docs.projectile.mx/projectile/index.html][Projectile]] is a
@@ -431,23 +670,23 @@
 ;; Projectile so it’s a good idea to have it installed even if you don’t use
 ;; its commands directly.
 
-(use-package projectile
-  :diminish projectile-mode
-  :hook
-  (after-init . projectile-mode)
-  :bind-keymap
-  ("C-c p" . projectile-command-map)
-  :init
-  ;; NOTE: Set this to the folder where you keep your Git repos!
-  (setq projectile-project-search-path '("~/Code" "~/Writing" "~/dtu/projects"))
-  ;; (setq projectile-switch-project-action 'projectile-dired)
-  :custom
-  ;; (projectile-completion-system 'ivy)
-  (projectile-switch-project-action 'projectile-find-file)
-  (projectile-dynamic-mode-line nil)
-  (projectile-enable-caching t)
-  (projectile-indexing-method 'hybrid)
-  (projectile-track-known-projects-automatically nil))
+;; (use-package projectile
+;;   :diminish projectile-mode
+;;   :hook
+;;   (after-init . projectile-mode)
+;;   :bind-keymap
+;;   ("C-c p" . projectile-command-map)
+;;   :init
+;;   ;; NOTE: Set this to the folder where you keep your Git repos!
+;;   (setq projectile-project-search-path '("~/Code" "~/Writing" "~/dtu/projects"))
+;;   ;; (setq projectile-switch-project-action 'projectile-dired)
+;;   :custom
+;;   ;; (projectile-completion-system 'ivy)
+;;   (projectile-switch-project-action 'projectile-find-file)
+;;   (projectile-dynamic-mode-line nil)
+;;   (projectile-enable-caching t)
+;;   (projectile-indexing-method 'hybrid)
+;;   (projectile-track-known-projects-automatically nil))
 
 ;; (use-package counsel-projectile
   ;; :config (counsel-projectile-mode))
@@ -503,22 +742,32 @@
 ;; * Lsp mode
 
 (use-package lsp-mode
+  :commands lsp lsp-deferred
+  :after orderless
+  :custom
+  (lsp-completion-provider :none) ;; we use Corfu!
+  (lsp-eldoc-enable-hover nil)
+  (lsp-trigger-auto-activate nil)
+  (lsp-file-watch-threshold 3000)
+  (lsp-idle-delay 0.500)
+  (lsp-log-io nil)
+  (lsp-headerline-breadcrumb-enable nil)
   :init
+  (defun tg/lsp-mode-setup-completion ()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless)))
   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   (setq lsp-keymap-prefix "C-c l")
   (setq gc-cons-threshold 100000000) ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
   (setq read-process-output-max (* 1024 1024)) ;; 1mb https://emacs-lsp.github.io/lsp-mode/page/performance/
-  (setq lsp-log-io nil)
-  (setq lsp-idle-delay 0.500)
   (with-eval-after-load 'lsp-mode
     (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.mypy_cache\\'"))
-  (setq lsp-file-watch-threshold 3000)
-  :config (setq lsp-headerline-breadcrumb-enable nil)
-  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-         (python-mode . lsp-deferred)
-         ;; if you want which-key integration
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands lsp lsp-deferred)
+  :hook
+  ;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+  (python-mode . lsp-deferred)
+  ;; if you want which-key integration
+  (lsp-mode . lsp-enable-which-key-integration)
+  (lsp-completion-mode . tg/lsp-mode-setup-completion))
 
 
 ;; https://emacs-lsp.github.io/lsp-mode/page/faq/#how-do-i-force-lsp-mode-to-forget-the-workspace-folders-for-multi-root
@@ -533,32 +782,31 @@
 ;; (use-package treemacs)
 
 ;; (use-package lsp-treemacs :after (lsp-mode treemacs) :commands lsp-treemacs-errors-list)
-
 (use-package lsp-pyright
-  :after lsp-mode
+  :ensure t
   :hook (python-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))
-  :custom (lsp-pyright-use-library-code-for-types t)
+  :custom
   (lsp-pyright-venv-path "/Users/tedgro/.venvs")
   (lsp-pyright-venv-directory "/Users/tedgro/.venvs")
+  (lsp-pyright-auto-import-completions t)
   (lsp-pyright-multi-root nil)
-  (lsp-pyright-stub-path "/Users/tedgro/Code/cloned/python-type-stubs")
-  )
+  (lsp-pyright-stub-path "/Users/tedgro/Code/stubs/"))
 
 
-(use-package company
-  :diminish company-mode
-  :bind
-  (:map company-active-map
-        ("<tab>" . nil)
-        ("TAB" . nil)
-        ("M-<tab>" . company-complete-common-or-cycle)
-        ("M-<tab>" . company-complete-selection))
-  ;; (:map lsp-mode-map ("M-<tab>" . company-indent-or-complete-common))
-  :custom
-  (company-minimum-prefix-length 2)
-  (company-idle-delay 0.01)
-  :config
-  )
+;; (use-package company
+;;   :diminish company-mode
+;;   :bind
+;;   (:map company-active-map
+;;         ("<tab>" . nil)
+;;         ("TAB" . nil)
+;;         ("M-<tab>" . company-complete-common-or-cycle)
+;;         ("M-<tab>" . company-complete-selection))
+;;   ;; (:map lsp-mode-map ("M-<tab>" . company-indent-or-complete-common))
+;;   :custom
+;;   (company-minimum-prefix-length 2)
+;;   (company-idle-delay 0.01)
+;;   :config
+;;   )
 
 (use-package general
   :config
@@ -577,7 +825,12 @@
    "r" '(lsp-find-references :which-key "find-references")
    "h" '(lsp-describe-thing-at-point :which-key "help-detailed")
    "e" '(lsp-ui-flycheck-list :which-key "flycheck-list")
-   "SPC" 'python-shell-send-statement
+   "b" '(consult-buffer :which-key "consult-buffer")
+   "cd" '(consult-lsp-diagnostics :which-key "consult-lsp-diagnostics")
+   "cs" '(consult-lsp-symbols :which-key "consult-lsp-symbols")
+   "cr" '(consult-ripgrep :which-key "consult-ripgrep")
+   "cy" '(consult-yasnippet :which-key "consult-yasnippet")
+   ;; "SPC" 'python-shell-send-statement
    ;; "o" 'counsel-imenu
    "x" 'lsp-execute-code-action)
 
@@ -676,10 +929,11 @@
   ;; Set correct Python interpreter
   (setq pyvenv-post-activate-hooks
         (list (lambda ()
-                (setq python-shell-interpreter (concat pyvenv-virtual-env "bin/jupyter-console")))))
+                (setq python-shell-interpreter
+                      (concat pyvenv-virtual-env "bin/ipython")))))
   (setq pyvenv-post-deactivate-hooks
         (list (lambda ()
-                (setq python-shell-interpreter "jupyter-console")))))
+                (setq python-shell-interpreter "ipython")))))
 
 
 ;; ** formatting
@@ -691,7 +945,7 @@
 (use-package blacken
   :init
   (setq-default blacken-fast-unsafe t)
-  ;; (setq-default blacken-line-length 80)
+  (setq-default blacken-line-length 80)
   ;; (setq-default blacken-allow-py36 t)
   )
 
@@ -701,23 +955,19 @@
   :hook
   (python-mode . pyvenv-mode)
   (python-mode . flycheck-mode)
-  (python-mode . company-mode)
+  ;; (python-mode . company-mode)
   (python-mode . blacken-mode)
   (python-mode . yas-minor-mode)
   :custom
-  (python-shell-interpreter "jupyter-console")
-  (python-shell-interpreter-args "--simple-prompt")
-  (python-shell-prompt-detect-failure-warning nil)
-  (python-shell-completion-native-enable nil)
+  (python-shell-interpreter "ipython")
+  (python-shell-interpreter-args "-i --simple-prompt --pprint")
+  (python-shell-setup-codes '("import sys; sys.argv = sys.argv[:1]"))
+  ;; (python-shell-prompt-detect-failure-warning nil)
+  ;; (python-shell-completion-native-enable t)
   (python-indent-def-block-scale 1) ;; function arguments have normal indentation
   (py-closing-list-dedents-bos t)  ;; list parentheses have inline indentation
   :bind
-  ("<C-return>" . python-shell-send-statement)
-  )
-
-;; (use-package jupyter
-  ;; :unless in-termux-p
-  ;; :ensure t)
+  ("<C-return>" . python-shell-send-statement))
 
 ;; * Keybinding
 
@@ -753,11 +1003,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package mu4e-alert
+  :after mu4e
   :unless in-termux-p
   :ensure t
   :init
   (setq mu4e-alert-interesting-mail-query
-        "flag:unread AND NOT flag:trashed AND (maildir:/Gmail/Inbox OR maildir:/dtu/Inbox)")
+        "flag:unread AND (maildir:/gmail/Inbox OR maildir:/dtu/Inbox)")
   :config
   (mu4e-alert-disable-notifications)
   (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
@@ -766,6 +1017,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
 (use-package doom-themes
+  :after org
   :ensure t
   :config
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
@@ -795,12 +1047,12 @@
 ;; You must run (all-the-icons-install-fonts) one time after
 ;; installing this package!
 (use-package doom-modeline
-  :after eshell doom-themes     ;; load after eshell and doom theme
+  :after eshell doom-themes mu4e mu4e-alert     ;; load after eshell, doom theme and mu4e
   :custom-face
   ;; (mode-line ((t (:height 0.85))))
   ;; (mode-line-inactive ((t (:height 0.85))))
   :custom
-  (doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
+  ;; (doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
   (doom-modeline-height 15)
   (doom-modeline-bar-width 6)
   (doom-modeline-lsp t)
@@ -852,11 +1104,26 @@
   ;; Uncomment if directly loading from your development repo
   ;; :load-path "your-path/stan-mode/stan-mode"
   :mode ("\\.stan\\'" . stan-mode)
-  :hook (stan-mode . stan-mode-setup)
+  :ensure t
+  ;; :hook (stan-mode . stan-mode-setup)
   ;;
-  :config
+  :custom
   ;; The officially recommended offset is 2.
-  (setq stan-indentation-offset 2))
+  (stan-indentation-offset 2))
+
+(use-package flycheck-stan
+  :ensure t
+  :after stan-mode
+  ;; Add a hook to setup `flycheck-stan' upon `stan-mode' entry
+  :hook ((stan-mode . flycheck-stan-stanc3-setup))
+  :config
+  ;; A string containing the name or the path of the stanc2 executable
+  ;; If nil, defaults to `stanc2'
+  (setq flycheck-stanc-executable nil)
+  ;; A string containing the name or the path of the stanc2 executable
+  ;; If nil, defaults to `stanc3'
+  (setq flycheck-stanc3-executable
+        "/Users/tedgro/.cmdstan/cmdstan-2.28.1/bin/stanc"))
 
 ;; ;;; company-stan.el
 ;; (use-package company-stan
@@ -897,6 +1164,7 @@
 (use-package csv-mode
   :ensure t
   :config
+  (setq csv-separators '("," ";", ":"))
   (add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode)))
 
 ;; R
@@ -907,133 +1175,31 @@
   (exec-path-from-shell-copy-env "LC_ALL")
   (exec-path-from-shell-copy-env "LANG"))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Org mode configuration
-
-;; Use recent version of org mode with contributed packages
-;; (unless (package-installed-p 'org-plus-contrib)  ;; Make sure the Org package is
-;;(package-install 'org-plus-contrib))
-
-;; interface
-(setq org-src-fontify-natively t)
-(setq org-indent_mode nil)
-(setq org-adapt-indentation nil)
-
-;; export
-;; (use-package ox-pandoc
-;;   :unless in-termux-p
-;;   :ensure t
-;;   :init (add-to-list 'exec-path "/usr/local/bin"))
-;; (require 'ox-publish)
-;; (defvar org-export-output-directory-prefix  ;; Export to export_<file_type>
-;;   "export_"
-;;   "prefix of directory used for org-mode export")
-;; (defadvice org-export-output-file-name (before org-add-export-dir activate)
-;;   "Modifies org-export to place exported files in a different directory"
-;;   (when (not pub-dir)
-;;     (setq pub-dir (concat org-export-output-directory-prefix (substring extension 1)))
-;;     (when (not (file-directory-p pub-dir))
-;;       (make-directory pub-dir))))
-
-;; spellchecking
-(add-hook 'org-mode-hook 'flyspell-mode)
-
-;; images
-(setq org-image-actual-width nil)
-
-;; Clicking on ebib link opens the pdf
-(org-link-set-parameters "ebib" :follow 'open-ebib)
-(defun open-ebib (arg) 
-  (find-file 
-   (car (bibtex-completion-find-pdf arg bibtex-completion-find-additional-pdfs))))
-
-;; Org babel
-
-(use-package ob-async
-  :ensure t
-  :unless in-termux-p)
-
+;; jupyter
 (use-package jupyter
   :ensure t
   :unless in-termux-p)
 
-(unless in-termux-p
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '(
-     (emacs-lisp . t)
-     (python . t)
-     (shell . t)
-     (jupyter . t))
-   )
-  ;; Syntax highlight in #+BEGIN_SRC blocks
-  (setq org-src-fontify-natively t)
-  ;; Don't prompt before running code in org
-  (setq org-confirm-babel-evaluate nil)
-  (setq ob-async-no-async-languages-alist '("jupyter-python" "jupyter-julia"))
-  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-)
-
-;; (setq org-confirm-babel-evaluate nil)
-;; (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
-
-;; Org agenda
-(setq dropsync-dir-parent (if in-termux-p "~/storage/shared/" "~/Dropbox/"))
-(setq dropsync-dir (concat dropsync-dir-parent "DropsyncFiles/"))
-(setq org-dir (concat dropsync-dir "org/"))
-(setq todo-file (concat org-dir "tasks.org"))
-(setq dtu-notes-file (concat org-dir "dtu.org"))
-(setq draft-file (concat org-dir "draft.org"))
-
-(setq org-agenda-window-setup 'only-window)  ;; agenda is full screen
-(define-key global-map "\C-ca" 'org-agenda)
-(setq org-agenda-custom-commands
-      '(("w" "Work view"
-         ((agenda)
-          (tags-todo "admin")
-          (tags-todo "reading")
-          (tags-todo "-admin-reading"))
-         ((org-agenda-filter-preset '("+work"))))
-        ("l" "Life view"
-         ((agenda) (todo))
-         ((org-agenda-filter-preset '("+life"))))))
-(setq org-agenda-files (file-expand-wildcards (concat org-dir "*.org")))
-(setq org-agenda-prefix-format " %i %?-12t% s")
-(setq org-agenda-hide-tags-regexp "work")
-
-;; org todo
-(setq org-todo-keywords '((sequence "TODO" "|" "DONE")))
-
-;; org capture
-(define-key global-map "\C-cc" 'org-capture)
-(add-hook 'org-capture-mode-hook #'org-align-all-tags)
-(setq org-capture-templates
-      '(("w" "Work todo" entry (file todo-file) "* TODO %i%? :work:\n%T")
-        ("l" "Life todo" entry (file todo-file) "* TODO %i%? :life:\n%T")
-        ("e" "Email" entry (file todo-file) "* TODO %a")
-        ("t" "Misc todo" entry (file todo-file) "* TODO %i%?\n%T")
-        ("d" "Draft" entry (file draft-file) "* %i%?\n%T")))
-
 ;; youtube links (Prefix is 'yt')
-(defvar yt-iframe-format
-  ;; You may want to change your width and height.
-  (concat "<iframe width=\"440\""
-          " height=\"335\""
-          " src=\"https://www.youtube.com/embed/%s\""
-          " frameborder=\"0\""
-          " allowfullscreen>%s</iframe>"))
-(org-add-link-type
- "yt"
- (lambda (handle)
-   (browse-url
-    (concat "https://www.youtube.com/embed/"
-            handle)))
- (lambda (path desc backend)
-   (cl-case backend
-     (html (format yt-iframe-format
-                   path (or desc "")))
-     (latex (format "\href{%s}{%s}"
-                    path (or desc "video"))))))
+;; (defvar yt-iframe-format
+;;   ;; You may want to change your width and height.
+;;   (concat "<iframe width=\"440\""
+;;           " height=\"335\""
+;;           " src=\"https://www.youtube.com/embed/%s\""
+;;           " frameborder=\"0\""
+;;           " allowfullscreen>%s</iframe>"))
+;; (org-add-link-type
+;;  "yt"
+;;  (lambda (handle)
+;;    (browse-url
+;;     (concat "https://www.youtube.com/embed/"
+;;             handle)))
+;;  (lambda (path desc backend)
+;;    (cl-case backend
+;;      (html (format yt-iframe-format
+;;                    path (or desc "")))
+;;      (latex (format "\href{%s}{%s}"
+;;                     path (or desc "video"))))))
 
 ;; (unless in-termux-p (require 'ox-bibtex))
 ;; (setq org-bibtex-file "/Users/tedgro/Dropbox/Reading/bibliography.bib")
@@ -1041,33 +1207,32 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TRAMP
 (setq tramp-default-method "ssh")
-
-
-
+(setq tramp-shell-prompt-pattern "\\(?:^\\|\r\\)[^]#$%>\n]*#?[]#$%>].* *\\(^[\\[[0-9;]*[a-zA-Z] *\\)*")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; orderless
 (use-package orderless
   :ensure t
+  :custom
+  (completion-styles '(orderless))
   :init
-  (setq completion-styles '(orderless)
+  (setq completion-styles '(orderless partial-completion)
         completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion)))))
-
+        completion-category-overrides '((file (styles basic partial-completion)))))
 
 (use-package olivetti
- :ensure t
- :custom
- (olivetti-body-width (if in-termux-p 60 80))
- :config
- (use-package olivetti :ensure t)
- (require 'olivetti)
- (define-global-minor-mode global-olivetti-mode olivetti-mode
-   (lambda ()
-     (unless (memq major-mode '(minibuffer-mode which-key-mode mu4e-headers-mode))
-       (olivetti-mode 1))))
-(if in-termux-p (setq-default fringe-mode nil))
- (global-olivetti-mode 1)
- )
+ :ensure t)
+ ;; :custom
+ ;; (olivetti-body-width (if in-termux-p 60 80))
+ ;; :config
+ ;; (use-package olivetti :ensure t)
+ ;; (require 'olivetti)
+ ;; (define-global-minor-mode global-olivetti-mode olivetti-mode
+   ;; (lambda ()
+     ;; (unless (memq major-mode '(minibuffer-mode which-key-mode mu4e-headers-mode))
+       ;; (olivetti-mode 1))))
+;; (if in-termux-p (setq-default fringe-mode nil))
+ ;; (global-olivetti-mode 1)
+ ;; )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; soccer
 (use-package soccer
@@ -1084,27 +1249,17 @@
   :ensure nil
   ;; :load-path "/usr/share/emacs/site-lisp/mu4e/"
   ;; :defer 20 ; Wait until 20 seconds after startup
+  :init
+  (setq mu4e-mu-binary (executable-find "mu"))
   :config
 
   ;; message on right hand side:
   ;; see https://www.djcbsoftware.nl/code/mu/mu4e/Split-view.html
-  ;; (setq mu4e-split-view 'vertical)
-  (setq mu4e-headers-visible-columns 100)
+  (setq mu4e-split-view 'vertical)
+  (setq mu4e-headers-visible-columns 90)
 
   ;; This is set to 't' to avoid mail syncing issues when using mbsync
   (setq mu4e-change-filenames-when-moving t)
-
-  ;; searches that return newsletters
-  (setq tg/news_queries
-   '("from:plura-list@pluralistic.net"          ;; Plura-list
-     "from:huw@substack.com"                    ;; Utopian drivel
-     "list:tl_1154865.tinyletter.com"           ;; Time for some mage theory
-     "list:tl_1405305.tinyletter.com"           ;; Michael Betancourt
-     "list:3983822d8f.193801.list-id.mcsv.net"                 ;; Cortado
-     "list:e39e7b4c29a565f8cbebeb66a.384876.list-id.mcsv.net"  ;; Olly
-     "list:24810bc6de7dd14c076735f2d.688814.list-id.mcsv.net"  ;; souldren
-     "list:514009622.xt.local"                  ;; Giddy
-     "from:office@exlibris.berlin"))            ;; Ex libris
 
   ;; Don't show related messages
   (setq mu4e-headers-include-related nil)
@@ -1118,33 +1273,32 @@
 
   ;; bookmarks
   (setq mu4e-bookmarks
-    '((:name  "Unread messages"
-       :query "flag:unread AND NOT flag:trashed AND (maildir:/Gmail/Inbox OR maildir:/dtu/Inbox)"
-       :key ?u)
-      (:name "Today's messages"
-       :query "date:today..now AND (maildir:/Gmail/Inbox OR maildir:/dtu/Inbox)"
-       :key ?t)
-      (:name "Last 7 days"
-       :query "date:7d..now AND NOT maildir:\"/Gmail/[Google mail]/All Mail\ AND NOT maildir:\"/Gmail/[Google mail]/Sent Mail\""
-        :key ?w)
-      (:name  "Note to self"
-       :query "from:groves.teddy@gmail.com AND maildir:\"/Gmail/Inbox\""
-       :key   ?n)
-      (:name  "OpenTECR mailing list"
-       :query "list:opentecr.googlegroups.com"
-       :key   ?o)
-      (:name  "Newsletters"
-       :query (string-join tg/news_queries " OR ")
-       :key   ?l)
-      (:name  "Github"
-       :query "from:notifications@github.com"
-       :key   ?g)
-      (:name  "Discourse"
-       :query "from:mc_stan@discoursemail.com"
-       :key   ?d)))
+        '((:name  "Note to self"
+                  :query "from:groves.teddy@gmail.com AND maildir:/gmail/Inbox"
+                  :key ?n)
+          (:name  "OpenTECR"
+                  :query "list:opentecr.googlegroups.com AND NOT maildir:\"/gmail/[Google mail]/All Mail\""
+                  :key ?o)
+          (:name  "Github"
+                  :query 
+                  "from:notifications@github.com AND NOT maildir:\"/gmail/[Google mail]/All Mail\""
+                  :key   ?g)
+          (:name  "Discourse"
+                  :query "from:mc_stan@discoursemail.com AND NOT maildir:\"/gmail/[Google mail]/All Mail\""
+                  :key   ?d)
+    ))
+
+  ;; don't view html if plain text is available
+  (with-eval-after-load "mm-decode"
+       (add-to-list 'mm-discouraged-alternatives "text/html")
+       ;; (add-to-list 'mm-discouraged-alternatives "text/richtext")
+       )
 
   ;; date format in headers view
   (setq mu4e-headers-date-format "%Y-%m-%d")
+
+  (setq mu4e-index-lazy-check t)
+ 
 
   ;; capture emails
   (define-key mu4e-view-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
@@ -1183,18 +1337,18 @@
         (list
          ;; Personal account
          (make-mu4e-context
-          :name "Gmail"
+          :name "gmail"
           :match-func
           (lambda (msg)
             (when msg
-              (string-prefix-p "/Gmail" (mu4e-message-field msg :maildir))))
+              (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
             :vars '((user-mail-address . "groves.teddy@gmail.com")
                     (user-full-name    . "Teddy Groves")
                     (mu4e-compose-signature . "Teddy via Gmail")
-                    (mu4e-drafts-folder  . "/Gmail/[Google mail]/Drafts")
-                    (mu4e-sent-folder  . "/Gmail/[Google mail]/Sent Mail")
-                    (mu4e-refile-folder  . "/Gmail/[Google mail]/All Mail")
-                    (mu4e-trash-folder  . "/Gmail/[Google mail]/Trash")))
+                    (mu4e-drafts-folder  . "/gmail/[Google mail]/Drafts")
+                    (mu4e-sent-folder  . "/gmail/[Google mail]/Sent Mail")
+                    (mu4e-refile-folder  . "/gmail/[Google mail]/All Mail")
+                    (mu4e-trash-folder  . "/gmail/[Google mail]/Trash")))
          (make-mu4e-context
           :name "dtu"
           :match-func
@@ -1211,15 +1365,24 @@
          ))
 
   (setq mu4e-maildir-shortcuts
-    '((:maildir "/Gmail/Inbox"    :key ?i)
-      (:maildir "/Gmail/[Google mail]/Sent Mail" :key ?s)
-      (:maildir "/Gmail/[Google mail]/Trash"     :key ?t)
-      (:maildir "/Gmail/[Google mail]/Drafts"    :key ?d)
-      (:maildir "/Gmail/[Google mail]/All Mail"  :key ?a)
+    '((:maildir "/gmail/Inbox"    :key ?i)
+      (:maildir "/gmail/[Google mail]/Sent Mail" :key ?s)
+      (:maildir "/gmail/[Google mail]/Trash"     :key ?t)
+      (:maildir "/gmail/[Google mail]/Drafts"    :key ?d)
+      (:maildir "/gmail/[Google mail]/All Mail"  :key ?a)
+      (:maildir "/gmail/newsletter"  :key ?n)
+      (:maildir "/gmail/paper"  :key ?p)
       (:maildir "/dtu/Inbox"  :key ?I)
-      (:maildir "/dtu/Drafts"    :key ?D)
+      (:maildir "/dtu/Drafts"    :key ?D))))
 
-      )))
+;;;;;;;;;;;;;;;;;;; accounting
+(use-package hledger-mode
+  :ensure t
+  :mode ("\\.journal\\'" "\\.hledger\\'")
+  :commands hledger-enable-reporting
+  :bind (("C-c j" . hledger-run-command))
+  :custom (hledger-jfile "~/finance/2021.journal"))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
 
@@ -1249,8 +1412,8 @@
 ;; Don't report auto-reverts
 (setq auto-revert-verbose nil)
 
-;; Default fill column 79
-(setq-default fill-column 79)
+;; Default fill column 80
+(setq-default fill-column 80)
 
 ;; Autosaves to temporary directory
 (setq backup-directory-alist '(("." . "~/.emacs-saves")))
@@ -1292,12 +1455,13 @@
 
 ;; fix mac meta and super keys
 (setq-default mac-option-modifier 'meta)
+(setq-default mac-left-option-modifier 'meta)
+(setq-default mac-right-option-modifier 'meta)
 (setq-default mac-command-modifier 'super)
 (global-set-key (kbd "s-k") 'kill-this-buffer)
 
-
 ;; font
-(mac-auto-operator-composition-mode t)
+;; (mac-auto-operator-composition-mode t)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -1306,4 +1470,11 @@
  ;; If there is more than one, they won't work right.
  '(column-number-mode t)
  '(menu-bar-mode nil)
+ '(org-agenda-files
+   '("/Users/tedgro/Dropbox/DropsyncFiles/org/draft.org" "/Users/tedgro/Dropbox/DropsyncFiles/org/dtu.org" "/Users/tedgro/Dropbox/DropsyncFiles/org/groceries.org" "/Users/tedgro/Dropbox/DropsyncFiles/org/holiday.org" "/Users/tedgro/Dropbox/DropsyncFiles/org/tasks.org")))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  )
