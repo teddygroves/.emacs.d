@@ -1168,6 +1168,7 @@ If ripgrep is not installed, use grep instead."
 (use-package vterm
   :ensure t
   :custom
+  (vterm-install t)
   (vterm-buffer-name-string "vterm %s"))
 
 ;; Stan
