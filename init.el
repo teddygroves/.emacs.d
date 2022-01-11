@@ -39,8 +39,8 @@
   :custom
   (evil-undo-system 'undo-tree)
   :init
-  (setq evil-shift-width 2)
   (setq evil-want-integration t)
+  (setq evil-shift-width 2)
   (setq evil-want-keybinding nil)
   :config
   (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
@@ -76,7 +76,7 @@
 
 ;; evil org mode, but just for the agenda
 (use-package evil-org
-  :after org
+  :after evil org
   :config
   (require 'evil-org-agenda)
   (evil-org-agenda-set-keys))
@@ -284,77 +284,6 @@
 (setq auto-save-file-name-transforms
       `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
 
-;; * Evil
-
-;; evil mode [[https://evil.readthedocs.io/en/latest/overview.html#installation-via-package-el][source]]
-
-;; ** evil mode [[https://github.com/emacs-evil/evil][github repo]]
-
-(use-package evil
-  :ensure t
-  :after undo-tree
-  :custom
-  (evil-undo-system 'undo-tree)
-  :init
-  (setq evil-shift-width 2)
-  (setq evil-want-integration t)
-  :config
-  (setq evil-want-keybinding nil)
-  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-
-  ;; Use visual line motions even outside of visual-line-mode buffers
-  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-  (evil-set-initial-state 'vterm-mode 'emacs)
-  (evil-set-initial-state 'help-mode 'emacs)
-  (evil-set-initial-state 'inferior-python-mode 'emacs)
-  (evil-set-initial-state 'messages-buffer-mode 'emacs)
-  (evil-set-initial-state 'dashboard-mode 'emacs)
-  (evil-set-initial-state 'special-mode 'emacs)
-  (evil-set-initial-state 'view-mode 'emacs)
-  (evil-mode 1)
-  )
-
-(use-package evil-collection
-  :after evil
-  :ensure t
-  :custom
-  (evil-collection-company-use-tng nil)
-  ;; (evil-collection-setup-minibuffer t)
-  :init
-  (evil-collection-init)
-  :config
-  (evil-collection-init 'compile)
-  (evil-collection-init 'info)
-  (evil-collection-init 'custom)
-  (evil-collection-init 'dired)
-  (evil-collection-init 'python)
-  (evil-collection-init 'flycheck)
-  (evil-collection-init 'xref)
-  (evil-collection-init 'magit)
-  (evil-collection-init 'which-key)
-  (evil-collection-init 'which-key)
-  (unless in-termux-p (evil-collection-init 'mu4e))
-  )
-
-(use-package evil-org
-  :ensure t
-  :after evil org
-  :init
-  (add-hook 'org-mode-hook #'evil-org-mode)
-  :config
-  (require 'evil-org-agenda)
-  (evil-org-agenda-set-keys))
-
-;; ** evil-nerd-commentor
-
-;; Use ~M-/~ for comment/uncomment.
-
-;; [[https://github.com/redguardtoo/evil-nerd-commenter][source]]
-
-(use-package evil-nerd-commenter
-  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
 
 ;; ** undo-tree
 (use-package undo-tree
@@ -538,6 +467,7 @@
   (embark-collect-mode . consult-preview-at-point-mode))
 
 (use-package corfu
+  :after evil
   :custom
   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
   (corfu-auto t)                 ;; Enable auto completion
@@ -1314,7 +1244,6 @@ If ripgrep is not installed, use grep instead."
   (soccer-time-local-time-utc-offset "+0300"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Email
-(unless in-termux-p
 (use-package mu4e
   :unless in-termux-p
   :straight (:local-repo "/usr/local/share/emacs/site-lisp/mu/mu4e/"
