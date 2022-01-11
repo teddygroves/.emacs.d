@@ -1022,6 +1022,7 @@ If ripgrep is not installed, use grep instead."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
 (use-package doom-themes
+  :unless in-termux-p
   :after org
   :ensure t
   :config
