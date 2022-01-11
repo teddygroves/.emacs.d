@@ -1244,8 +1244,8 @@ If ripgrep is not installed, use grep instead."
   (soccer-time-local-time-utc-offset "+0300"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Email
+(unless in-termux-p
 (use-package mu4e
-  :unless in-termux-p
   :straight (:local-repo "/usr/local/share/emacs/site-lisp/mu/mu4e/"
              :pre-build ())
   :ensure nil
@@ -1375,7 +1375,7 @@ If ripgrep is not installed, use grep instead."
       (:maildir "/gmail/newsletter"  :key ?n)
       (:maildir "/gmail/paper"  :key ?p)
       (:maildir "/dtu/Inbox"  :key ?I)
-      (:maildir "/dtu/Drafts"    :key ?D))))
+      (:maildir "/dtu/Drafts"    :key ?D)))))
 
 ;;;;;;;;;;;;;;;;;;; accounting
 (use-package hledger-mode
