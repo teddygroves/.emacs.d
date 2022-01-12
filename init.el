@@ -624,12 +624,14 @@
 ;; copied from here: https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 (use-package project
   :straight nil
-  :custom
-  (project-switch-commands '((project-dired "Root" "r")
-                             (project-find-file "File" "f")
-                             (magit-project-status "Git" "g")
-                             (tg/project-search "Search" "s")
-                             (tg/vterm-dwim "Terminal" "t"))))
+  :config
+  (unless in-termux-p
+    (setq project-switch-commands
+          '((project-dired "Root" "r")
+            (project-find-file "File" "f")
+            (magit-project-status "Git" "g")
+            (tg/project-search "Search" "s")
+            (tg/vterm-dwim "Terminal" "t")))))
 
 (defun tg/project-name (&optional project)
   "Return the name for PROJECT.
