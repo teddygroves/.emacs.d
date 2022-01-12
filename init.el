@@ -141,7 +141,9 @@
      ("l" "Life view"
      ((agenda) (todo))
      ((org-agenda-filter-preset '("+life"))))))
-  (setq org-agenda-files (file-expand-wildcards (concat org-dir "*.org")))
+  (setq org-agenda-files
+        (list (concat org-dir "tasks.org")
+              (concat org-dir "dtu.org")))
   (setq org-agenda-prefix-format " %i %?-12t% s")
   (setq org-agenda-hide-tags-regexp "work")
   :config
@@ -245,7 +247,7 @@
                          "#+title: ${title}\n#+filetags: :work:")
       :unnarrowed t)
      ("c" "Cat log" entry "** %T\n%?"
-      :if-new (node "Cat log")
+      :target (file+olp "20211228121509-axel.org" ("Cat log"))
       :empty-lines-before 1
       :unnarrowed t)
      ))
@@ -1476,8 +1478,6 @@ If ripgrep is not installed, use grep instead."
  ;; If there is more than one, they won't work right.
  '(column-number-mode t)
  '(menu-bar-mode nil)
- '(org-agenda-files
-   '("/Users/tedgro/Dropbox/DropsyncFiles/org/draft.org" "/Users/tedgro/Dropbox/DropsyncFiles/org/dtu.org" "/Users/tedgro/Dropbox/DropsyncFiles/org/groceries.org" "/Users/tedgro/Dropbox/DropsyncFiles/org/holiday.org" "/Users/tedgro/Dropbox/DropsyncFiles/org/tasks.org")))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
