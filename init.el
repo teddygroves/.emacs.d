@@ -623,7 +623,6 @@
 ;; customize project.el
 ;; copied from here: https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 (use-package project
-  :straight nil
   :config
   (unless in-termux-p
     (setq project-switch-commands
