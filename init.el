@@ -65,6 +65,7 @@
   :ensure t
   ;; :custom (evil-collection-company-use-tng nil)
   :config
+  (with-eval-after-load 'help (evil-collection-help-setup))
   (with-eval-after-load 'info (evil-collection-info-setup))
   (with-eval-after-load 'custom (evil-collection-custom-setup))
   (with-eval-after-load 'dired (evil-collection-dired-setup))
@@ -238,9 +239,8 @@
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                          "#+title: ${title}\n#+filetags:")
       :unnarrowed t)
-     ("m" "Meeting" plain "%?"
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+title: %<%Y%m%d%H%M%S>-${title}\n#+filetags: :meeting:")
+     ("m" "Meeting" entry "* %T ${title}\n:PROPERTIES:\n:ID: %(org-id-new)\n:END:\n%?"
+      :target (file "20220113161734-meetings.org")
       :unnarrowed t)
      ("w" "Work" plain "%?"
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
@@ -761,6 +761,7 @@ If ripgrep is not installed, use grep instead."
   (lsp-idle-delay 0.500)
   (lsp-log-io nil)
   (lsp-headerline-breadcrumb-enable nil)
+  (lsp-keep-workspace-alive nil)
   :init
   (defun tg/lsp-mode-setup-completion ()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
@@ -833,12 +834,11 @@ If ripgrep is not installed, use grep instead."
    "d" '(lsp-find-definition :which-key "find-definitions")
    "r" '(lsp-find-references :which-key "find-references")
    "h" '(lsp-describe-thing-at-point :which-key "help-detailed")
-   "e" '(lsp-ui-flycheck-list :which-key "flycheck-list")
+   "e" '(consult-lsp-diagnostics :which-key "consult-lsp-diagnostics")
    "b" '(consult-buffer :which-key "consult-buffer")
-   "cd" '(consult-lsp-diagnostics :which-key "consult-lsp-diagnostics")
-   "cs" '(consult-lsp-symbols :which-key "consult-lsp-symbols")
-   "cr" '(consult-ripgrep :which-key "consult-ripgrep")
-   "cy" '(consult-yasnippet :which-key "consult-yasnippet")
+   "s" '(consult-lsp-symbols :which-key "consult-lsp-symbols")
+   "g" '(consult-ripgrep :which-key "consult-ripgrep")
+   "y" '(consult-yasnippet :which-key "consult-yasnippet")
    ;; "SPC" 'python-shell-send-statement
    ;; "o" 'counsel-imenu
    "x" 'lsp-execute-code-action)
