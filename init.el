@@ -1056,7 +1056,8 @@ If ripgrep is not installed, use grep instead."
 ;; You must run (all-the-icons-install-fonts) one time after
 ;; installing this package!
 (use-package doom-modeline
-  :after eshell doom-themes mu4e mu4e-alert     ;; load after eshell, doom theme and mu4e
+  :after eshell doom-themes
+  ;; mu4e mu4e-alert     ;; load after eshell, doom theme and mu4e
   :custom-face
   ;; (mode-line ((t (:height 0.85))))
   ;; (mode-line-inactive ((t (:height 0.85))))
@@ -1077,8 +1078,8 @@ If ripgrep is not installed, use grep instead."
   (setq doom-modeline-percent-position '(-3 ""))
   (doom-modeline-mode 1)
   :config
-  (unless in-termux-p
-      (mu4e-alert-enable-mode-line-display))
+  ;; (unless in-termux-p
+      ;; (mu4e-alert-enable-mode-line-display))
   ;; (setq-default header-line-format mode-line-format)
   ;; (setq-default mode-line-format nil)
   )
@@ -1245,146 +1246,139 @@ If ripgrep is not installed, use grep instead."
  ;; (global-olivetti-mode 1)
  ;; )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; soccer
-(use-package soccer
-  :straight (soccer :type git :host github :repo "md-arif-shaikh/soccer")
-
-  :custom
-  (soccer-time-local-time-utc-offset "+0300"))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Email
-(unless in-termux-p
-(use-package mu4e
-  :straight (:local-repo "/usr/local/share/emacs/site-lisp/mu/mu4e/"
-             :pre-build ())
-  :ensure nil
-  ;; :load-path "/usr/share/emacs/site-lisp/mu4e/"
-  ;; :defer 20 ; Wait until 20 seconds after startup
-  :init
-  (setq mu4e-mu-binary (executable-find "mu"))
-  :config
+;; (unless in-termux-p
+;; (use-package mu4e
+;;   :straight (:local-repo "/usr/local/share/emacs/site-lisp/mu/mu4e/"
+;;              :pre-build ())
+;;   :ensure nil
+;;   ;; :load-path "/usr/share/emacs/site-lisp/mu4e/"
+;;   ;; :defer 20 ; Wait until 20 seconds after startup
+;;   :init
+;;   (setq mu4e-mu-binary (executable-find "mu"))
+;;   :config
 
-  ;; message on right hand side:
-  ;; see https://www.djcbsoftware.nl/code/mu/mu4e/Split-view.html
-  (setq mu4e-split-view 'vertical)
-  (setq mu4e-headers-visible-columns 90)
+;;   ;; message on right hand side:
+;;   ;; see https://www.djcbsoftware.nl/code/mu/mu4e/Split-view.html
+;;   (setq mu4e-split-view 'vertical)
+;;   (setq mu4e-headers-visible-columns 90)
 
-  ;; This is set to 't' to avoid mail syncing issues when using mbsync
-  (setq mu4e-change-filenames-when-moving t)
+;;   ;; This is set to 't' to avoid mail syncing issues when using mbsync
+;;   (setq mu4e-change-filenames-when-moving t)
 
-  ;; Don't show related messages
-  (setq mu4e-headers-include-related nil)
+;;   ;; Don't show related messages
+;;   (setq mu4e-headers-include-related nil)
 
-  ;;
-  (defun tg/mu4e-narrow-unread ()
-    "Narrow search to unread"
-    (interactive)
-    (mu4e-headers-search-narrow "flag:unread"))
-  (define-key mu4e-headers-mode-map (kbd "M-u") 'tg/mu4e-narrow-unread)
+;;   ;;
+;;   (defun tg/mu4e-narrow-unread ()
+;;     "Narrow search to unread"
+;;     (interactive)
+;;     (mu4e-headers-search-narrow "flag:unread"))
+;;   (define-key mu4e-headers-mode-map (kbd "M-u") 'tg/mu4e-narrow-unread)
 
-  ;; bookmarks
-  (setq mu4e-bookmarks
-        '((:name  "Note to self"
-                  :query "from:groves.teddy@gmail.com AND maildir:/gmail/Inbox"
-                  :key ?n)
-          (:name  "OpenTECR"
-                  :query "list:opentecr.googlegroups.com AND NOT maildir:\"/gmail/[Google mail]/All Mail\""
-                  :key ?o)
-          (:name  "Github"
-                  :query 
-                  "from:notifications@github.com AND NOT maildir:\"/gmail/[Google mail]/All Mail\""
-                  :key   ?g)
-          (:name  "Discourse"
-                  :query "from:mc_stan@discoursemail.com AND NOT maildir:\"/gmail/[Google mail]/All Mail\""
-                  :key   ?d)
-    ))
+;;   ;; bookmarks
+;;   (setq mu4e-bookmarks
+;;         '((:name  "Note to self"
+;;                   :query "from:groves.teddy@gmail.com AND maildir:/gmail/Inbox"
+;;                   :key ?n)
+;;           (:name  "OpenTECR"
+;;                   :query "list:opentecr.googlegroups.com AND NOT maildir:\"/gmail/[Google mail]/All Mail\""
+;;                   :key ?o)
+;;           (:name  "Github"
+;;                   :query 
+;;                   "from:notifications@github.com AND NOT maildir:\"/gmail/[Google mail]/All Mail\""
+;;                   :key   ?g)
+;;           (:name  "Discourse"
+;;                   :query "from:mc_stan@discoursemail.com AND NOT maildir:\"/gmail/[Google mail]/All Mail\""
+;;                   :key   ?d)
+;;     ))
 
-  ;; don't view html if plain text is available
-  (with-eval-after-load "mm-decode"
-       (add-to-list 'mm-discouraged-alternatives "text/html")
-       ;; (add-to-list 'mm-discouraged-alternatives "text/richtext")
-       )
+;;   ;; don't view html if plain text is available
+;;   (with-eval-after-load "mm-decode"
+;;        (add-to-list 'mm-discouraged-alternatives "text/html")
+;;        ;; (add-to-list 'mm-discouraged-alternatives "text/richtext")
+;;        )
 
-  ;; date format in headers view
-  (setq mu4e-headers-date-format "%Y-%m-%d")
+;;   ;; date format in headers view
+;;   (setq mu4e-headers-date-format "%Y-%m-%d")
 
-  (setq mu4e-index-lazy-check t)
+;;   (setq mu4e-index-lazy-check t)
  
 
-  ;; capture emails
-  (define-key mu4e-view-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
-  (define-key mu4e-headers-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
+;;   ;; capture emails
+;;   (define-key mu4e-view-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
+;;   (define-key mu4e-headers-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
 
-  ;; Refresh mail using isync every 10 minutes
-  (setq mu4e-update-interval (* 10 60))
+;;   ;; Refresh mail using isync every 10 minutes
+;;   (setq mu4e-update-interval (* 10 60))
 
-  ;; isync setup
-  (setq mu4e-get-mail-command "mbsync -a")
-  (setq mu4e-maildir "~/Mail")
+;;   ;; isync setup
+;;   (setq mu4e-get-mail-command "mbsync -a")
+;;   (setq mu4e-maildir "~/Mail")
 
-  ;; slightly nicer rendering of html emails
-  (setq mu4e-html2text-command "html2text -utf8 -width 72")
+;;   ;; slightly nicer rendering of html emails
+;;   (setq mu4e-html2text-command "html2text -utf8 -width 72")
 
-  ;; set up msmtp
-  (setq message-send-mail-function 'message-send-mail-with-sendmail)
-  (setq sendmail-program (executable-find "msmtp"))
-  (setq message-sendmail-envelope-from 'header)
+;;   ;; set up msmtp
+;;   (setq message-send-mail-function 'message-send-mail-with-sendmail)
+;;   (setq sendmail-program (executable-find "msmtp"))
+;;   (setq message-sendmail-envelope-from 'header)
 
-  ;; nicer comosing
-  (setq mu4e-compose-format-flowed t)
+;;   ;; nicer comosing
+;;   (setq mu4e-compose-format-flowed t)
 
-  ;; no confirmation before quit
-  (setq mu4e-confirm-quit nil)
+;;   ;; no confirmation before quit
+;;   (setq mu4e-confirm-quit nil)
 
-  ;; cc and bcc fields
-  (add-hook 'mu4e-compose-mode-hook
-            (defun timu/add-cc-and-bcc ()
-              "My Function to automatically add Cc & Bcc: headers."
-              (save-excursion (message-add-header "Cc:\n"))
-              (save-excursion (message-add-header "Bcc:\n"))))
+;;   ;; cc and bcc fields
+;;   (add-hook 'mu4e-compose-mode-hook
+;;             (defun timu/add-cc-and-bcc ()
+;;               "My Function to automatically add Cc & Bcc: headers."
+;;               (save-excursion (message-add-header "Cc:\n"))
+;;               (save-excursion (message-add-header "Bcc:\n"))))
 
-  ;; contexts (need one of these for work email maybe someday)
-  (setq mu4e-contexts
-        (list
-         ;; Personal account
-         (make-mu4e-context
-          :name "gmail"
-          :match-func
-          (lambda (msg)
-            (when msg
-              (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
-            :vars '((user-mail-address . "groves.teddy@gmail.com")
-                    (user-full-name    . "Teddy Groves")
-                    (mu4e-compose-signature . "Teddy via Gmail")
-                    (mu4e-drafts-folder  . "/gmail/[Google mail]/Drafts")
-                    (mu4e-sent-folder  . "/gmail/[Google mail]/Sent Mail")
-                    (mu4e-refile-folder  . "/gmail/[Google mail]/All Mail")
-                    (mu4e-trash-folder  . "/gmail/[Google mail]/Trash")))
-         (make-mu4e-context
-          :name "dtu"
-          :match-func
-          (lambda (msg)
-            (when msg
-              (string-prefix-p "/dtu" (mu4e-message-field msg :maildir))))
-            :vars '((user-mail-address . "tedgro@dtu.dk")
-                    (user-full-name    . "Teddy Groves")
-                    (mu4e-compose-signature . "Teddy Groves via DTU email")
-                    (mu4e-drafts-folder  . "/dtu/Drafts")
-                    (mu4e-sent-folder  . "/dtu/Sent Items")
-                    (mu4e-refile-folder  . "/dtu/Archive")
-                    (mu4e-trash-folder  . "/dtu/Deleted Items")))
-         ))
+;;   ;; contexts (need one of these for work email maybe someday)
+;;   (setq mu4e-contexts
+;;         (list
+;;          ;; Personal account
+;;          (make-mu4e-context
+;;           :name "gmail"
+;;           :match-func
+;;           (lambda (msg)
+;;             (when msg
+;;               (string-prefix-p "/gmail" (mu4e-message-field msg :maildir))))
+;;             :vars '((user-mail-address . "groves.teddy@gmail.com")
+;;                     (user-full-name    . "Teddy Groves")
+;;                     (mu4e-compose-signature . "Teddy via Gmail")
+;;                     (mu4e-drafts-folder  . "/gmail/[Google mail]/Drafts")
+;;                     (mu4e-sent-folder  . "/gmail/[Google mail]/Sent Mail")
+;;                     (mu4e-refile-folder  . "/gmail/[Google mail]/All Mail")
+;;                     (mu4e-trash-folder  . "/gmail/[Google mail]/Trash")))
+;;          (make-mu4e-context
+;;           :name "dtu"
+;;           :match-func
+;;           (lambda (msg)
+;;             (when msg
+;;               (string-prefix-p "/dtu" (mu4e-message-field msg :maildir))))
+;;             :vars '((user-mail-address . "tedgro@dtu.dk")
+;;                     (user-full-name    . "Teddy Groves")
+;;                     (mu4e-compose-signature . "Teddy Groves via DTU email")
+;;                     (mu4e-drafts-folder  . "/dtu/Drafts")
+;;                     (mu4e-sent-folder  . "/dtu/Sent Items")
+;;                     (mu4e-refile-folder  . "/dtu/Archive")
+;;                     (mu4e-trash-folder  . "/dtu/Deleted Items")))
+;;          ))
 
-  (setq mu4e-maildir-shortcuts
-    '((:maildir "/gmail/Inbox"    :key ?i)
-      (:maildir "/gmail/[Google mail]/Sent Mail" :key ?s)
-      (:maildir "/gmail/[Google mail]/Trash"     :key ?t)
-      (:maildir "/gmail/[Google mail]/Drafts"    :key ?d)
-      (:maildir "/gmail/[Google mail]/All Mail"  :key ?a)
-      (:maildir "/gmail/newsletter"  :key ?n)
-      (:maildir "/gmail/paper"  :key ?p)
-      (:maildir "/dtu/Inbox"  :key ?I)
-      (:maildir "/dtu/Drafts"    :key ?D)))))
+;;   (setq mu4e-maildir-shortcuts
+;;     '((:maildir "/gmail/Inbox"    :key ?i)
+;;       (:maildir "/gmail/[Google mail]/Sent Mail" :key ?s)
+;;       (:maildir "/gmail/[Google mail]/Trash"     :key ?t)
+;;       (:maildir "/gmail/[Google mail]/Drafts"    :key ?d)
+;;       (:maildir "/gmail/[Google mail]/All Mail"  :key ?a)
+;;       (:maildir "/gmail/newsletter"  :key ?n)
+;;       (:maildir "/gmail/paper"  :key ?p)
+;;       (:maildir "/dtu/Inbox"  :key ?I)
+;;       (:maildir "/dtu/Drafts"    :key ?D)))))
 
 ;;;;;;;;;;;;;;;;;;; accounting
 (use-package hledger-mode
@@ -1393,6 +1387,10 @@ If ripgrep is not installed, use grep instead."
   :commands hledger-enable-reporting
   :bind (("C-c j" . hledger-run-command))
   :custom (hledger-jfile "~/finance/2021.journal"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;; fonts
+(use-package all-the-icons
+  :if (display-graphic-p))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
 
@@ -1479,10 +1477,12 @@ If ripgrep is not installed, use grep instead."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(column-number-mode t)
+ '(display-time-mode t)
  '(menu-bar-mode nil)
+ '(tool-bar-mode nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(default ((t (:family "Iosevka" :foundry "nil" :slant normal :weight normal :height 161 :width normal)))))
