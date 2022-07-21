@@ -1,0 +1,15 @@
+* Feeds                                                              :elfeed:
+** Papers                                                             :paper:
+*** [[http://export.arxiv.org/api/query?search_query=cat:stat.TH&start=0&max_results=300&sortBy=submittedDate&sortOrder=descending][Arxiv:Stat]]
+*** [[https://connect.biorxiv.org/biorxiv_xml.php?subject=systems_biology][Biorxiv:sysbio]]
+*** [[https://academic.oup.com/rss/site_5139/advanceAccess_3001.xml][Bioinformatics]]
+*** [[https://rss.sciencedirect.com/publication/science/01679473][Computational statistics and data science]]
+** Blogs                                                               :blog:
+*** [[https://statmodeling.stat.columbia.edu/feed/][Andrew Gelman]]
+*** [[https://thenextrecession.wordpress.com/feed/][Michael Roberts]]
+** Youtube                                                          :youtube:
+*** [[https://www.youtube.com/feeds/videos.xml?channel_id=UCAiiOTio8Yu69c3XnR7nQBQ][System crafters]]
+*** [[https://www.youtube.com/feeds/videos.xml?channel_id=UCe0DNp0mKMqrYVaTundyr9w][VaatiVidya]]
+*** [[https://www.youtube.com/feeds/videos.xml?playlist_id=PL49CF3715CB9EF31D][MIT open courseware]]
+*** [[https://www.youtube.com/feeds/videos.xml?channel_id=UC0uTPqBCFIpZxlz_Lv1tk_g][Protesilaos]]
+*** [[https://www.youtube.com/feeds/videos.xml?playlist_id=PLre5AT9JnKShBOPeuiD9b-I4XROIJhkIU][OCaml course]]
