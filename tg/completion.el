@@ -86,6 +86,7 @@
 
   :bind
   ("C-x p f" . consult-project-buffer)
+  ("C-x r b" . consult-bookmark)
   ;; Configure other variables and modes in the :config section,
   ;; after lazily loading the package.
   :config
