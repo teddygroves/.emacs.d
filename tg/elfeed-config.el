@@ -49,6 +49,8 @@
 
 (use-package elfeed-tube-mpv
   :straight (:host github :repo "karthink/elfeed-tube")
+  :custom
+  (elfeed-tube-mpv-options '("--cache=yes" "--ytdl-format=`bestvideo[height<=?1080][vcodec!=vp9]+bestaudio/best`"))
   :bind (:map elfeed-show-mode-map
               ("C-c C-p" . mpv-pause)
               ("C-c C-f" . elfeed-tube-mpv-follow-mode)
@@ -60,7 +62,8 @@
 
 (with-eval-after-load 'evil-collection (evil-collection-elfeed-setup))
 
-(defun elfeed-olivetti-other-window (buff)
+(defun blfeed-olivetti-other-window (buff)
+  (interactive)
   (pop-to-buffer buff)
   (olivetti-mode)
   (elfeed-show-refresh)

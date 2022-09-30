@@ -1,15 +1,11 @@
-;; -*- lexical-binding: t; -*-
-
 (use-package emacsql
   :straight (:type git :host github :repo "bram85/emacsql")
   :ensure t)
 
 (use-package org-roam
-  :after org consult
   :ensure t
   :init
   (setq org-roam-v2-ack t)
-  (org-roam-db-autosync-mode)
   :custom
   (org-roam-directory (concat tg/icloud-drive "Documents/org/org-roam"))
   (org-roam-completion-everywhere t)
@@ -31,24 +27,33 @@
      ("c" "Cat log" entry "** %T\n%?"
       :target (file+olp "20211228121509-axel.org" ("Cat log"))
       :empty-lines-before 1
-      :unnarrowed t)
-     ))
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f" . org-roam-node-find)
-         ("C-c n i" . org-roam-node-insert)
-         ("C-c n n" . org-roam-capture)
-         ("C-c n p" . tg/org-roam-find-project)
-         ("C-c n b" . tg/org-roam-capture-inbox)
-         ("C-c n s" . tg/org-roam-rg-search)
-         ("C-c n t" . tg/org-roam-capture-task)
-         :map org-mode-map
-         ("C-M-i" . completion-at-point)
-         :map org-roam-dailies-map
-         ("Y" . org-roam-dailies-capture-yesterday)
-         ("T" . org-roam-dailies-capture-tomorrow))
+      :unnarrowed t)))
+  :bind
+  (("C-c n l" . org-roam-buffer-toggle)
+   ("C-c n f" . org-roam-node-find)
+   ("C-c n i" . org-roam-node-insert)
+   ("C-c n n" . org-roam-capture))
+         ;; ("C-c n p" . tg/org-roam-find-project)
+         ;; ("C-c n b" . tg/org-roam-capture-inbox)
+         ;; ("C-c n s" . tg/org-roam-rg-search)
+         ;; ("C-c n t" . tg/org-roam-capture-task)
+         ;; :map org-mode-map
+         ;; ("C-M-i" . completion-at-point)
+         ;; :map org-roam-dailies-map
+         ;; ("Y" . org-roam-dailies-capture-yesterday)
+         ;; ("T" . org-roam-dailies-capture-tomorrow))
   :bind-keymap
   ("C-c n d" . org-roam-dailies-map)
   :config
+  (org-roam-db-autosync-mode)
+  ;; Build the agenda list the first time for the session
+  (require 'org-roam-dailies) ;; Ensure the keymap is available
+  (add-to-list 'display-buffer-alist
+              '("\\*org-roam\\*"
+                (display-buffer-in-direction)
+                (direction . right)
+                (window-width . 0.33)
+                (window-height . fit-window-to-buffer)))
   (defun tg/org-roam-filter-by-tag (tag-name)
     (lambda (node)
       (member tag-name (org-roam-node-tags node))))
@@ -60,24 +65,23 @@
   (defun tg/org-roam-refresh-agenda-list ()
     (interactive)
     (setq org-agenda-files (append (tg/org-roam-list-notes-by-tag "project")
-                                   (tg/org-roam-list-notes-by-tag "inbox"))))
+                                    (tg/org-roam-list-notes-by-tag "inbox"))))
   (defun tg/org-roam-rg-search ()
     "Search org-roam directory using consult-ripgrep. With live-preview."
     (interactive)
     (let ((consult-ripgrep "rg --null --multiline --ignore-case --type org --line-buffered --color=always --max-columns=500 --no-heading --line-number . -e ARG OPTS"))
         (consult-ripgrep org-roam-directory)))
-  ;; my custom functions
   (defun tg/org-roam-capture-task ()
     (interactive)
     ;; Add the project file to the agenda after capture is finished
     (add-hook 'org-capture-after-finalize-hook #'tg/org-roam-project-finalize-hook)
     ;; Capture the new task, creating the project file if necessary
     (org-roam-capture-
-     :node (org-roam-node-read
+      :node (org-roam-node-read
             nil
             (lambda (node) (member "project" (org-roam-node-tags node))))
-     :templates '(("p" "project" plain "** TODO %?"
-                   :if-new (file+head+olp "%<%Y%m%d%H%M%S>-${slug}.org"
+      :templates '(("p" "project" plain "** TODO %?"
+                    :if-new (file+head+olp "%<%Y%m%d%H%M%S>-${slug}.org"
                                           "#+title: ${title}\n#+category: ${title}\n#+filetags: project"
                                           ("Tasks"))))))
   (defun tg/org-roam-project-finalize-hook ()
@@ -109,13 +113,4 @@
     (org-roam-capture- :node (org-roam-node-create)
                       :templates '(("i" "inbox" plain "* %?"
                                     :if-new (file+head "Inbox.org" "#+title: Inbox\n")))))
-  ;; Build the agenda list the first time for the session
-  (tg/org-roam-refresh-agenda-list)
-  (require 'org-roam-dailies) ;; Ensure the keymap is available
-  (add-to-list 'display-buffer-alist
-              '("\\*org-roam\\*"
-                (display-buffer-in-direction)
-                (direction . right)
-                (window-width . 0.33)
-                (window-height . fit-window-to-buffer))))
-
+  (tg/org-roam-refresh-agenda-list))

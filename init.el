@@ -17,6 +17,10 @@
 (setq straight-use-package-by-default t)
 (setq straight-repository-branch "develop")
 
+;;;; test if in termux
+(setq tg/in-termux
+      (string-suffix-p "Android" (string-trim (shell-command-to-string "uname -a"))))
+
 ;;;; No littering
 (use-package no-littering)
 ;; no-littering doesn't set this by default so we must place
@@ -30,7 +34,7 @@
 
 ;; pdf-tools
 (use-package pdf-tools
-  :after evil
+  :unless tg/in-termux
   :ensure t
   :bind (:map pdf-view-mode-map ("B" . pdf-history-backward))
   :custom
@@ -129,8 +133,7 @@
 ;; ** eldoc
 
 (use-package eldoc
-  :diminish eldoc-mode
-  )
+  :diminish eldoc-mode)
 
 
 ;; ** prescient
@@ -146,70 +149,15 @@
   :diminish yas-minor-mode
   :config
   (yas-reload-all)
-  (add-hook 'org-mode-hook #'yas-minor-mode)
-)
+  (add-hook 'org-mode-hook #'yas-minor-mode))
 
 ;; Flymake
 
 (use-package flymake
   :ensure t)
-;; * Flycheck
-
-;; (use-package flycheck
-  ;; :diminish flycheck-mode
-  ;; :init
-  ;; (setq flycheck-idle-change-delay 5.0
-        ;; flycheck-display-errors-delay 0.9
-        ;; flycheck-check-syntax-automatically '(idle-change save)
-        ;; flycheck-highlighting-mode 'symbols
-        ;; flycheck-deferred-syntax-check nil)
-  ;; :config
-  ;; (flycheck-add-next-checker 'python-flake8 'python-pylint)
-  ;; (flycheck-add-next-checker 'python-flake8 'python-pyright)
-  ;; )
-
-;; ocaml
-(use-package tuareg
-  :ensure t)
-;; (use-package merlin
-  ;; :after lsp-mode
-  ;; :ensure t
-  ;; :config
-  ;; (add-hook 'tuareg-mode-hook #'merlin-mode)
-  ;; (require 'merlin-company))
-
-;; * Lsp mode
-
-;; (use-package lsp-mode
-;;   :commands lsp lsp-deferred
-;;   :after orderless
-;;   :custom
-;;   (lsp-completion-provider :none) ;; we use Corfu!
-;;   (lsp-eldoc-enable-hover nil)
-;;   (lsp-trigger-auto-activate nil)
-;;   (lsp-file-watch-threshold 3000)
-;;   (lsp-idle-delay 0.500)
-;;   (lsp-log-io nil)
-;;   (lsp-headerline-breadcrumb-enable nil)
-;;   (lsp-keep-workspace-alive nil)
-;;   :init
-;;   (defun tg/lsp-mode-setup-completion ()
-;;     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-;;           '(orderless)))
-;;   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-;;   (setq lsp-keymap-prefix "C-c l")
-;;   (setq gc-cons-threshold 100000000) ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
-;;   (setq read-process-output-max (* 1024 1024)) ;; 1mb https://emacs-lsp.github.io/lsp-mode/page/performance/
-;;   (with-eval-after-load 'lsp-mode
-;;     (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.mypy_cache\\'"))
-;;   :hook
-;;   ;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-;;   (python-mode . lsp-deferred)
-;;   ;; if you want which-key integration
-;;   (lsp-mode . lsp-enable-which-key-integration)
-;;   (lsp-completion-mode . tg/lsp-mode-setup-completion))
 
 (use-package eglot
+  :unless tg/in-termux
   :ensure t
   :hook ((python-mode . eglot-ensure))
   :config
@@ -219,158 +167,8 @@
               ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose) ;optional
               )))
 
-;; https://emacs-lsp.github.io/lsp-mode/page/faq/#how-do-i-force-lsp-mode-to-forget-the-workspace-folders-for-multi-root
-;; (advice-add 'lsp :before (lambda (&rest _args) (eval '(setf (lsp-session-server-id->folders (lsp-session)) (ht)))))
-
-;; lsp-related packages
-
-;; (use-package lsp-ui
-  ;; :after lsp-mode
-  ;; :commands lsp-ui-mode)
-
-;; (use-package treemacs)
-
-;; (use-package lsp-treemacs :after (lsp-mode treemacs) :commands lsp-treemacs-errors-list)
-;; (use-package lsp-pyright
-;;   :ensure t
-;;   :hook (python-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))
-;;   :custom
-;;   (lsp-pyright-venv-path "/Users/tedgro/.venvs")
-;;   (lsp-pyright-venv-directory "/Users/tedgro/.venvs")
-;;   (lsp-pyright-auto-import-completions t)
-;;   (lsp-pyright-multi-root nil)
-;;   (lsp-pyright-stub-path "/Users/tedgro/Code/stubs/"))
-
-
-;; (use-package company
-;;   :diminish company-mode
-;;   :bind
-;;   (:map company-active-map
-;;         ("<tab>" . nil)
-;;         ("TAB" . nil)
-;;         ("M-<tab>" . company-complete-common-or-cycle)
-;;         ("M-<tab>" . company-complete-selection))
-;;   ;; (:map lsp-mode-map ("M-<tab>" . company-indent-or-complete-common))
-;;   :custom
-;;   (company-minimum-prefix-length 2)
-;;   (company-idle-delay 0.01)
-;;   :config
-;;   )
-
-(use-package general
-  :after evil-collection
-  :config
-  (general-evil-setup t)
-  (general-create-definer my/ctrl-c-keys
-    :prefix "C-c")
-  (my/ctrl-c-keys "t"  '(treemacs-select-window :which-key "treemacs-select"))
-  (general-define-key
-    :states '(normal visual)
-    ;; :keymaps 'lsp-mode-map
-    :prefix "SPC"
-    "d" '(xref-find-definitions :which-key "find-definitions")
-    "r" '(xref-find-references :which-key "find-references")
-    "f" '(eglot-format :which-key "eglot-format")
-    "h" '(eldoc :which-key "eldoc")
-    "i" '(consult-imenu :which-key "consult-imenu")
-    "~" '(consult-lsp-symbols :which-key "consult-lsp-symbols")
-    "e" '(consult-flymake :which-key "consult-flymake")
-    "E" '(flymake-show-project-diagnostics :which-key "project diagnostics")
-    "b" '(consult-buffer :which-key "consult-buffer")
-    "g" '(consult-ripgrep :which-key "consult-ripgrep")
-    "y" '(consult-yasnippet :which-key "consult-yasnippet")
-    "p" '(consult-project-extra-find :which-key "consult-project-extra-find")
-    "s" '(consult-flyspell :which-key "consult-flyspell")
-    ;; "SPC" 'python-shell-send-statement
-    ;; "o" 'counsel-imenu
-    "x" 'lsp-execute-code-action))
-
-
-
-;; ** lsp-ivy [[https://github.com/emacs-lsp/lsp-ivy][source github]]\\
-
-;; lsp-ivy integrates Ivy with lsp-mode to make it easy to search for things by
-;; name in your code. When you run these commands, a prompt will appear in the
-;; minibuffer allowing you to type part of the name of a symbol in your
-;; code. Results will be populated in the minibuffer so that you can find what
-;; you’re looking for and jump to that location in the code upon selecting the
-;; result.\\
-
-;; Try these commands with ~M-x~:\\
-
-;;     ~lsp-ivy-workspace-symbol~ - Search for a symbol name in the current
-;;     project workspace\\
-
-;;     ~lsp-ivy-global-workspace-symbol~ - Search for a symbol name in all
-;;     active project workspaces\\
-
-
-;; ** lsp-ui
-
-;; Documentation: [[https://emacs-lsp.github.io/lsp-ui/]]
-
-;; - ~lsp-ui-doc-focus-frame~ to enter the documentation frame to navigate and
-;;   search around
-
-;; - ~lsp-ui-doc-unfocus-frame~ to leave documentation frame
-
-;; (use-package lsp-ui
-  ;; :hook (lsp-mode . lsp-ui-mode)
-  ;; :after lsp-mode
-  ;; :custom
-  ;; (lsp-ui-doc-enable nil))
-
-;; ** lsp-treemacs
-
-;; Provides an even nicer UI on top of lsp-mode using Treemacs\\
-
-;; - ~lsp-treemacs-symbols~ - Show a tree view of the symbols in the current
-;;   file
-
-;; - ~lsp-treemacs-references~ - Show a tree view for the references of the
-;;   symbol under the cursor
-
-;; - ~lsp-treemacs-error-list~ - Show a tree view for the diagnostic messages
-;;   in the project
-
-;; (use-package lsp-treemacs
-  ;; :after (lsp-mode treemacs)
-  ;; )
-
-
-;; * Python configuration
-
-;; [[https://github.com/daviwil/emacs-from-scratch/blob/master/show-notes/Emacs-IDE-02.org][efs
-;; series notes]]\\
-
-;; [[https://ddavis.io/posts/emacs-python-lsp]]\\
-
-;; some options are
-
-;; - [[https://emacs-lsp.github.io/lsp-mode/page/lsp-pyls/][pyls]] Palantir
-
-;; - [[https://emacs-lsp.github.io/lsp-python-ms][microsoft]] now depreciated by MS
-
-;; - [[https://emacs-lsp.github.io/lsp-pyright][pyright]] also by Microsoft
-
-;; ** pyright [[https://emacs-lsp.github.io/lsp-pyright/#configuration][config]] \\
-
-
-;; ** pyvenv
-
-;; Strongly recommend to use python virtualenv to python work properly in emacs.\\
-
-;; Assuming venvs are installed here =~/.venvs=\\
-
-;; Learn about setting python virtual env below\\
-
-;; [[https://blog.fredrikmeyer.net/2020/08/26/emacs-python-venv.html]]\\
-
-;; [[https://ddavis.io/posts/emacs-python-lsp]]\\
-
-;; You can use ~M-x pyvenv-activate~ to activate specific venv \\
-
 (use-package pydoc
+  :after python
   :ensure t
   :bind (:map python-mode-map ("C-c d" . 'pydoc-at-point)))
 
@@ -390,6 +188,13 @@
   (setq pyvenv-mode-line-indicator
         '(pyvenv-virtual-env-name ("[venv:" pyvenv-virtual-env-name "] "))))
 
+(defun tg/pyvenv-autoload ()
+          (interactive)
+          "auto activate venv directory if exists"
+          (f-traverse-upwards (lambda (path)
+              (let ((venv-path (f-expand ".venv" path)))
+              (when (f-exists? venv-path)
+              (pyvenv-activate venv-path))))))
 
 ;; ** formatting
 ;; (use-package py-isort
@@ -411,6 +216,7 @@
   ;; (python-mode . flycheck-mode)
   ;; (python-mode . blacken-mode)
   (python-mode . yas-minor-mode)
+  (python-mode . tg/pyvenv-autoload)
   :custom
   (python-shell-interpreter "ipython")
   (python-shell-interpreter-args "-i --simple-prompt --pprint")
@@ -454,61 +260,10 @@
 ;; use ~SPC~ prefix for ~lsp-mode~ keybinding defined below. These keybindings
 ;; are for ~evil~ normal mode.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
-(use-package modus-themes
-  :ensure 
-  :init
-  (setq modus-themes-mode-line '(accented borderless (padding . 4))
-        modus-themes-bold-constructs t
-        modus-themes-italic-constructs t
-        modus-themes-fringes nil
-        modus-themes-tabs-accented t
-        modus-themes-paren-match '(bold intense)
-        modus-themes-prompts '(bold intense)
-        modus-themes-completions 'opinionated
-        modus-themes-org-blocks 'tinted-background
-        modus-themes-region '(bg-only)
-        modus-themes-headings
-        '((1 . (rainbow background bold 1))
-          (2 . (rainbow bold 1))
-          (3 . (rainbow bold 1))
-          (t . (semilight 1))))
-  (modus-themes-load-themes)
-
-  :bind ("<f5>" . modus-themes-toggle)
-  :config (load-theme 'modus-operandi t))
-
-;; (use-package doom-themes
-;;   ;; :unless in-termux-p
-;;   :after org
-;;   :ensure t
-;;   :config
-;;   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-;;         doom-themes-enable-italic t)
-;;   (load-theme 'doom-palenight t)
-
-;;   ;; Enable flashing mode-line on errors
-;;   (doom-themes-visual-bell-config)
-;;   ;; Enable custom neotree theme (all-the-icons must be installed!)
-;;   ;; (doom-themes-neotree-config)
-;;   ;; or for treemacs users
-;;   ;; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-;;   ;; (doom-themes-treemacs-config)
-;;   ;; Corrects (and improves) org-mode's native fontification.
-;;   (doom-themes-org-config))
-
-;; (use-package nano-modeline
-  ;; :demand t
-  ;; :ensure t
-  ;; :config (nano-modeline-mode)
-  ;; )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Mode line
-
 (setq mode-line-position-column-line-format '("%l:%c"))
 ;; position
 (setq mode-line-percent-position nil)
@@ -535,13 +290,101 @@
                 ;; mode-line-remote
                 ;; mode-line-frame-identification
                 mode-line-position
-                evil-mode-line-tag
+                ;; evil-mode-line-tag
                 mode-line-buffer-identification
                 ;; (vc-mode vc-mode)
                 ;; "  "
                 mode-line-modes
                 mode-line-misc-info
                 mode-line-end-spaces))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Themes
+;; (use-package modus-themes
+;;   :ensure 
+;;   :init
+;;   (setq modus-themes-mode-line '(accented borderless (padding . 4))
+;;         modus-themes-bold-constructs t
+;;         modus-themes-italic-constructs t
+;;         modus-themes-fringes nil
+;;         modus-themes-tabs-accented t
+;;         modus-themes-paren-match '(bold intense)
+;;         modus-themes-prompts '(bold intense)
+;;         modus-themes-completions 'opinionated
+;;         modus-themes-org-blocks 'tinted-background
+;;         modus-themes-region '(bg-only)
+;;         modus-themes-headings
+;;         '((1 . (rainbow background bold 1))
+;;           (2 . (rainbow bold 1))
+;;           (3 . (rainbow bold 1))
+;;           (t . (semilight 1))))
+;;   (modus-themes-load-themes)
+
+;;   :bind ("<f5>" . modus-themes-toggle)
+;;   :config (load-theme 'modus-operandi t))
+
+;; (use-package autothemer ;; requirement of sakura-theme
+;;   :ensure t)
+
+;; (use-package sakura-theme
+;;   :ensure t
+;;   :config
+;;   (mapc #'disable-theme custom-enabled-themes)
+;;   (load-theme 'sakura))
+
+(use-package ef-themes
+  :ensure t
+  :custom
+  (ef-themes-mixed-fonts t)
+  (ef-themes--variable-pitch-ui t)
+  :config
+  (defun tg/ef-themes-add-borders-to-modeline ()
+    (let ((line (pop (cdr (assoc 'border (ef-themes--current-theme-palette))))))
+      (set-face-attribute 'mode-line          nil :overline   line)
+      (set-face-attribute 'mode-line          nil :underline  line)
+      (set-face-attribute 'mode-line-inactive nil :overline   line)
+      (set-face-attribute 'mode-line-inactive nil :underline  line)
+      (set-face-attribute 'mode-line          nil :box        nil)
+      (set-face-attribute 'mode-line-inactive nil :box        nil)))
+  (mapc #'disable-theme custom-enabled-themes)
+  (setq x-underline-at-descent-line t)
+  (add-hook 'ef-themes-post-load-hook #'tg/ef-themes-add-borders-to-modeline)
+  (load-theme 'ef-day :no-confirm)
+  (tg/ef-themes-add-borders-to-modeline))
+
+(use-package moody
+  :ensure t
+  :config
+  (setq x-underline-at-descent-line t
+        moody-mode-line-height nil)
+  (moody-replace-mode-line-front-space)
+  (moody-replace-mode-line-buffer-identification)
+  ;; (moody-replace-vc-mode)
+  (moody-replace-eldoc-minibuffer-message-function))
+
+;; (use-package doom-themes
+;;   ;; :unless in-termux-p
+;;   :after org
+;;   :ensure t
+;;   :config
+;;   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+;;         doom-themes-enable-italic t)
+;;   (load-theme 'doom-palenight t)
+
+;;   ;; Enable flashing mode-line on errors
+;;   (doom-themes-visual-bell-config)
+;;   ;; Enable custom neotree theme (all-the-icons must be installed!)
+;;   ;; (doom-themes-neotree-config)
+;;   ;; or for treemacs users
+;;   ;; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+;;   ;; (doom-themes-treemacs-config)
+;;   ;; Corrects (and improves) org-mode's native fontification.
+;;   (doom-themes-org-config))
+
+;; (use-package nano-modeline
+  ;; :demand t
+  ;; :ensure t
+  ;; :config (nano-modeline-mode)
+  ;; )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Misc Packages
 
@@ -556,15 +399,9 @@
   :straight nil
   :demand t)
 
-;; ace window
-(use-package ace-window
-  :ensure t
-  :config
-  (global-set-key (kbd "M-o") 'ace-window)
-  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
-
 ;; vterm
 (use-package vterm
+  :unless tg/in-termux
   :ensure t
   :custom
   (vterm-install t)
@@ -649,6 +486,7 @@
 
 ;; R
 (use-package ess
+  :unless tg/in-termux
   :ensure t
   :init (require 'ess-site)
   :config
@@ -656,8 +494,9 @@
   (exec-path-from-shell-copy-env "LANG"))
 
 ;; jupyter
-(use-package jupyter
-  :ensure t)
+;; (use-package jupyter
+  ;; :unless tg/in-termux
+  ;; :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TRAMP
 (setq tramp-default-method "ssh")
@@ -669,6 +508,7 @@
 
 ;;;;;;;;;;;;;;;;;;; accounting
 (use-package hledger-mode
+  :unless tg/in-termux
   :ensure t
   :mode ("\\.journal\\'" "\\.hledger\\'")
   :commands hledger-enable-reporting
@@ -679,6 +519,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;; fonts
 (use-package all-the-icons
   :if (display-graphic-p))
+
+;;;;;;;;;;;;;;;;;;;;;;;; function for dedicating windows
+;;;;;;;;;;;;;;;;;;;;;;;; see https://www.masteringemacs.org/article/demystifying-emacs-window-manager
+(defun tg/dedicate-window ()
+  "Toggles window dedication in the selected window."
+  (interactive)
+  (set-window-dedicated-p (selected-window)
+     (not (window-dedicated-p (selected-window)))))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Spell checking with aspell
 (use-package flyspell
@@ -699,36 +549,39 @@
   ;; ("C-M-;" . flyspell-correct-wrapper)
   ;; ("C-M-]" . flyspell-correct-next))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; winner mode: return to previous window configuration with C-c <left>
-(use-package winner
-  :defer t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; org mode
 (load-file "~/.emacs.d/tg/org-mode-config.el")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;; org roam
-(load-file "~/.emacs.d/tg/org-roam-config.el")
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; evil mode
-(load-file "~/.emacs.d/tg/evil-config.el")
+;; (load-file "~/.emacs.d/tg/evil-config.el")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; References
-(load-file "~/.emacs.d/tg/reference-handling.el")
+(unless tg/in-termux (load-file "~/.emacs.d/tg/reference-handling.el"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Latex
-(load-file "~/.emacs.d/tg/latex-config.el")
+(unless tg/in-termux (load-file "~/.emacs.d/tg/latex-config.el"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Completion
 (load-file "~/.emacs.d/tg/completion.el")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; elfeed
-(load-file "~/.emacs.d/tg/elfeed-config.el")
+(unless tg/in-termux (load-file "~/.emacs.d/tg/elfeed-config.el"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Email
 ;; (load-file "~/.emacs.d/tg/email.el")
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;; org roam
+;; (load-file "~/.emacs.d/tg/org-roam-config.el")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;; denote
+(load-file "~/.emacs.d/tg/denote-config.el")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;; window management
+(load-file "~/.emacs.d/tg/window-config.el")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;; fun packages
-(load-file "~/.emacs.d/tg/fun-packages.el")
+(unless tg/in-termux (load-file "~/.emacs.d/tg/fun-packages.el"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customisations
 
@@ -806,6 +659,9 @@
 (setq custom-file (locate-user-emacs-file "custom-vars.el"))
 (load custom-file 'noerror 'nomessage)
 
+;; scroll by one line with M-n and M-p
+(global-set-key "\M-n"  (lambda () (interactive) (scroll-up   1)) )
+(global-set-key "\M-p"  (lambda () (interactive) (scroll-down 1)) )
 
 ;; misc getting rid of furniture
 (tool-bar-mode -1)
@@ -816,13 +672,15 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 
 ;; fix mac meta and super keys
-(setq-default mac-option-modifier 'meta)
-(setq-default mac-left-option-modifier 'meta)
-(setq-default mac-right-option-modifier 'meta)
-(setq-default mac-command-modifier 'super)
-(global-set-key (kbd "s-k") 'kill-this-buffer)
-(global-set-key (kbd "s-u") 'revert-buffer)
-(global-set-key (kbd "s-v") 'yank)
+(unless tg/in-termux (setq-default mac-option-modifier 'meta))
+(unless tg/in-termux (setq-default mac-left-option-modifier 'meta))
+(unless tg/in-termux (setq-default mac-right-option-modifier 'meta))
+(unless tg/in-termux (setq-default mac-command-modifier 'super))
+(unless tg/in-termux (setq-default mac-left-command-modifier 'super))
+(unless tg/in-termux (setq-default mac-right-command-modifier 'control))
+(unless tg/in-termux (global-set-key (kbd "s-k") 'kill-this-buffer))
+(unless tg/in-termux (global-set-key (kbd "s-u") 'revert-buffer))
+(unless tg/in-termux (global-set-key (kbd "s-v") 'yank))
 ; Allow hash to be entered  
 (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
 (define-key isearch-mode-map (kbd "M-3") '(lambda () (interactive) (isearch-process-search-char ?\#)))

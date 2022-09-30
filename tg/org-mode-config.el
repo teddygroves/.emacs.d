@@ -7,13 +7,12 @@
 (use-package org
   :mode (("\\.org$" . org-mode))
   :straight (:repo "https://git.savannah.gnu.org/git/emacs/org-mode.git")
-  :after citeproc cdlatex jupyter
   :demand t
   :bind (("C-c c" . org-capture)
-         ("C-c a" . 'org-agenda)
-         :map org-mode-map
-         ("C-j" . forward-page)
-         ("C-k" . backward-page))
+         ("C-c a" . 'org-agenda))
+         ;; :map org-mode-map
+         ;; ("C-j" . forward-page)
+         ;; ("C-k" . backward-page))
   :ensure t
   :init
   ;; org-cdlatex mode https://orgmode.org/manual/CDLaTeX-mode.html
@@ -63,14 +62,6 @@
       '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
         "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
         "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
-
-  ;; capture
-  (org-capture-templates
-   '(("w" "Work todo" entry (file todo-file) "* TODO %i%? :work:\n%T")
-     ("l" "Life todo" entry (file todo-file) "* TODO %i%? :life:\n%T")
-     ("e" "Email" entry (file todo-file) "* TODO %a")
-     ("t" "Misc todo" entry (file todo-file) "* TODO %i%?\n%T")
-     ("d" "Draft" entry (file draft-file) "* %i%?\n%T")))
 
   ;; habits
   (org-habit-show-all-today t)

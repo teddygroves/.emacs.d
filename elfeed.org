@@ -1,15 +1,29 @@
 * Feeds                                                              :elfeed:
 ** Papers                                                             :paper:
-*** [[http://export.arxiv.org/api/query?search_query=cat:stat.TH&start=0&max_results=300&sortBy=submittedDate&sortOrder=descending][Arxiv:Stat]]
-*** [[https://connect.biorxiv.org/biorxiv_xml.php?subject=systems_biology][Biorxiv:sysbio]]
-*** [[https://academic.oup.com/rss/site_5139/advanceAccess_3001.xml][Bioinformatics]]
-*** [[https://rss.sciencedirect.com/publication/science/01679473][Computational statistics and data science]]
+*** [[http://export.arxiv.org/api/query?search_query=cat:stat.TH&start=0&max_results=300&sortBy=submittedDate&sortOrder=descending][Arxiv:Stat]]                                                  :stats:arxiv:
+*** [[https://connect.biorxiv.org/biorxiv_xml.php?subject=systems_biology][Biorxiv:sysbio]]                                            :biology:arxiv:
+*** [[https://academic.oup.com/rss/site_5139/advanceAccess_3001.xml][Bioinformatics]]                                                  :biology:
+*** [[https://rss.sciencedirect.com/publication/science/01679473][Computational statistics and data science]]                         :stats:
+*** [[https://onlinelibrary.wiley.com/feed/10970290/most-recent][Biotechnology and Bioengineering]]                                :biology:
+*** [[https://journals.plos.org/ploscompbiol/feed/atom][PLOS Computational Biology]]                                      :biology:
+** Articles                                                         :article:
+*** [[https://www.lrb.co.uk/feeds/rss][London Review of Books]]
+*** [[https://newleftreview.org/feed][New Left Review]]
+*** [[https://www.nplusonemag.com/feed/][N+1]]
 ** Blogs                                                               :blog:
 *** [[https://statmodeling.stat.columbia.edu/feed/][Andrew Gelman]]
 *** [[https://thenextrecession.wordpress.com/feed/][Michael Roberts]]
+*** [[http://bactra.org/weblog/index.rss][Three-Toed Sloth]]
+*** [[http://bactra.org/notebooks/index.rss][Cosma Shalizi notes]]
+*** [[https://adamtooze.substack.com/feed/][Adam Tooze substack]]
+*** [[https://xenodium.com/rss.xml][xenodium]]                                                          :emacs:
+*** [[https://acoup.blog/feed/][acoup]]                                                           :history:
+*** [[https://thehistoryofbyzantium.com/feed/][History of Byzantium]]                                            :history:
 ** Youtube                                                          :youtube:
 *** [[https://www.youtube.com/feeds/videos.xml?channel_id=UCAiiOTio8Yu69c3XnR7nQBQ][System crafters]]
 *** [[https://www.youtube.com/feeds/videos.xml?channel_id=UCe0DNp0mKMqrYVaTundyr9w][VaatiVidya]]
 *** [[https://www.youtube.com/feeds/videos.xml?playlist_id=PL49CF3715CB9EF31D][MIT open courseware]]
 *** [[https://www.youtube.com/feeds/videos.xml?channel_id=UC0uTPqBCFIpZxlz_Lv1tk_g][Protesilaos]]
 *** [[https://www.youtube.com/feeds/videos.xml?playlist_id=PLre5AT9JnKShBOPeuiD9b-I4XROIJhkIU][OCaml course]]
+** Forums                                                             :forum:
+*** [[https://discourse.mc-stan.org/latest.rss][Stan discourse]]

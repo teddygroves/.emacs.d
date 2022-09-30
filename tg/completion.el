@@ -1,3 +1,4 @@
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; vertico
 
 (use-package vertico
@@ -83,6 +84,8 @@
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
 
+  :bind
+  ("C-x p f" . consult-project-buffer)
   ;; Configure other variables and modes in the :config section,
   ;; after lazily loading the package.
   :config
@@ -129,12 +132,12 @@
   :after consult
   :ensure t)
 
-(use-package consult-project-extra
-  :after consult
-  :straight (consult-project-extra :type git :host github :repo "Qkessler/consult-project-extra")
-  :bind
-  (("C-x p f" . consult-project-extra-find)
-   ("C-x p o" . consult-project-extra-find-other-window)))
+;; (use-package consult-project-extra
+  ;; :ensure t
+  ;; :straight (consult-project-extra :type git :host github :repo "Qkessler/consult-project-extra")
+  ;; :bind
+  ;; ("C-c p f" . consult-project-extra-find)
+  ;; ("C-c p o" . consult-project-extra-find-other-window))
 
 (use-package consult-flyspell
   :after consult
@@ -146,11 +149,11 @@
         consult-flyspell-always-check-buffer nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; corfu
+
 (use-package corfu
-  :after evil
   :custom
   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-  (corfu-auto t)                 ;; Enable auto completion
+  (corfu-auto nil)                 ;; Enable auto completion
   (corfu-count 15)
   (corfu-min-width 20)
   (corfu-max-width 100)
@@ -171,16 +174,16 @@
   ;; This is recommended since dabbrev can be used globally (M-/).
   :init
   (corfu-global-mode)
-
   :config
+
   (with-eval-after-load "eldoc" (eldoc-add-command-completions "corfu-"))
-  (advice-add 'corfu--setup :after 'evil-normalize-keymaps)
-  (advice-add 'corfu--teardown :after 'evil-normalize-keymaps)
-  (evil-make-overriding-map corfu-map)
+  ;; (advice-add 'corfu--setup :after 'evil-normalize-keymaps)
+  ;; (advice-add 'corfu--teardown :after 'evil-normalize-keymaps)
+  ;; (evil-make-overriding-map corfu-map)
   :bind (:map corfu-map
          ("C-<return>" . corfu-insert)
-         ("C-J" . corfu-next)
-         ("C-K" . corfu-previous)
+         ("C-n" . corfu-next)
+         ("C-p" . corfu-previous)
          ("C-<return>" . corfu-insert)))
 
 ;; corfu-related external config
