@@ -16,10 +16,13 @@
            (projects (-zip project-titles project-files)))
       (cdr (assoc (completing-read "Project: " projects) projects))))
 
+  (defun tg/refresh-org-agenda-files ()
+    (interactive)
     (with-eval-after-load 'org-agenda
       (setq org-agenda-files
             (append (directory-files denote-directory t "_project")
-                    (directory-files denote-directory nil "inbox__"))))
+                    (directory-files denote-directory nil "inbox__")))))
+  (tg/refresh-org-agenda-files)
   (add-hook 'dired-mode-hook #'denote-dired-mode)
   (setq denote-org-capture-specifiers "%l\n%i\n%?")
   :bind

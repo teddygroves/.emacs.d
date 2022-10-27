@@ -22,15 +22,21 @@
   (add-hook 'org-capture-mode-hook #'org-align-all-tags)
 
   :config
-  ;; babel
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-      (python . t)
-      (shell . t)
-      (jupyter . t)))
-    ;; Don't prompt before running code in org
-  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  ;; nicer timestamps from https://endlessparentheses.com/better-time-stamps-in-org-export.html
+  (with-eval-after-load 'ox (add-to-list 'org-export-filter-timestamp-functions
+               #'tg/filter-timestamp))
+  (defun tg/filter-timestamp (timestamp backend _comm)
+    "Remove <> around time-stamps."
+
+    (cond
+     ((org-export-derived-backend-p backend 'latex)
+      (replace-regexp-in-string "[<>]\\|[][]" "" timestamp))
+     ((org-export-derived-backend-p backend 'html)
+      (replace-regexp-in-string "&[lg]t;\\|[][]" "" timestamp))))
+  (setq-default org-display-custom-times t)
+  (setq org-time-stamp-custom-formats
+        '("<%Y-%m-%d %a>" . "<%Y-%m-%d %a %H:%M>"))
+
 
   ;; org habit
   (add-to-list 'org-modules 'org-habit)
@@ -42,6 +48,10 @@
   ;; export syntax highlighting
   (org-html-htmlize-output-type 'css)
 
+  ;; init file for async export emacs process
+  (org-export-in-background t)
+  (org-export-async-init-file "~/.emacs.d/tg/org-async-export-init.el")
+  
   ;; todo
   (org-todo-keywords '((sequence "TODO" "|" "DONE")))
   (todo-file (concat tg/org-dir "tasks.org"))
@@ -144,3 +154,30 @@
       (org-archive-subtree)
       (setq org-map-continue-from (org-element-property :begin (org-element-at-point))))
     "/DONE" 'file))
+
+
+;; ox-ipynb
+(use-package ox-ipynb
+  :after org
+  :ensure t
+  :straight (:type git :host github :repo "jkitchin/ox-ipynb"))
+
+
+
+;; jupyter
+(use-package jupyter
+  :unless tg/in-termux
+  :ensure t
+  :config (setq ob-async-no-async-languages-alist '("jupyter-python" "jupyter-julia"))
+  )
+
+;; babel
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (python . t)
+   (shell . t)
+   (jupyter . t)))
+
+;; Don't prompt before running code in org
+(add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)

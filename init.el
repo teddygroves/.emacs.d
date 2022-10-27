@@ -46,6 +46,24 @@
 (use-package citeproc
   :ensure t)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; set exec path from PATH environment variable
+(defun set-exec-path-from-shell-PATH ()
+  "Set up Emacs' `exec-path' and PATH environment variable to match
+that used by the user's shell.
+
+This is particularly useful under Mac OS X and macOS, where GUI
+apps are not started from a shell."
+  (interactive)
+  (let ((path-from-shell (replace-regexp-in-string
+			  "[ \t\n]*$" "" (shell-command-to-string
+					  "$SHELL --login -c 'echo $PATH'"
+						    ))))
+    (setenv "PATH" path-from-shell)
+    (setq exec-path (split-string path-from-shell path-separator))))
+
+(set-exec-path-from-shell-PATH)
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; make sure environment variables are correct
 (use-package exec-path-from-shell
   :ensure t
@@ -261,7 +279,9 @@
 ;; are for ~evil~ normal mode.
 
 
+;;;;;;;;;;;;;;;;;;; imenu
 
+(global-set-key (kbd "C-c i") 'consult-imenu)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Mode line
 (setq mode-line-position-column-line-format '("%l:%c"))
@@ -493,10 +513,12 @@
   (exec-path-from-shell-copy-env "LC_ALL")
   (exec-path-from-shell-copy-env "LANG"))
 
-;; jupyter
-;; (use-package jupyter
-  ;; :unless tg/in-termux
-  ;; :ensure t)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; pandoc
+(use-package pandoc-mode
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook 'pandoc-mode)
+  (add-hook 'pandoc-mode-hook 'pandoc-load-default-settings))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TRAMP
 (setq tramp-default-method "ssh")
@@ -685,6 +707,11 @@
 (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
 (define-key isearch-mode-map (kbd "M-3") '(lambda () (interactive) (isearch-process-search-char ?\#)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; easier window resizing
+(global-set-key (kbd "S-C-<left>") 'shrink-window-horizontally)
+(global-set-key (kbd "S-C-<right>") 'enlarge-window-horizontally)
+(global-set-key (kbd "S-C-<down>") 'shrink-window)
+(global-set-key (kbd "S-C-<up>") 'enlarge-window)
 
 ;; font
 ;; (mac-auto-operator-composition-mode t)
